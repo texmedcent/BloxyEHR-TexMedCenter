@@ -30,6 +30,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { BehrLogo } from "@/components/branding/BehrLogo";
 
 const navItems = [
   { href: "/chart", label: "Patient Chart", icon: LayoutDashboard },
@@ -78,8 +79,8 @@ export function HyperspaceLayout({
       >
         <div className="flex items-center justify-between p-3 border-b border-white/20">
           {!sidebarCollapsed && (
-            <Link href="/dashboard" className="font-bold text-lg truncate">
-              BloxyEHR
+            <Link href="/dashboard" className="truncate">
+              <BehrLogo compact className="text-white [&_p]:text-white" />
             </Link>
           )}
           <Button
@@ -139,10 +140,10 @@ export function HyperspaceLayout({
         >
           <Link
             href="/dashboard"
-            className="font-bold text-lg text-[#1a4d8c] shrink-0 hidden sm:block"
+            className="shrink-0 hidden sm:block"
             aria-label="BloxyEHR Home"
           >
-            BloxyEHR
+            <BehrLogo compact />
           </Link>
           <Button
             variant="outline"
