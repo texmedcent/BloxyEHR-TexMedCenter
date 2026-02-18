@@ -35,7 +35,7 @@ export function LoginForm({
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
       if (error) throw error;
@@ -51,7 +51,14 @@ export function LoginForm({
       }
       router.push(getRoleLandingPath(role));
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const rawMessage = error instanceof Error ? error.message : "An error occurred";
+      if (rawMessage.toLowerCase().includes("invalid login credentials")) {
+        setError(
+          "Invalid login credentials. If you just signed up, confirm your email first, then try again."
+        );
+      } else {
+        setError(rawMessage);
+      }
     } finally {
       setIsLoading(false);
     }

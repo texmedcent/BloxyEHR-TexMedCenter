@@ -25,6 +25,7 @@ export function SignUpForm({
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -33,6 +34,7 @@ export function SignUpForm({
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     if (password !== repeatPassword) {
       setError("Passwords do not match");
@@ -41,7 +43,7 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -50,11 +52,22 @@ export function SignUpForm({
         },
       });
       if (error) throw error;
-      // New users default to patient portal unless promoted by manager logic.
-      const role = email.toLowerCase() === "dylanmwoodruff@icloud.com"
-        ? "hospital_manager"
-        : "patient";
-      router.push(getRoleLandingPath(role));
+
+      // If email confirmation is enabled, Supabase may return no active session yet.
+      // In that case user must confirm before logging in.
+      if (!data.session) {
+        setSuccess(
+          "Account created. Check your email to confirm your account before logging in."
+        );
+        return;
+      }
+
+      // New users default to patient portal unless manager email override applies.
+      const expectedRole =
+        email.toLowerCase() === "dylanmwoodruff@icloud.com"
+          ? "hospital_manager"
+          : "patient";
+      router.push(getRoleLandingPath(expectedRole));
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -108,6 +121,7 @@ export function SignUpForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
+              {success && <p className="text-sm text-emerald-700">{success}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
