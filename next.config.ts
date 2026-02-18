@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  // cacheComponents requires all async data inside Suspense; disabling for now
+  // cacheComponents: true,
 };
 
 export default nextConfig;

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getRoleLandingPath } from "@/lib/roles";
 
 export function SignUpForm({
   className,
@@ -44,11 +45,16 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: { role: "patient" },
         },
       });
       if (error) throw error;
-      router.push("/auth/sign-up-success");
+      // New users default to patient portal unless promoted by manager logic.
+      const role = email.toLowerCase() === "dylanmwoodruff@icloud.com"
+        ? "hospital_manager"
+        : "patient";
+      router.push(getRoleLandingPath(role));
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
