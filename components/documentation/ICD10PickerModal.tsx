@@ -85,6 +85,10 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
   const [favorites, setFavorites] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [catalogCodes, setCatalogCodes] = useState<ICD10Code[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [catalogBacked, setCatalogBacked] = useState(false);
+  const [unspecifiedOtherText, setUnspecifiedOtherText] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -115,17 +119,58 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
     void loadFavorites();
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const loadCatalogCodes = async () => {
+      setLoadingCatalog(true);
+      const supabase = createClient();
+      let query = supabase
+        .from("icd10_catalog")
+        .select("code, label")
+        .eq("is_active", true)
+        .order("code", { ascending: true })
+        .limit(500);
+
+      if (category !== "all") {
+        query = query.eq("category_key", category);
+      }
+      if (search.trim()) {
+        const q = search.trim().replace(/[,{}]/g, " ");
+        query = query.or(`code.ilike.%${q}%,label.ilike.%${q}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        setCatalogBacked(false);
+        setCatalogCodes([]);
+        setLoadingCatalog(false);
+        return;
+      }
+
+      const rows = (data || []).map((row) => ({ code: row.code, label: row.label }));
+      setCatalogCodes(rows);
+      setCatalogBacked(rows.length > 0);
+      setLoadingCatalog(false);
+    };
+
+    void loadCatalogCodes();
+  }, [category, open, search]);
+
   const filteredCodes = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const byCategory =
+    const localByCategory =
       category === "all"
         ? ICD10_CODES
         : ICD10_CODES.filter((c) => getICDCategory(c.code) === category);
-    const codes = q
-      ? byCategory.filter(
+
+    const localCodes = q
+      ? localByCategory.filter(
           (c) => c.code.toLowerCase().includes(q) || c.label.toLowerCase().includes(q)
         )
-      : byCategory;
+      : localByCategory;
+
+    const codes = catalogBacked ? catalogCodes : localCodes;
 
     return [...codes].sort((a, b) => {
       const af = favorites.includes(a.code) ? 1 : 0;
@@ -133,7 +178,7 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
       if (af !== bf) return bf - af;
       return a.code.localeCompare(b.code);
     });
-  }, [category, favorites, search]);
+  }, [catalogBacked, catalogCodes, category, favorites, search]);
 
   const persistFavorites = async (next: string[]) => {
     if (!userId) return;
@@ -221,9 +266,37 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
               })}
             </div>
           </div>
+          <div className="rounded border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Fallback
+            </p>
+            <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
+              <Input
+                value={unspecifiedOtherText}
+                onChange={(event) => setUnspecifiedOtherText(event.target.value)}
+                placeholder='Unspecified - Other: type diagnosis (optional)'
+              />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const nextLabel = unspecifiedOtherText.trim() || "Unspecified - Other";
+                  onSelect({ code: "R69", label: nextLabel });
+                  onClose();
+                }}
+              >
+                Use Unspecified - Other
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Uses code <span className="font-medium text-slate-700">R69</span> as fallback when no exact code fits.
+            </p>
+          </div>
           <p className="text-xs text-slate-500">
-            Showing {filteredCodes.length} codes. Favorites are pinned to the top.
+            Showing {filteredCodes.length} codes.
+            {catalogBacked ? " Using full catalog search." : " Using bundled curated set."}
+            {" "}Favorites are pinned to the top.
             {saving ? " Saving favorites..." : ""}
+            {loadingCatalog ? " Loading catalog..." : ""}
           </p>
         </CardContent>
       </Card>

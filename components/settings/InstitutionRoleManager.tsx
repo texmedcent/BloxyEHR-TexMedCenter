@@ -5,18 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const ROLE_OPTIONS = [
-  "patient",
-  "hospital_manager",
-  "medical_doctor",
-  "physician_assistant",
-  "nurse",
-  "radiologist",
-  "pharmacist",
-  "lab_technician",
-  "admin_staff",
-] as const;
+import { ALL_ROLES, formatRoleLabel } from "@/lib/roles";
 
 interface Row {
   id: string;
@@ -127,9 +116,9 @@ export function InstitutionRoleManager({
                     className="h-8 rounded border border-slate-300 bg-white px-2 text-sm"
                     disabled={savingId === row.id}
                   >
-                    {ROLE_OPTIONS.map((role) => (
+                    {ALL_ROLES.map((role) => (
                       <option key={role} value={role}>
-                        {role}
+                        {formatRoleLabel(role)}
                       </option>
                     ))}
                   </select>

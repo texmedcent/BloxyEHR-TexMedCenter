@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings } from "lucide-react";
+import { formatRoleLabel } from "@/lib/roles";
 
 interface AccountSettingsFormProps {
   userId: string;
@@ -122,7 +123,7 @@ export function AccountSettingsForm({
 
           <div>
             <Label>Role</Label>
-            <Input value={role ?? ""} disabled className="mt-1 bg-slate-50 capitalize" />
+            <Input value={formatRoleLabel(role)} disabled className="mt-1 bg-slate-50" />
           </div>
         </div>
 

@@ -1,11 +1,17 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { PatientSummaryBar } from "@/components/chart/PatientSummaryBar";
-import { FileText, ClipboardList, TestTube, ArrowLeft } from "lucide-react";
+import {
+  FileText,
+  ClipboardList,
+  ClipboardCheck,
+  TestTube,
+  ArrowLeft,
+} from "lucide-react";
 
 interface Patient {
   id: string;
@@ -17,20 +23,30 @@ interface Patient {
   allergies?: unknown;
 }
 
+interface EncounterOption {
+  id: string;
+  type: string;
+  status: string;
+  admit_date: string | null;
+}
+
 export function PatientContextBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [encounters, setEncounters] = useState<EncounterOption[]>([]);
 
-  const isOnChartPage = pathname?.match(/^\/chart\/[a-f0-9-]+$/);
-  const patientId =
-    pathname?.match(/^\/chart\/([a-f0-9-]+)$/)?.[1] ||
-    searchParams?.get("patientId");
+  const chartPatientMatch = pathname?.match(/^\/chart\/([a-f0-9-]+)$/);
+  const isOnChartPage = Boolean(chartPatientMatch);
+  const patientId = chartPatientMatch?.[1] || searchParams?.get("patientId");
+  const selectedEncounterId = searchParams?.get("encounterId") || "";
 
   useEffect(() => {
     // Keep hook order stable; just clear/hide context when not needed.
     if (!patientId || isOnChartPage) {
       setPatient(null);
+      setEncounters([]);
       return;
     }
 
@@ -42,6 +58,14 @@ export function PatientContextBar() {
         .eq("id", patientId)
         .single();
       setPatient(data);
+
+      const { data: encounterRows } = await supabase
+        .from("encounters")
+        .select("id, type, status, admit_date")
+        .eq("patient_id", patientId)
+        .order("admit_date", { ascending: false })
+        .limit(25);
+      setEncounters((encounterRows || []) as EncounterOption[]);
     };
 
     fetchPatient();
@@ -49,10 +73,16 @@ export function PatientContextBar() {
 
   // Don't show context bar on chart page - chart has its own summary.
   if (!patient || isOnChartPage) return null;
+  const buildModuleHref = (basePath: string) => {
+    const params = new URLSearchParams();
+    params.set("patientId", patient.id);
+    if (selectedEncounterId) params.set("encounterId", selectedEncounterId);
+    return `${basePath}?${params.toString()}`;
+  };
 
   return (
     <div className="border-b bg-white px-4 py-2">
-      <div className="mb-2 flex items-center gap-3 text-sm">
+      <div className="mb-2 flex items-center gap-3 text-sm flex-wrap">
         <Link
           href={`/chart/${patientId}`}
           className="inline-flex items-center gap-1 rounded border border-slate-200 px-2 py-1 text-slate-700 hover:bg-slate-50"
@@ -66,25 +96,56 @@ export function PatientContextBar() {
         >
           {patient.last_name}, {patient.first_name}
         </Link>
+        <div className="inline-flex items-center gap-2">
+          <span className="text-xs text-slate-500">Encounter:</span>
+          <select
+            value={selectedEncounterId}
+            onChange={(e) => {
+              const params = new URLSearchParams(searchParams?.toString() || "");
+              if (e.target.value) params.set("encounterId", e.target.value);
+              else params.delete("encounterId");
+              const query = params.toString();
+              router.replace(`${pathname}${query ? `?${query}` : ""}`);
+            }}
+            className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+          >
+            <option value="">All Encounters</option>
+            {encounters.map((encounter) => (
+              <option key={encounter.id} value={encounter.id}>
+                {encounter.type} · {encounter.status}
+                {encounter.admit_date
+                  ? ` · ${new Date(encounter.admit_date).toLocaleDateString()}`
+                  : ""}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <PatientSummaryBar patient={patient} />
       <div className="flex gap-2 mt-2 flex-wrap">
         <Link
-          href={`/documentation?patientId=${patientId}`}
+          href={buildModuleHref("/documentation")}
           className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
         >
           <FileText className="h-3.5 w-3.5" />
           Documentation
         </Link>
         <Link
-          href={`/orders?patientId=${patientId}`}
+          href={buildModuleHref("/orders")}
           className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
         >
           <ClipboardList className="h-3.5 w-3.5" />
           Orders
         </Link>
         <Link
-          href={`/results?patientId=${patientId}`}
+          href={buildModuleHref("/procedures")}
+          className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
+        >
+          <ClipboardCheck className="h-3.5 w-3.5" />
+          Procedures
+        </Link>
+        <Link
+          href={buildModuleHref("/results")}
           className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
         >
           <TestTube className="h-3.5 w-3.5" />

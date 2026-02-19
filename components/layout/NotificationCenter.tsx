@@ -19,6 +19,8 @@ interface InBasketItem {
   priority: string;
   read_at: string | null;
   created_at: string;
+  related_entity_id?: string | null;
+  label?: string;
 }
 
 export function NotificationCenter() {
@@ -32,15 +34,54 @@ export function NotificationCenter() {
       if (!user) return;
       const { data } = await supabase
         .from("in_basket_items")
-        .select("id, type, priority, read_at, created_at")
+        .select("id, type, priority, read_at, created_at, related_entity_id")
         .eq("recipient_id", user.id)
         .order("created_at", { ascending: false })
         .limit(10);
-      setItems(data || []);
-      setUnreadCount((data || []).filter((i) => !i.read_at).length);
+
+      const rows = data || [];
+      const resultIds = rows
+        .filter((i) => i.type === "result" && i.related_entity_id)
+        .map((i) => i.related_entity_id as string);
+
+      const { data: results } =
+        resultIds.length > 0
+          ? await supabase
+              .from("results")
+              .select("id, type, status")
+              .in("id", resultIds)
+          : { data: [] };
+      const resultMap = new Map((results || []).map((r) => [r.id, r]));
+
+      const mapped = rows.map((item) => {
+        if (item.type !== "result" || !item.related_entity_id) {
+          return { ...item, label: `${item.type} - ${item.priority}` };
+        }
+        const result = resultMap.get(item.related_entity_id);
+        return {
+          ...item,
+          label: result
+            ? `${result.status.toUpperCase()} ${result.type.toUpperCase()} result`
+            : "Result notification",
+        };
+      });
+
+      setItems(mapped);
+      setUnreadCount(mapped.filter((i) => !i.read_at).length);
     };
     fetchItems();
   }, []);
+
+  const clearAll = async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("in_basket_items").delete().eq("recipient_id", user.id);
+    setItems([]);
+    setUnreadCount(0);
+  };
 
   return (
     <div className="flex items-center gap-2">
@@ -59,7 +100,18 @@ export function NotificationCenter() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-72">
-          <div className="px-2 py-1.5 text-sm font-semibold">In Basket</div>
+          <div className="flex items-center justify-between px-2 py-1.5">
+            <div className="text-sm font-semibold">In Basket</div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={clearAll}
+              disabled={items.length === 0}
+            >
+              Clear
+            </Button>
+          </div>
           {items.length === 0 ? (
             <div className="px-2 py-4 text-sm text-gray-500">
               No items
@@ -77,7 +129,7 @@ export function NotificationCenter() {
                       !item.read_at ? "font-medium" : "text-gray-600"
                     }
                   >
-                    {item.type} - {item.priority}
+                    {item.label || `${item.type} - ${item.priority}`}
                   </span>
                 </Link>
               </DropdownMenuItem>
@@ -92,8 +144,10 @@ export function NotificationCenter() {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button variant="ghost" size="icon" title="Secure Chat (placeholder)">
-        <MessageCircle className="h-5 w-5" />
+      <Button asChild variant="ghost" size="icon" title="Open Team Chat">
+        <Link href="/chat" aria-label="Open Team Chat">
+          <MessageCircle className="h-5 w-5" />
+        </Link>
       </Button>
     </div>
   );

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { ScheduleView } from "@/components/schedule/ScheduleView";
+import { format, parseISO } from "date-fns";
 
 export default async function SchedulePage({
   searchParams,
@@ -10,13 +11,11 @@ export default async function SchedulePage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const targetDate = date
-    ? new Date(date)
-    : new Date();
-  const startOfDay = new Date(targetDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(targetDate);
-  endOfDay.setHours(23, 59, 59, 999);
+  // Keep schedule date in local-calendar terms (yyyy-MM-dd) to avoid
+  // timezone shifts that can hide scheduled visits.
+  const currentDate = date || format(new Date(), "yyyy-MM-dd");
+  const startOfDay = parseISO(`${currentDate}T00:00:00`);
+  const endOfDay = parseISO(`${currentDate}T23:59:59.999`);
 
   const { data: appointments } = await supabase
     .from("appointments")
@@ -52,7 +51,7 @@ export default async function SchedulePage({
         patient: a.patient_id ? patientMap.get(a.patient_id) : null,
       }))}
       patients={allPatients || []}
-      currentDate={targetDate.toISOString().split("T")[0]}
+      currentDate={currentDate}
       providerId={user?.id}
     />
   );

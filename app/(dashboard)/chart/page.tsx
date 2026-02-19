@@ -6,49 +6,72 @@ import { Badge } from "@/components/ui/badge";
 import { LiveClock } from "@/components/chart/LiveClock";
 import { StartEncounterButton } from "@/components/chart/StartEncounterButton";
 import { StartChartCard } from "@/components/chart/StartChartCard";
+import { DashboardRecentPanels } from "@/components/chart/DashboardRecentPanels";
 
 export default async function ChartPage() {
   const supabase = await createClient();
-  const { data: recentPatients } = await supabase
-    .from("patients")
-    .select("id, mrn, first_name, last_name")
-    .neq("mrn", "MRN001")
-    .neq("mrn", "MRN002")
-    .neq("mrn", "MRN003")
-    .neq("mrn", "MRN004")
-    .neq("mrn", "MRN005")
-    .order("created_at", { ascending: false })
-    .limit(6);
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = (claimsData?.claims as { sub?: string } | undefined)?.sub;
+  const { data: currentProfile } = userId
+    ? await supabase
+        .from("profiles")
+        .select("dashboard_orders_cleared_at, dashboard_results_cleared_at")
+        .eq("id", userId)
+        .maybeSingle()
+    : { data: null };
+  const ordersClearedAt = currentProfile?.dashboard_orders_cleared_at ?? null;
+  const resultsClearedAt = currentProfile?.dashboard_results_cleared_at ?? null;
 
   const { count: activeEncounterCount } = await supabase
     .from("encounters")
     .select("*", { count: "exact", head: true })
     .eq("status", "active");
 
-  const { data: recentOrders } = await supabase
+  let ordersQuery = supabase
     .from("orders")
     .select("id, patient_id, type, status, ordered_at")
     .order("ordered_at", { ascending: false })
     .limit(8);
+  if (ordersClearedAt) {
+    ordersQuery = ordersQuery.gte("ordered_at", ordersClearedAt);
+  }
+  const { data: recentOrders } = await ordersQuery;
 
-  const { data: recentResults } = await supabase
+  let resultsQuery = supabase
     .from("results")
     .select("id, patient_id, type, status, reported_at")
     .order("reported_at", { ascending: false })
     .limit(8);
+  if (resultsClearedAt) {
+    resultsQuery = resultsQuery.gte("reported_at", resultsClearedAt);
+  }
+  const { data: recentResults } = await resultsQuery;
 
   const { data: triageQueue } = await supabase
     .from("patient_checkins")
-    .select("id, patient_id, campus, status, checked_in_at")
+    .select("id, patient_id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode")
     .eq("status", "triage")
     .order("checked_in_at", { ascending: true })
     .limit(10);
+
+  const { data: activeEncounterRows } = await supabase
+    .from("encounters")
+    .select("patient_id, admit_date")
+    .eq("status", "active")
+    .order("admit_date", { ascending: false })
+    .limit(30);
+
+  const activeEncounterPatientIds = [
+    ...new Set((activeEncounterRows || []).map((row) => row.patient_id).filter(Boolean)),
+  ] as string[];
+  const triagePatientIds = new Set((triageQueue || []).map((row) => row.patient_id).filter(Boolean));
 
   const patientIds = [
     ...new Set(
       [...(recentOrders || []), ...(recentResults || []), ...(triageQueue || [])]
         .map((r) => r.patient_id)
         .filter(Boolean)
+        .concat(activeEncounterPatientIds)
     ),
   ];
   const { data: mappedPatients } =
@@ -60,6 +83,12 @@ export default async function ChartPage() {
       : { data: [] };
 
   const patientMap = new Map((mappedPatients || []).map((p) => [p.id, p]));
+  const quickAccessPatients = activeEncounterPatientIds
+    .filter((id) => !triagePatientIds.has(id))
+    .map((id) => patientMap.get(id))
+    .filter((p): p is { id: string; first_name: string; last_name: string; mrn: string } =>
+      Boolean(p)
+    );
 
   return (
     <div className="space-y-4">
@@ -115,81 +144,11 @@ export default async function ChartPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Recent Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentOrders?.length ? (
-              <div className="space-y-2">
-                {recentOrders.map((order) => {
-                  const patient = patientMap.get(order.patient_id);
-                  return (
-                    <div
-                      key={order.id}
-                      className="flex items-center justify-between rounded border border-slate-200 px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium capitalize">
-                          {order.type}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {patient
-                            ? `${patient.last_name}, ${patient.first_name} (MRN: ${patient.mrn})`
-                            : "Unknown patient"}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="capitalize">
-                        {order.status}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">No recent orders</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Recent Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentResults?.length ? (
-              <div className="space-y-2">
-                {recentResults.map((result) => {
-                  const patient = patientMap.get(result.patient_id);
-                  return (
-                    <div
-                      key={result.id}
-                      className="flex items-center justify-between rounded border border-slate-200 px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium capitalize">
-                          {result.type}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {patient
-                            ? `${patient.last_name}, ${patient.first_name} (MRN: ${patient.mrn})`
-                            : "Unknown patient"}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="capitalize">
-                        {result.status}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">No recent results</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardRecentPanels
+        recentOrders={recentOrders || []}
+        recentResults={recentResults || []}
+        patients={mappedPatients || []}
+      />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -219,6 +178,16 @@ export default async function ChartPage() {
                         <p className="text-xs text-slate-600">
                           MRN: {p.mrn} · {q.campus}
                         </p>
+                        <p className="text-xs text-slate-600">
+                          {(q.acuity_level || "acuity not set").replaceAll("_", " ").toUpperCase()}
+                          {typeof q.pain_score === "number" ? ` · Pain ${q.pain_score}/10` : ""}
+                          {q.arrival_mode ? ` · ${q.arrival_mode.replaceAll("_", " ")}` : ""}
+                        </p>
+                        {q.chief_complaint && (
+                          <p className="text-xs text-slate-600 truncate">
+                            CC: {q.chief_complaint}
+                          </p>
+                        )}
                       </div>
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
@@ -234,8 +203,8 @@ export default async function ChartPage() {
               })
             ) : null}
 
-            {recentPatients?.length ? (
-              recentPatients.map((p) => (
+            {quickAccessPatients.length ? (
+              quickAccessPatients.map((p) => (
                 <Link
                   key={p.id}
                   href={`/chart/${p.id}`}
@@ -252,7 +221,7 @@ export default async function ChartPage() {
               ))
             ) : (
               <p className="text-sm text-slate-500">
-                No patients yet. Run the seed script or add patients.
+                No active encounters right now.
               </p>
             )}
           </div>

@@ -32,15 +32,50 @@ const UNIT_BY_TYPE: Record<string, string> = {
   pain_score: "/10",
 };
 
+const VITAL_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "blood_pressure", label: "Blood Pressure" },
+  { value: "heart_rate", label: "Heart Rate" },
+  { value: "respiratory_rate", label: "Respiratory Rate" },
+  { value: "temperature", label: "Temperature" },
+  { value: "spo2", label: "SpO2" },
+  { value: "pain_score", label: "Pain Score" },
+  { value: "weight", label: "Weight" },
+  { value: "height", label: "Height" },
+];
+
+const VITAL_PLACEHOLDER: Record<string, string> = {
+  blood_pressure: "e.g. 120/80",
+  heart_rate: "e.g. 82",
+  respiratory_rate: "e.g. 16",
+  temperature: "e.g. 98.6",
+  spo2: "e.g. 98",
+  pain_score: "e.g. 4",
+  weight: "e.g. 75",
+  height: "e.g. 175",
+};
+
+const QUICK_VALUES_BY_TYPE: Record<string, string[]> = {
+  blood_pressure: ["120/80", "110/70", "140/90"],
+  heart_rate: ["72", "88", "110"],
+  respiratory_rate: ["14", "16", "22"],
+  temperature: ["98.6", "100.4", "102.0"],
+  spo2: ["98", "95", "92"],
+  pain_score: ["0", "5", "10"],
+  weight: ["70", "80", "90"],
+  height: ["160", "170", "180"],
+};
+
 const normalizeType = (raw: string) =>
   raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
 
 export function VitalsRecorder({
   patientId,
   initialVitals,
+  activeEncounterId,
 }: {
   patientId: string;
   initialVitals: VitalSign[];
+  activeEncounterId: string | null;
 }) {
   const router = useRouter();
   const [vitals, setVitals] = useState(initialVitals);
@@ -50,13 +85,19 @@ export function VitalsRecorder({
   const [type, setType] = useState("blood_pressure");
   const [value, setValue] = useState("");
   const [unit, setUnit] = useState(UNIT_BY_TYPE.blood_pressure);
+  const [customUnitEnabled, setCustomUnitEnabled] = useState(false);
 
   const handleTypeChange = (nextType: string) => {
     setType(nextType);
     setUnit(UNIT_BY_TYPE[nextType] ?? "");
+    setCustomUnitEnabled(false);
   };
 
   const saveVital = async () => {
+    if (!activeEncounterId) {
+      setError("No active encounter. Start an encounter to chart vitals.");
+      return;
+    }
     if (!value.trim()) {
       setError("Please enter a value.");
       return;
@@ -76,6 +117,7 @@ export function VitalsRecorder({
       .from("vital_signs")
       .upsert({
         patient_id: patientId,
+        encounter_id: activeEncounterId,
         type,
         value: value.trim(),
         unit: unit.trim() || null,
@@ -125,45 +167,97 @@ export function VitalsRecorder({
         </Link>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[180px_1fr_130px_auto]">
-          <div>
-            <Label>Type</Label>
-            <select
-              value={type}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
-            >
-              <option value="blood_pressure">Blood Pressure</option>
-              <option value="heart_rate">Heart Rate</option>
-              <option value="respiratory_rate">Respiratory Rate</option>
-              <option value="temperature">Temperature</option>
-              <option value="spo2">SpO2</option>
-              <option value="weight">Weight</option>
-              <option value="height">Height</option>
-              <option value="pain_score">Pain Score</option>
-            </select>
+        <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            {VITAL_TYPE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleTypeChange(option.value)}
+                className={cn(
+                  "inline-flex h-7 items-center rounded-md border px-2 text-xs",
+                  type === option.value
+                    ? "border-[#1a4d8c] bg-blue-50 font-medium text-[#1a4d8c]"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-          <div>
-            <Label>Value</Label>
-            <Input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              placeholder={type === "blood_pressure" ? "e.g. 120/80" : "Enter value"}
-              className="mt-1"
-            />
+
+          <div className="grid gap-2 md:grid-cols-[1fr_110px_auto] md:items-end">
+            <div>
+              <Label>Value</Label>
+              <Input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={VITAL_PLACEHOLDER[type] || "Enter value"}
+                className="mt-1 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    void saveVital();
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Unit</Label>
+                <label className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={customUnitEnabled}
+                    onChange={(e) => setCustomUnitEnabled(e.target.checked)}
+                  />
+                  Edit
+                </label>
+              </div>
+              <Input
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="mt-1 bg-white"
+                readOnly={!customUnitEnabled}
+              />
+            </div>
+            <div>
+              <Button
+                onClick={saveVital}
+                disabled={saving || !activeEncounterId}
+                className="h-9 w-full md:w-auto"
+                title={!activeEncounterId ? "No active encounter selected" : undefined}
+              >
+                {saving ? "Saving..." : "Add Vital"}
+              </Button>
+            </div>
           </div>
-          <div>
-            <Label>Unit</Label>
-            <Input value={unit} onChange={(e) => setUnit(e.target.value)} className="mt-1" />
-          </div>
-          <div className="flex items-end">
-            <Button onClick={saveVital} disabled={saving} className="h-9 w-full md:w-auto">
-              {saving ? "Saving..." : "Add Vital"}
-            </Button>
+
+          <div className="mt-2 flex flex-wrap gap-1">
+            {(QUICK_VALUES_BY_TYPE[type] || []).map((quickValue) => (
+              <button
+                key={quickValue}
+                type="button"
+                onClick={() => setValue(quickValue)}
+                className={cn(
+                  "rounded border px-2 py-0.5 text-[11px]",
+                  value === quickValue
+                    ? "border-[#1a4d8c] bg-blue-50 text-[#1a4d8c]"
+                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                {quickValue}
+              </button>
+            ))}
           </div>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {!activeEncounterId && (
+          <p className="text-sm text-amber-700">
+            Vitals are encounter-scoped and only charted during an active encounter.
+          </p>
+        )}
 
         {vitals.length === 0 ? (
           <p className="text-sm text-slate-500">No vitals recorded yet.</p>

@@ -6,7 +6,10 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { EncounterStatusModal } from "./EncounterStatusModal";
+import { EncounterEditModal } from "./EncounterEditModal";
+import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
 
 interface Encounter {
   id: string;
@@ -21,21 +24,42 @@ interface Encounter {
 interface EncounterHistoryProps {
   patientId: string;
   encounters: Encounter[];
+  currentUserRole: string | null;
 }
 
 export function EncounterHistory({
   patientId,
   encounters,
+  currentUserRole,
 }: EncounterHistoryProps) {
   const router = useRouter();
   const [endingId, setEndingId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [endEncounterError, setEndEncounterError] = useState<string | null>(null);
   const [encounterType, setEncounterType] = useState<"outpatient" | "inpatient" | "ed">(
     "outpatient"
   );
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    encounterId: string;
+  } | null>(null);
+  const [statusEncounterId, setStatusEncounterId] = useState<string | null>(null);
+  const [editEncounterId, setEditEncounterId] = useState<string | null>(null);
+  const canStartEncounter = hasRolePermission(currentUserRole, "start_encounter");
+  const canEditEncounter = hasRolePermission(currentUserRole, "edit_encounter");
+  const canFinalizeEncounter = hasRolePermission(currentUserRole, "finalize_encounter");
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
 
   const endEncounter = async (encounterId: string) => {
+    if (!canFinalizeEncounter) return;
     setEndingId(encounterId);
+    setEndEncounterError(null);
     const supabase = createClient();
 
     const nowIso = new Date().toISOString();
@@ -51,6 +75,7 @@ export function EncounterHistory({
 
     if (encounterError) {
       setEndingId(null);
+      setEndEncounterError(encounterError.message);
       return;
     }
 
@@ -66,6 +91,7 @@ export function EncounterHistory({
   };
 
   const startNewEncounter = async () => {
+    if (!canStartEncounter) return;
     setStarting(true);
     const supabase = createClient();
     const {
@@ -132,20 +158,40 @@ export function EncounterHistory({
             variant="outline"
             className="h-8 text-xs"
             onClick={startNewEncounter}
-            disabled={starting}
+            disabled={starting || !canStartEncounter}
+            title={
+              !canStartEncounter
+                ? `Role ${formatRoleLabel(currentUserRole)} cannot start encounters`
+                : undefined
+            }
           >
             {starting ? "Starting..." : "Start New Encounter"}
           </Button>
         </div>
       </CardHeader>
       <CardContent>
+        {endEncounterError && (
+          <p className="mb-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
+            Could not finalize encounter: {endEncounterError}
+          </p>
+        )}
         {encounters.length === 0 ? (
           <p className="text-sm text-gray-500">No encounters</p>
         ) : (
           <ul className="space-y-2">
             {encounters.map((e) => (
               <li key={e.id}>
-                <div className="flex items-center justify-between gap-2 rounded border p-2">
+                <div
+                  className="flex items-center justify-between gap-2 rounded border p-2"
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setContextMenu({
+                      x: event.clientX,
+                      y: event.clientY,
+                      encounterId: e.id,
+                    });
+                  }}
+                >
                   <Link
                     href={`/documentation?patientId=${patientId}&encounterId=${e.id}`}
                     className="min-w-0 flex-1 hover:text-[#1a4d8c]"
@@ -182,7 +228,14 @@ export function EncounterHistory({
                       variant="outline"
                       className="h-7 text-xs shrink-0"
                       onClick={() => endEncounter(e.id)}
-                      disabled={endingId === e.id}
+                      disabled={endingId === e.id || !canFinalizeEncounter}
+                      title={
+                        !canFinalizeEncounter
+                          ? `Role ${formatRoleLabel(
+                              currentUserRole
+                            )} cannot finalize encounters`
+                          : undefined
+                      }
                     >
                       {endingId === e.id ? "Ending..." : "End Encounter"}
                     </Button>
@@ -193,6 +246,65 @@ export function EncounterHistory({
           </ul>
         )}
       </CardContent>
+      {contextMenu && (
+        <div
+          className="fixed z-50 w-44 rounded-md border border-slate-200 bg-white p-1 shadow-lg"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+            onClick={() => {
+              setStatusEncounterId(contextMenu.encounterId);
+              setContextMenu(null);
+            }}
+          >
+            Encounter Status
+          </button>
+          <button
+            type="button"
+            className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+            onClick={() => {
+              if (!canEditEncounter) return;
+              setEditEncounterId(contextMenu.encounterId);
+              setContextMenu(null);
+            }}
+            disabled={!canEditEncounter}
+          >
+            {canEditEncounter ? "Edit" : `Edit (Restricted)`}
+          </button>
+          <button
+            type="button"
+            className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+            onClick={() => {
+              router.push(`/documentation?patientId=${patientId}&encounterId=${contextMenu.encounterId}`);
+              setContextMenu(null);
+            }}
+          >
+            View
+          </button>
+        </div>
+      )}
+      {statusEncounterId && (
+        <EncounterStatusModal
+          patientId={patientId}
+          encounterId={statusEncounterId}
+          onClose={() => setStatusEncounterId(null)}
+          onUpdated={() => router.refresh()}
+        />
+      )}
+      {editEncounterId && (
+        <EncounterEditModal
+          encounterId={editEncounterId}
+          currentUserRole={currentUserRole}
+          onClose={() => setEditEncounterId(null)}
+          onSaved={() => {
+            setEditEncounterId(null);
+            router.refresh();
+          }}
+        />
+      )}
     </Card>
   );
 }

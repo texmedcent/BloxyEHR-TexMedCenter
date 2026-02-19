@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ICD10PickerModal } from "./ICD10PickerModal";
+import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
 
 interface EncounterDiagnosisPanelProps {
   encounterId: string;
@@ -15,6 +16,7 @@ interface EncounterDiagnosisPanelProps {
   initialDescription: string | null;
   initialDdx: string | null;
   initialPlan: string | null;
+  currentUserRole: string | null;
   onSaved: () => void;
 }
 
@@ -24,6 +26,7 @@ export function EncounterDiagnosisPanel({
   initialDescription,
   initialDdx,
   initialPlan,
+  currentUserRole,
   onSaved,
 }: EncounterDiagnosisPanelProps) {
   const [query, setQuery] = useState(
@@ -36,6 +39,10 @@ export function EncounterDiagnosisPanel({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const canSubmitTreatmentPlan = hasRolePermission(
+    currentUserRole,
+    "submit_treatment_plan"
+  );
 
   const selectCode = (nextCode: string, nextLabel: string) => {
     setCode(nextCode);
@@ -44,6 +51,14 @@ export function EncounterDiagnosisPanel({
   };
 
   const saveDiagnosis = async () => {
+    if (!canSubmitTreatmentPlan) {
+      setMessage(
+        `Your role (${formatRoleLabel(
+          currentUserRole
+        )}) cannot submit final diagnosis/treatment plans.`
+      );
+      return;
+    }
     setSaving(true);
     setMessage(null);
     const supabase = createClient();
@@ -81,9 +96,15 @@ export function EncounterDiagnosisPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onClick={() => setPickerOpen(true)}
+              disabled={!canSubmitTreatmentPlan}
               placeholder='Click to open picker (or type "fracture", "burn", "W54")'
             />
-            <Button type="button" variant="outline" onClick={() => setPickerOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPickerOpen(true)}
+              disabled={!canSubmitTreatmentPlan}
+            >
               Browse ICD-10
             </Button>
           </div>
@@ -99,6 +120,7 @@ export function EncounterDiagnosisPanel({
               className="mt-1"
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              disabled={!canSubmitTreatmentPlan}
               placeholder="e.g. W54.0XXA"
             />
           </div>
@@ -108,6 +130,7 @@ export function EncounterDiagnosisPanel({
               className="mt-1"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={!canSubmitTreatmentPlan}
               placeholder="Diagnosis text"
             />
           </div>
@@ -119,6 +142,7 @@ export function EncounterDiagnosisPanel({
             className="mt-1 min-h-[90px]"
             value={ddx}
             onChange={(e) => setDdx(e.target.value)}
+            disabled={!canSubmitTreatmentPlan}
             placeholder="List possible diagnoses considered."
           />
         </div>
@@ -129,14 +153,22 @@ export function EncounterDiagnosisPanel({
             className="mt-1 min-h-[110px]"
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
+            disabled={!canSubmitTreatmentPlan}
             placeholder="Document definitive treatment plan."
           />
         </div>
 
+        {!canSubmitTreatmentPlan && (
+          <p className="text-sm text-amber-700">
+            Read-only for {formatRoleLabel(currentUserRole)}. A provider role is required
+            to submit final diagnosis and treatment plan.
+          </p>
+        )}
+
         {message && <p className="text-sm text-slate-600">{message}</p>}
 
         <div className="flex justify-end">
-          <Button onClick={saveDiagnosis} disabled={saving}>
+          <Button onClick={saveDiagnosis} disabled={saving || !canSubmitTreatmentPlan}>
             {saving ? "Saving..." : "Save Diagnosis"}
           </Button>
         </div>

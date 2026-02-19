@@ -20,6 +20,112 @@ Objective:
 Assessment:
 Plan:
 `,
+  operative_note: `Operative Note
+
+Preoperative Diagnosis:
+Postoperative Diagnosis:
+Procedure Performed:
+Indications:
+
+Description of Procedure (Narrative):
+
+Findings:
+Estimated Blood Loss:
+Complications:
+Disposition:
+`,
+  procedure_note_non_or: `Procedure Note (Non-OR)
+
+Indication:
+Consent:
+Technique:
+Complications:
+Outcome:
+`,
+  lab_interpretation: `Lab Interpretation Note
+
+Labs Reviewed:
+- 
+
+Abnormal Findings:
+- 
+
+Clinical Impression:
+
+Plan:
+`,
+  emergency_department_note: `Emergency Department Note
+
+Triage Note:
+Chief Complaint:
+HPI:
+Vitals:
+Physical Exam:
+Medical Decision Making:
+Disposition:
+`,
+  discharge_summary: `Discharge Summary
+
+Admission Diagnosis:
+Hospital Course:
+Procedures Performed:
+Final Diagnosis:
+Medications at Discharge:
+Follow-Up Instructions:
+`,
+  consultation_note: `Consultation Note
+
+Reason for Consult:
+Findings:
+Recommendations:
+`,
+  end_of_visit: `End of Visit Summary
+
+Visit Date/Time:
+Encounter Type:
+Primary Diagnosis:
+Secondary Diagnoses:
+
+Summary of Visit:
+- Presenting concern:
+- Key findings:
+- Workup completed:
+- Procedures/interventions:
+
+Treatments Given Today:
+- Medications administered:
+- IV fluids / therapies:
+
+Discharge Medications:
+- New prescriptions:
+- Continue home medications:
+- Stop medications:
+
+Follow-Up Plan:
+- Follow-up with:
+- Timeline:
+- Pending labs/imaging:
+
+Return Precautions:
+- Return immediately for:
+
+Condition at Discharge:
+- Stable / Improved / Other:
+`,
+};
+
+type NoteTemplateKey = keyof typeof NOTE_TEMPLATES;
+
+const TEMPLATE_LABELS: Record<NoteTemplateKey, string> = {
+  progress: "Progress Note",
+  soap: "SOAP Note",
+  operative_note: "Operative Note",
+  procedure_note_non_or: "Procedure Note (Non-OR)",
+  lab_interpretation: "Lab Interpretation Note",
+  emergency_department_note: "Emergency Department Note",
+  discharge_summary: "Discharge Summary",
+  consultation_note: "Consultation Note",
+  end_of_visit: "End of Visit Summary",
 };
 
 interface NoteEditorProps {
@@ -29,7 +135,7 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
-  const [type, setType] = useState<"progress" | "soap">("progress");
+  const [type, setType] = useState<NoteTemplateKey>("progress");
   const [content, setContent] = useState(NOTE_TEMPLATES.progress);
   const [soapSubjective, setSoapSubjective] = useState("");
   const [soapObjective, setSoapObjective] = useState("");
@@ -63,7 +169,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
     void loadSignature();
   }, []);
 
-  const applyTemplate = (t: "progress" | "soap") => {
+  const applyTemplate = (t: NoteTemplateKey) => {
     setType(t);
     setContent(NOTE_TEMPLATES[t]);
     if (t === "soap") {
@@ -94,7 +200,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
         ? contentTrimmed.endsWith(signatureLine)
           ? contentTrimmed
           : `${contentTrimmed}\n\n${signatureLine}`
-        : content;
+        : computedContent;
 
     const { error } = await supabase.from("clinical_notes").insert({
       encounter_id: encounterId,
@@ -120,23 +226,23 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 overflow-hidden">
+        <CardContent className="flex min-h-0 flex-col gap-4 overflow-y-auto">
           <div>
             <Label>Template</Label>
-            <div className="flex gap-2 mt-1">
-              <Button
-                variant={type === "progress" ? "default" : "outline"}
-                size="sm"
-                onClick={() => applyTemplate("progress")}
+            <div className="mt-1 grid gap-2 md:grid-cols-[1fr_auto]">
+              <select
+                value={type}
+                onChange={(e) => applyTemplate(e.target.value as NoteTemplateKey)}
+                className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
               >
-                Progress Note
-              </Button>
-              <Button
-                variant={type === "soap" ? "default" : "outline"}
-                size="sm"
-                onClick={() => applyTemplate("soap")}
-              >
-                SOAP Note
+                {Object.keys(NOTE_TEMPLATES).map((key) => (
+                  <option key={key} value={key}>
+                    {TEMPLATE_LABELS[key as NoteTemplateKey]}
+                  </option>
+                ))}
+              </select>
+              <Button variant="outline" size="sm" onClick={() => applyTemplate(type)}>
+                Apply Suggested Template
               </Button>
             </div>
           </div>

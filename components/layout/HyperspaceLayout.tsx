@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   FileText,
   ClipboardList,
+  ClipboardCheck,
   TestTube,
   Calendar,
   Inbox,
@@ -15,6 +16,7 @@ import {
   LogOut,
   Settings,
   Star,
+  MessageCircle,
 } from "lucide-react";
 import { ChartSearch } from "./ChartSearch";
 import { NotificationCenter } from "./NotificationCenter";
@@ -36,9 +38,11 @@ const navItems = [
   { href: "/chart", label: "Patient Chart", icon: LayoutDashboard },
   { href: "/documentation", label: "Clinical Documentation", icon: FileText },
   { href: "/orders", label: "Order Entry", icon: ClipboardList },
+  { href: "/procedures", label: "Procedures", icon: ClipboardCheck },
   { href: "/results", label: "Results", icon: TestTube },
   { href: "/schedule", label: "Scheduling", icon: Calendar },
   { href: "/inbasket", label: "In Basket", icon: Inbox },
+  { href: "/chat", label: "Team Chat", icon: MessageCircle },
 ];
 
 interface HyperspaceLayoutProps {

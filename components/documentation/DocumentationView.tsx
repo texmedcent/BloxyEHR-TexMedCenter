@@ -12,6 +12,10 @@ import { VitalsRecorder } from "./VitalsRecorder";
 import { NoteDetailModal } from "./NoteDetailModal";
 import { EncounterDiagnosisPanel } from "./EncounterDiagnosisPanel";
 import { format } from "date-fns";
+import { createClient } from "@/lib/supabase/client";
+import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
+import { NursingFlowsheetPanel } from "./NursingFlowsheetPanel";
+import { HandoffPanel } from "./HandoffPanel";
 
 interface Patient {
   id: string;
@@ -37,6 +41,17 @@ interface Note {
   content: string;
   signed_at: string | null;
   created_at: string;
+  encounter_id: string;
+  requires_cosign?: boolean;
+  cosign_status?: string;
+  cosigned_by_name?: string | null;
+  cosigned_at?: string | null;
+  is_addendum?: boolean;
+  parent_note_id?: string | null;
+  addendum_reason?: string | null;
+  released_to_patient?: boolean;
+  patient_release_hold?: boolean;
+  patient_release_hold_reason?: string | null;
 }
 
 interface VitalSign {
@@ -52,7 +67,9 @@ interface DocumentationViewProps {
   encounters: Encounter[];
   notes: Note[];
   vitals: VitalSign[];
+  claimedPatients: Patient[];
   selectedEncounterId?: string;
+  currentUserRole: string | null;
 }
 
 export function DocumentationView({
@@ -60,16 +77,20 @@ export function DocumentationView({
   encounters,
   notes,
   vitals,
+  claimedPatients,
   selectedEncounterId,
+  currentUserRole,
 }: DocumentationViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showEditor, setShowEditor] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [cosigningNoteId, setCosigningNoteId] = useState<string | null>(null);
 
   const [creatingEncounter, setCreatingEncounter] = useState(false);
   const selectedEncounter =
     encounters.find((e) => e.id === selectedEncounterId) || null;
+  const canCosign = hasRolePermission(currentUserRole, "cosign_note");
 
   const updateParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams?.toString() || "");
@@ -78,6 +99,44 @@ export function DocumentationView({
       else params.delete(k);
     });
     router.push(`/documentation?${params.toString()}`);
+  };
+
+  const requestCosign = async (note: Note) => {
+    const supabase = createClient();
+    await supabase
+      .from("clinical_notes")
+      .update({ requires_cosign: true, cosign_status: "pending" })
+      .eq("id", note.id);
+    router.refresh();
+  };
+
+  const cosignNote = async (note: Note) => {
+    if (!canCosign) return;
+    setCosigningNoteId(note.id);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setCosigningNoteId(null);
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    await supabase
+      .from("clinical_notes")
+      .update({
+        cosign_status: "co_signed",
+        cosigned_by: user.id,
+        cosigned_by_name: profile?.full_name || user.email || "Clinician",
+        cosigned_at: new Date().toISOString(),
+      })
+      .eq("id", note.id);
+    setCosigningNoteId(null);
+    router.refresh();
   };
 
   if (!patient) {
@@ -89,8 +148,27 @@ export function DocumentationView({
             <p className="text-gray-600 mb-4">
               Search for a patient to view and add clinical notes.
             </p>
+            {claimedPatients.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Quick Open Claimed Patients
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {claimedPatients.map((p) => (
+                    <Button
+                      key={p.id}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => updateParams({ patientId: p.id, encounterId: "" })}
+                    >
+                      {p.last_name}, {p.first_name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
             <PatientSearchSelect
-              onSelect={(id) => updateParams({ patientId: id })}
+              onSelect={(id) => updateParams({ patientId: id, encounterId: "" })}
             />
           </CardContent>
         </Card>
@@ -106,6 +184,11 @@ export function DocumentationView({
           {patient.last_name}, {patient.first_name}
         </span>
         <span className="text-sm text-gray-500">MRN: {patient.mrn}</span>
+        {selectedEncounterId && (
+          <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">
+            Encounter Filter Active
+          </span>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -175,9 +258,30 @@ export function DocumentationView({
           </CardHeader>
           <CardContent>
             {!selectedEncounterId ? (
-              <p className="text-sm text-gray-500">
-                Select an encounter to view notes
-              </p>
+              notes.length === 0 ? (
+                <p className="text-sm text-gray-500">No notes yet</p>
+              ) : (
+                <ul className="space-y-3">
+                  {notes.map((n) => (
+                    <li
+                      key={n.id}
+                      className="p-3 rounded border bg-gray-50 text-sm cursor-pointer hover:border-[#1a4d8c]/40 hover:bg-white transition-colors"
+                      onClick={() => setSelectedNote(n)}
+                    >
+                      <div className="flex justify-between text-xs text-gray-500 mb-2">
+                        <span className="capitalize">{n.type.replaceAll("_", " ")}</span>
+                        <span>
+                          {n.signed_at ? "Signed" : "Draft"} ·{" "}
+                          {format(new Date(n.created_at), "MM/dd/yyyy")}
+                        </span>
+                      </div>
+                      <pre className="whitespace-pre-wrap font-sans text-gray-700 truncate max-h-24 overflow-hidden">
+                        {n.content}
+                      </pre>
+                    </li>
+                  ))}
+                </ul>
+              )
             ) : notes.length === 0 ? (
               <p className="text-sm text-gray-500">No notes yet</p>
             ) : (
@@ -189,15 +293,70 @@ export function DocumentationView({
                     onClick={() => setSelectedNote(n)}
                   >
                     <div className="flex justify-between text-xs text-gray-500 mb-2">
-                      <span className="capitalize">{n.type}</span>
+                      <span className="capitalize">{n.type.replaceAll("_", " ")}</span>
                       <span>
                         {n.signed_at ? "Signed" : "Draft"} ·{" "}
                         {format(new Date(n.created_at), "MM/dd/yyyy")}
                       </span>
                     </div>
+                    <div className="mb-2 flex items-center gap-2 text-xs">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700">
+                        Co-sign: {(n.cosign_status || "not_required").replaceAll("_", " ")}
+                      </span>
+                      {n.cosigned_by_name && (
+                        <span className="text-slate-500">
+                          {n.cosigned_by_name}
+                          {n.cosigned_at
+                            ? ` · ${format(new Date(n.cosigned_at), "MM/dd HH:mm")}`
+                            : ""}
+                        </span>
+                      )}
+                      {n.is_addendum && (
+                        <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-indigo-700">
+                          Addendum
+                        </span>
+                      )}
+                      <span
+                        className={`rounded px-1.5 py-0.5 ${
+                          n.released_to_patient ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {n.released_to_patient ? "Released to patient" : "Not released"}
+                      </span>
+                    </div>
                     <pre className="whitespace-pre-wrap font-sans text-gray-700 truncate max-h-24 overflow-hidden">
                       {n.content}
                     </pre>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(n.cosign_status || "not_required") === "not_required" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void requestCosign(n);
+                          }}
+                        >
+                          Request Co-sign
+                        </Button>
+                      )}
+                      {(n.cosign_status || "not_required") === "pending" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          disabled={!canCosign || cosigningNoteId === n.id}
+                          title={!canCosign ? `${formatRoleLabel(currentUserRole)} cannot co-sign notes` : undefined}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void cosignNote(n);
+                          }}
+                        >
+                          {cosigningNoteId === n.id ? "Co-signing..." : "Co-sign"}
+                        </Button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -207,17 +366,30 @@ export function DocumentationView({
       </div>
 
       {selectedEncounterId && selectedEncounter && (
-        <EncounterDiagnosisPanel
-          encounterId={selectedEncounterId}
-          initialCode={selectedEncounter.final_diagnosis_code}
-          initialDescription={selectedEncounter.final_diagnosis_description}
-          initialDdx={selectedEncounter.differential_diagnosis}
-          initialPlan={selectedEncounter.final_treatment_plan}
-          onSaved={() => router.refresh()}
-        />
+        <div className="grid gap-4 xl:grid-cols-2">
+          <EncounterDiagnosisPanel
+            encounterId={selectedEncounterId}
+            initialCode={selectedEncounter.final_diagnosis_code}
+            initialDescription={selectedEncounter.final_diagnosis_description}
+            initialDdx={selectedEncounter.differential_diagnosis}
+            initialPlan={selectedEncounter.final_treatment_plan}
+            currentUserRole={currentUserRole}
+            onSaved={() => router.refresh()}
+          />
+          <NursingFlowsheetPanel patientId={patient.id} encounterId={selectedEncounterId} />
+          <HandoffPanel
+            patientId={patient.id}
+            encounterId={selectedEncounterId}
+            currentUserRole={currentUserRole}
+          />
+        </div>
       )}
 
-      <VitalsRecorder patientId={patient.id} initialVitals={vitals} />
+      <VitalsRecorder
+        patientId={patient.id}
+        initialVitals={vitals}
+        activeEncounterId={encounters.find((e) => e.status === "active")?.id || null}
+      />
 
       {showEditor && selectedEncounterId && (
         <NoteEditor
