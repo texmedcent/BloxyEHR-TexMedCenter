@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,9 @@ interface ResultDetailProps {
 }
 
 export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [reviewedNote, setReviewedNote] = useState(result.reviewed_note || "");
   const [actionNote, setActionNote] = useState(result.action_note || "");
   const [callbackDocumented, setCallbackDocumented] = useState(
@@ -152,6 +155,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
   const updateAcknowledgment = async (nextStatus: "reviewed" | "actioned") => {
     if (!canAcknowledge) return;
     setSaving(true);
+    setUpdateError(null);
     const supabase = createClient();
     const {
       data: { user },
@@ -173,6 +177,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
     }
     if (result.is_critical && nextStatus === "actioned" && !actionNote.trim()) {
       setSaving(false);
+      setUpdateError("Action note is required for critical results.");
       return;
     }
 
@@ -205,9 +210,13 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
             critical_callback_documented_by_name: callbackDocumented ? actorName : null,
           };
 
-    await supabase.from("results").update(payload).eq("id", result.id);
+    const { error } = await supabase.from("results").update(payload).eq("id", result.id);
     setSaving(false);
-    window.location.reload();
+    if (error) {
+      setUpdateError(error.message);
+      return;
+    }
+    router.refresh();
   };
 
   const updatePatientRelease = async (release: boolean) => {
@@ -243,9 +252,13 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
           patient_release_hold: releaseHold,
           patient_release_hold_reason: releaseHold ? releaseHoldReason.trim() || "Hold" : null,
         };
-    await supabase.from("results").update(payload).eq("id", result.id);
+    const { error } = await supabase.from("results").update(payload).eq("id", result.id);
     setSaving(false);
-    window.location.reload();
+    if (error) {
+      setUpdateError(error.message);
+      return;
+    }
+    router.refresh();
   };
 
   return (
@@ -280,6 +293,11 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
           <p className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
             Critical reason: {result.critical_reason}
           </p>
+        )}
+        {updateError && (
+          <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {updateError}
+          </div>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded bg-slate-100 px-2 py-1">

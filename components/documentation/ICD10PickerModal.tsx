@@ -170,7 +170,21 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
         )
       : localByCategory;
 
-    const codes = catalogBacked ? catalogCodes : localCodes;
+    let codes: ICD10Code[];
+    if (category === "all") {
+      const byCode = new Map<string, ICD10Code>();
+      for (const c of catalogBacked ? catalogCodes : localCodes) {
+        byCode.set(c.code, c);
+      }
+      if (catalogBacked && catalogCodes.length > 0) {
+        for (const c of localCodes) {
+          if (!byCode.has(c.code)) byCode.set(c.code, c);
+        }
+      }
+      codes = Array.from(byCode.values());
+    } else {
+      codes = catalogBacked ? catalogCodes : localCodes;
+    }
 
     return [...codes].sort((a, b) => {
       const af = favorites.includes(a.code) ? 1 : 0;
