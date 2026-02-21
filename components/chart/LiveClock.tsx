@@ -12,7 +12,7 @@ export function LiveClock() {
   }, []);
 
   return (
-    <div className="text-sm text-slate-600">
+    <div className="text-sm text-slate-600 dark:text-muted-foreground">
       {format(now, "EEEE, MMM d, yyyy • hh:mm:ss a")}
     </div>
   );

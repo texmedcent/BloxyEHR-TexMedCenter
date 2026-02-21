@@ -25,13 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
-          enableSystem={false}
-          forcedTheme="light"
+          storageKey="bloxyehr-theme"
+          themes={["light", "dark"]}
           disableTransitionOnChange
         >
           {children}

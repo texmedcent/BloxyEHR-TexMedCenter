@@ -97,7 +97,7 @@ export function RecentPatientsDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 text-foreground border-border bg-background/80 hover:bg-accent">
           <Clock className="h-4 w-4" />
           Recent Patients
         </Button>
@@ -113,18 +113,18 @@ export function RecentPatientsDropdown() {
               <p className="font-medium truncate">
                 {p.last_name}, {p.first_name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">
                 MRN: {p.mrn} · {format(new Date(p.viewed_at), "MM/dd")}
               </p>
             </div>
             <button
               type="button"
               onClick={(e) => togglePin(e, p.id)}
-              className="shrink-0 p-1 rounded hover:bg-gray-200"
+              className="shrink-0 p-1 rounded hover:bg-gray-200 dark:hover:bg-muted"
               title={p.is_pinned ? "Unpin" : "Pin"}
             >
               <Pin
-                className={`h-4 w-4 ${p.is_pinned ? "fill-[#1a4d8c] text-[#1a4d8c]" : "text-gray-400"}`}
+                className={`h-4 w-4 ${p.is_pinned ? "fill-[#1a4d8c] dark:fill-primary text-[#1a4d8c] dark:text-primary" : "text-gray-400 dark:text-muted-foreground"}`}
               />
             </button>
           </DropdownMenuItem>

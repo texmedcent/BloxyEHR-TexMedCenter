@@ -133,13 +133,13 @@ export function InstitutionIcd10Manager({ initialRows }: { initialRows: IcdRow[]
   };
 
   return (
-    <div className="space-y-3 rounded-md border border-slate-200 bg-white p-3">
-      <h3 className="text-sm font-semibold text-slate-900">ICD-10 Catalog Manager</h3>
-      <p className="text-xs text-slate-500">
+    <div className="space-y-3 rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-foreground">ICD-10 Catalog Manager</h3>
+      <p className="text-xs text-slate-500 dark:text-muted-foreground">
         Add custom diagnosis entries. A random ICD-style code is auto-generated from the selected section.
       </p>
       {message && (
-        <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+        <div className="rounded border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-700 dark:text-foreground">
           {message}
         </div>
       )}
@@ -148,7 +148,7 @@ export function InstitutionIcd10Manager({ initialRows }: { initialRows: IcdRow[]
           <Label htmlFor="icd-category">Section</Label>
           <select
             id="icd-category"
-            className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-2 text-sm"
+            className="mt-1 h-9 w-full rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             value={category}
             onChange={(event) => setCategory(event.target.value as (typeof ICD_CATEGORY_KEYS)[number])}
           >
@@ -175,9 +175,9 @@ export function InstitutionIcd10Manager({ initialRows }: { initialRows: IcdRow[]
           </Button>
         </div>
       </div>
-      <div className="overflow-x-auto rounded border border-slate-200">
+      <div className="overflow-x-auto rounded border border-slate-200 dark:border-border">
         <table className="w-full text-sm">
-          <thead className="border-b bg-slate-50">
+          <thead className="border-b bg-slate-50 dark:bg-muted">
             <tr>
               <th className="px-3 py-2 text-left font-semibold">Code</th>
               <th className="px-3 py-2 text-left font-semibold">Diagnosis</th>
@@ -187,9 +187,9 @@ export function InstitutionIcd10Manager({ initialRows }: { initialRows: IcdRow[]
           <tbody>
             {rows.slice(0, 40).map((row) => (
               <tr key={row.code} className="border-b last:border-b-0">
-                <td className="px-3 py-2 font-medium text-slate-800">{row.code}</td>
+                <td className="px-3 py-2 font-medium text-slate-800 dark:text-foreground">{row.code}</td>
                 <td className="px-3 py-2">{row.label}</td>
-                <td className="px-3 py-2 text-slate-600">
+                <td className="px-3 py-2 text-slate-600 dark:text-muted-foreground">
                   {row.category_key && row.category_key in CATEGORY_LABELS
                     ? CATEGORY_LABELS[row.category_key as (typeof ICD_CATEGORY_KEYS)[number]]
                     : row.category_key || "Uncategorized"}
@@ -198,7 +198,7 @@ export function InstitutionIcd10Manager({ initialRows }: { initialRows: IcdRow[]
             ))}
             {rows.length === 0 && (
               <tr>
-                <td className="px-3 py-6 text-center text-slate-500" colSpan={3}>
+                <td className="px-3 py-6 text-center text-slate-500 dark:text-muted-foreground" colSpan={3}>
                   No ICD-10 catalog entries found yet.
                 </td>
               </tr>

@@ -73,14 +73,14 @@ export function ChartSearch({ open, onClose }: ChartSearchProps) {
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="fixed left-0 top-0 bottom-0 w-96 max-w-[90vw] bg-white shadow-xl z-50 flex flex-col">
-        <div className="p-4 border-b flex items-center gap-2">
-          <Search className="h-5 w-5 text-gray-500" />
+      <div className="fixed left-0 top-0 bottom-0 w-96 max-w-[90vw] bg-white dark:bg-card shadow-xl z-50 flex flex-col border-r border-transparent dark:border-border">
+        <div className="p-4 border-b border-border flex items-center gap-2">
+          <Search className="h-5 w-5 text-gray-500 dark:text-muted-foreground" />
           <Input
             placeholder="Search by MRN, name..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 border-0 focus-visible:ring-0"
+            className="flex-1 border-0 focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground"
             autoFocus
           />
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -89,29 +89,29 @@ export function ChartSearch({ open, onClose }: ChartSearchProps) {
         </div>
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-sm text-gray-500">Searching...</div>
+            <div className="p-4 text-sm text-gray-500 dark:text-muted-foreground">Searching...</div>
           ) : results.length === 0 && query ? (
-            <div className="p-4 text-sm text-gray-500">
+            <div className="p-4 text-sm text-gray-500 dark:text-muted-foreground">
               No patients found
             </div>
           ) : (
-            <ul className="divide-y">
+            <ul className="divide-y divide-border">
               {results.map((p) => (
                 <li key={p.id}>
                   <button
                     type="button"
                     onClick={() => openChart(p.id)}
                     className={cn(
-                      "w-full px-4 py-3 flex items-center gap-3 text-left",
-                      "hover:bg-[#1a4d8c]/5 transition-colors"
+                      "w-full px-4 py-3 flex items-center gap-3 text-left text-foreground",
+                      "hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 transition-colors"
                     )}
                   >
-                    <User className="h-5 w-5 text-[#1a4d8c] shrink-0" />
+                    <User className="h-5 w-5 text-[#1a4d8c] dark:text-primary shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium truncate">
                         {p.last_name}, {p.first_name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground">
                         MRN: {p.mrn} · DOB:{" "}
                         {p.dob ? format(new Date(p.dob), "MM/dd/yyyy") : "—"}
                       </p>

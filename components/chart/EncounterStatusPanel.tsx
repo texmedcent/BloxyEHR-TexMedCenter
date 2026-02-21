@@ -156,7 +156,7 @@ export function EncounterStatusPanel({
           <CardTitle className="text-sm">Encounter Status Panel</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">
             No encounter available yet. Start an encounter to track assignment and audit details.
           </p>
         </CardContent>
@@ -511,19 +511,19 @@ export function EncounterStatusPanel({
       <CardContent className="space-y-3 text-sm">
         <div className="grid gap-2 md:grid-cols-2">
           <p>
-            <span className="text-slate-500">Encounter ID:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Encounter ID:</span>{" "}
             <span className="font-medium">{encounterIdLabel}</span>
           </p>
           <p>
-            <span className="text-slate-500">Status:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Status:</span>{" "}
             <span className="font-medium capitalize">{workflow.replaceAll("_", " ")}</span>
           </p>
           <p>
-            <span className="text-slate-500">Assigned To:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Assigned To:</span>{" "}
             <span className="font-medium">{assignedLabel}</span>
           </p>
           <p>
-            <span className="text-slate-500">Timestamp:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Timestamp:</span>{" "}
             <span className="font-medium">
               {encounterState.assigned_at
                 ? format(new Date(encounterState.assigned_at), "MM/dd/yyyy HH:mm")
@@ -531,27 +531,27 @@ export function EncounterStatusPanel({
             </span>
           </p>
           <p>
-            <span className="text-slate-500">Last Updated By:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Last Updated By:</span>{" "}
             <span className="font-medium">{encounterState.last_updated_by_name || "—"}</span>
           </p>
           <p>
-            <span className="text-slate-500">Encounter State:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Encounter State:</span>{" "}
             <span className="font-medium capitalize">{encounterState.status}</span>
           </p>
           <p>
-            <span className="text-slate-500">Elapsed:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Elapsed:</span>{" "}
             <span className="font-medium">{elapsedMinutes !== null ? `${elapsedMinutes} min` : "—"}</span>
           </p>
           <p>
-            <span className="text-slate-500">Disposition:</span>{" "}
+            <span className="text-slate-500 dark:text-muted-foreground">Disposition:</span>{" "}
             <span className="font-medium capitalize">
               {(encounterState.disposition_type || "not set").replaceAll("_", " ")}
             </span>
           </p>
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             ED Pathway Timers
           </p>
           <div className="grid gap-2 text-xs md:grid-cols-3">
@@ -582,21 +582,21 @@ export function EncounterStatusPanel({
           </div>
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
               Discharge Packet / AVS
             </p>
             <Button size="sm" variant="outline" onClick={generateAvs} disabled={savingAvs}>
               {savingAvs ? "Generating..." : "Generate AVS"}
             </Button>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-muted-foreground">
             Auto-generates diagnosis, meds, follow-up, return precautions, and pending tests.
           </p>
           {latestAvs && (
-            <div className="mt-2 rounded bg-slate-50 p-2">
-              <p className="mb-1 text-xs text-slate-500">
+            <div className="mt-2 rounded bg-slate-50 dark:bg-muted p-2">
+              <p className="mb-1 text-xs text-slate-500 dark:text-muted-foreground">
                 Latest AVS by {latestAvs.created_by_name || "Clinician"} ·{" "}
                 {format(new Date(latestAvs.created_at), "MM/dd HH:mm")}
               </p>
@@ -607,8 +607,8 @@ export function EncounterStatusPanel({
           )}
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Supervising Attending
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -624,8 +624,8 @@ export function EncounterStatusPanel({
           </div>
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Encounter Task Board
           </p>
           <div className="mb-2 grid gap-2 md:grid-cols-4">
@@ -645,7 +645,7 @@ export function EncounterStatusPanel({
               onChange={(e) =>
                 setTaskPriority(e.target.value as "low" | "normal" | "high" | "critical")
               }
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             >
               <option value="low">Low</option>
               <option value="normal">Normal</option>
@@ -659,14 +659,14 @@ export function EncounterStatusPanel({
             </Button>
           </div>
           {taskRows.length === 0 ? (
-            <p className="text-xs text-slate-500">No open tasks for this encounter.</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground">No open tasks for this encounter.</p>
           ) : (
             <ul className="space-y-1">
               {taskRows.map((task) => (
-                <li key={task.id} className="flex items-center justify-between gap-2 rounded bg-slate-50 px-2 py-1 text-xs">
+                <li key={task.id} className="flex items-center justify-between gap-2 rounded bg-slate-50 dark:bg-muted px-2 py-1 text-xs">
                   <div>
                     <p className="font-medium">{task.title}</p>
-                    <p className="text-slate-500">
+                    <p className="text-slate-500 dark:text-muted-foreground">
                       {task.owner_name || "Unassigned"}
                       {task.due_at ? ` · due ${format(new Date(task.due_at), "MM/dd HH:mm")}` : ""}
                       {` · ${task.priority}`}
@@ -693,15 +693,15 @@ export function EncounterStatusPanel({
           )}
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Disposition
           </p>
           <div className="grid gap-2 md:grid-cols-2">
             <select
               value={dispositionType}
               onChange={(e) => setDispositionType(e.target.value)}
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
               disabled={!canSetDisposition || savingDisposition}
             >
               <option value="">Select disposition</option>
@@ -748,7 +748,7 @@ export function EncounterStatusPanel({
               </span>
             )}
             {encounterState.disposition_set_by_name && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-muted-foreground">
                 Last set by {encounterState.disposition_set_by_name}
                 {encounterState.disposition_set_at
                   ? ` · ${format(new Date(encounterState.disposition_set_at), "MM/dd HH:mm")}`
@@ -758,15 +758,15 @@ export function EncounterStatusPanel({
           </div>
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Patient Safety Event
           </p>
           <div className="grid gap-2 md:grid-cols-2">
             <select
               value={adverseType}
               onChange={(e) => setAdverseType(e.target.value)}
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             >
               <option value="medication">Medication Event</option>
               <option value="fall">Fall</option>
@@ -777,7 +777,7 @@ export function EncounterStatusPanel({
             <select
               value={adverseSeverity}
               onChange={(e) => setAdverseSeverity(e.target.value)}
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             >
               <option value="low">Low</option>
               <option value="moderate">Moderate</option>
@@ -811,19 +811,19 @@ export function EncounterStatusPanel({
           >
             {savingAssign ? "Assigning..." : "Assign to Me"}
           </Button>
-          {message && <p className="text-xs text-slate-600">{message}</p>}
+          {message && <p className="text-xs text-slate-600 dark:text-muted-foreground">{message}</p>}
         </div>
 
-        <div className="rounded border border-slate-200 p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="rounded border border-slate-200 dark:border-border p-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Audit Trail
           </p>
           {auditRows.length === 0 ? (
-            <p className="text-xs text-slate-500">No audit events yet.</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground">No audit events yet.</p>
           ) : (
             <ul className="space-y-1 text-xs">
               {auditRows.map((row) => (
-                <li key={row.id} className="rounded bg-slate-50 px-2 py-1">
+                <li key={row.id} className="rounded bg-slate-50 dark:bg-muted px-2 py-1">
                   <span className="font-medium">{row.action.replaceAll("_", " ")}</span>
                   {" · "}
                   {row.created_by_name || "Clinician"}

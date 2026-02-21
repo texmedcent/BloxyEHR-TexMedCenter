@@ -142,35 +142,35 @@ async function PatientChartContent({
   return (
     <div className="space-y-4">
       <RecordRecentPatient patientId={patientId} />
-      <div className="rounded-md border border-slate-200 bg-white">
-        <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs">
-          <span className="px-2 py-1 font-semibold text-slate-700 border-b-2 border-[#1a4d8c]">
+      <div className="rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-xs">
+          <span className="px-2 py-1 font-semibold text-slate-700 dark:text-foreground border-b-2 border-[#1a4d8c] dark:border-primary dark:bg-card">
             Summary
           </span>
           <Link
             href={`/documentation?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] hover:underline"
+            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
           >
             <FileText className="h-3.5 w-3.5" />
             Documentation
           </Link>
           <Link
             href={`/orders?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] hover:underline"
+            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
           >
             <ClipboardList className="h-3.5 w-3.5" />
             Orders
           </Link>
           <Link
             href={`/procedures?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] hover:underline"
+            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
           >
             <ClipboardCheck className="h-3.5 w-3.5" />
             Procedures
           </Link>
           <Link
             href={`/results?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] hover:underline"
+            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
           >
             <TestTube className="h-3.5 w-3.5" />
             Results

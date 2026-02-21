@@ -233,7 +233,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
               <select
                 value={type}
                 onChange={(e) => applyTemplate(e.target.value as NoteTemplateKey)}
-                className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+                className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
               >
                 {Object.keys(NOTE_TEMPLATES).map((key) => (
                   <option key={key} value={key}>
@@ -249,7 +249,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
           <div className="flex-1 min-h-0">
             {type === "soap" ? (
               <div className="space-y-3">
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-muted-foreground">
                   SOAP template encourages complete clinical documentation.
                 </p>
                 <div>
@@ -310,7 +310,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
             />
             <Label htmlFor="sign">Sign note on save</Label>
             {sign && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-muted-foreground">
                 Signature: {signature}
               </span>
             )}

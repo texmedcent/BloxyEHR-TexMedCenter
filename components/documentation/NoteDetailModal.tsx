@@ -207,17 +207,17 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
           {note.signed_at && parsed.signature && (
             <div>
               <Label>Signature</Label>
-              <p className="mt-1 whitespace-pre-wrap rounded border bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              <p className="mt-1 whitespace-pre-wrap rounded border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-700 dark:text-foreground">
                 {parsed.signature}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
                 Signature is shown on a separate line below the note text.
               </p>
             </div>
           )}
 
-          <div className="rounded border border-slate-200 p-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="rounded border border-slate-200 dark:border-border p-3">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
               Patient Portal Release
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -232,7 +232,7 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
               >
                 Save Hold
               </Button>
-              <label className="inline-flex items-center gap-2 text-xs text-slate-700">
+              <label className="inline-flex items-center gap-2 text-xs text-slate-700 dark:text-foreground">
                 <input
                   type="checkbox"
                   checked={releaseHold}
@@ -242,7 +242,7 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
               </label>
               {releaseHold && (
                 <input
-                  className="h-8 rounded border border-slate-300 px-2 text-xs"
+                  className="h-8 rounded border border-slate-300 dark:border-input bg-background px-2 text-xs"
                   value={releaseHoldReason}
                   onChange={(e) => setReleaseHoldReason(e.target.value)}
                   placeholder="Hold reason"
@@ -252,8 +252,8 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
           </div>
 
           {noteLocked && (
-            <div className="rounded border border-slate-200 p-3">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <div className="rounded border border-slate-200 dark:border-border p-3">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
                 Addendum
               </p>
               <div className="space-y-2">

@@ -81,23 +81,23 @@ export function PatientContextBar() {
   };
 
   return (
-    <div className="border-b bg-white px-4 py-2">
+    <div className="border-b bg-white dark:bg-card border-slate-200 dark:border-[hsl(var(--border))] px-4 py-2">
       <div className="mb-2 flex items-center gap-3 text-sm flex-wrap">
         <Link
           href={`/chart/${patientId}`}
-          className="inline-flex items-center gap-1 rounded border border-slate-200 px-2 py-1 text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1 rounded border border-slate-200 dark:border-[hsl(var(--border))] px-2 py-1 text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Chart
         </Link>
         <Link
           href={`/chart/${patientId}`}
-          className="font-medium text-[#1a4d8c] hover:underline"
+          className="font-medium text-[#1a4d8c] dark:text-primary hover:underline"
         >
           {patient.last_name}, {patient.first_name}
         </Link>
         <div className="inline-flex items-center gap-2">
-          <span className="text-xs text-slate-500">Encounter:</span>
+          <span className="text-xs text-slate-500 dark:text-muted-foreground">Encounter:</span>
           <select
             value={selectedEncounterId}
             onChange={(e) => {
@@ -107,7 +107,7 @@ export function PatientContextBar() {
               const query = params.toString();
               router.replace(`${pathname}${query ? `?${query}` : ""}`);
             }}
-            className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+            className="h-8 rounded border border-slate-300 dark:border-[hsl(var(--input))] bg-white dark:bg-background px-2 text-xs"
           >
             <option value="">All Encounters</option>
             {encounters.map((encounter) => (
@@ -125,28 +125,28 @@ export function PatientContextBar() {
       <div className="flex gap-2 mt-2 flex-wrap">
         <Link
           href={buildModuleHref("/documentation")}
-          className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
+          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
         >
           <FileText className="h-3.5 w-3.5" />
           Documentation
         </Link>
         <Link
           href={buildModuleHref("/orders")}
-          className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
+          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
         >
           <ClipboardList className="h-3.5 w-3.5" />
           Orders
         </Link>
         <Link
           href={buildModuleHref("/procedures")}
-          className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
+          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
         >
           <ClipboardCheck className="h-3.5 w-3.5" />
           Procedures
         </Link>
         <Link
           href={buildModuleHref("/results")}
-          className="text-sm text-[#1a4d8c] hover:underline flex items-center gap-1"
+          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
         >
           <TestTube className="h-3.5 w-3.5" />
           Results

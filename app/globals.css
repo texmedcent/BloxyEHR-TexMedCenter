@@ -32,29 +32,29 @@
     --radius: 0.5rem;
   }
   .dark {
-    /* Force same token values as light theme for consistent clinical UI. */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 211 69% 33%;
+    color-scheme: dark;
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 211 69% 55%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 211 69% 33%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 194 100% 42%;
+    --secondary: 217 33% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 15%;
+    --muted-foreground: 215 20% 70%;
+    --accent: 194 70% 50%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 63% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 20% 89%;
-    --input: 210 20% 89%;
-    --ring: 211 69% 33%;
-    --chart-1: 211 69% 33%;
-    --chart-2: 194 100% 42%;
-    --chart-3: 173 58% 39%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 211 69% 55%;
+    --chart-1: 211 69% 55%;
+    --chart-2: 194 70% 50%;
+    --chart-3: 173 58% 50%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
   }
@@ -77,14 +77,14 @@
 
 @layer components {
   .ehr-panel {
-    @apply rounded-md border bg-white shadow-sm;
+    @apply rounded-md border bg-white shadow-sm dark:bg-card dark:border-[hsl(var(--border))];
   }
 
   .ehr-panel-header {
-    @apply border-b bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800;
+    @apply border-b bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 dark:bg-muted dark:text-foreground dark:border-[hsl(var(--border))];
   }
 
   .ehr-panel-body {
-    @apply p-4 text-sm;
+    @apply p-4 text-sm dark:text-foreground;
   }
 }

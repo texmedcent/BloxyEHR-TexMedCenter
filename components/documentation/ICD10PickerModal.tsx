@@ -129,12 +129,12 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
         .from("icd10_catalog")
         .select("code, label")
         .eq("is_active", true)
-        .order("code", { ascending: true })
-        .limit(500);
+        .order("code", { ascending: true });
 
       if (category !== "all") {
         query = query.eq("category_key", category);
       }
+      query = query.limit(category === "all" ? 2000 : 500);
       if (search.trim()) {
         const q = search.trim().replace(/[,{}]/g, " ");
         query = query.or(`code.ilike.%${q}%,label.ilike.%${q}%`);
@@ -173,17 +173,13 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
     let codes: ICD10Code[];
     if (category === "all") {
       const byCode = new Map<string, ICD10Code>();
-      for (const c of catalogBacked ? catalogCodes : localCodes) {
-        byCode.set(c.code, c);
-      }
-      if (catalogBacked && catalogCodes.length > 0) {
-        for (const c of localCodes) {
-          if (!byCode.has(c.code)) byCode.set(c.code, c);
-        }
+      for (const c of localCodes) byCode.set(c.code, c);
+      for (const c of catalogCodes) {
+        if (!byCode.has(c.code)) byCode.set(c.code, c);
       }
       codes = Array.from(byCode.values());
     } else {
-      codes = catalogBacked ? catalogCodes : localCodes;
+      codes = catalogBacked && catalogCodes.length > 0 ? catalogCodes : localCodes;
     }
 
     return [...codes].sort((a, b) => {
@@ -231,7 +227,7 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as ICDCategory)}
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             >
               {ICD_CATEGORIES.map((key) => (
                 <option key={key} value={key}>
@@ -240,8 +236,8 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
               ))}
             </select>
           </div>
-          <div className="rounded border border-slate-200">
-            <div className="grid grid-cols-[auto_140px_1fr] border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+          <div className="rounded border border-slate-200 dark:border-border">
+            <div className="grid grid-cols-[auto_140px_1fr] border-b bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-semibold text-slate-600 dark:text-muted-foreground">
               <span>Fav</span>
               <span>Code</span>
               <span>Diagnosis</span>
@@ -253,7 +249,7 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
                   <button
                     type="button"
                     key={item.code}
-                    className="grid w-full grid-cols-[auto_140px_1fr] items-start gap-2 border-b px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    className="grid w-full grid-cols-[auto_140px_1fr] items-start gap-2 border-b border-slate-200/50 dark:border-border/50 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-muted"
                     onClick={() => {
                       onSelect(item);
                       onClose();
@@ -273,15 +269,15 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
                         }`}
                       />
                     </span>
-                    <span className="font-medium text-slate-900">{item.code}</span>
-                    <span className="text-slate-700">{item.label}</span>
+                    <span className="font-medium text-slate-900 dark:text-foreground">{item.code}</span>
+                    <span className="text-slate-700 dark:text-foreground">{item.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-          <div className="rounded border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
               Fallback
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-[1fr_auto]">
@@ -301,16 +297,16 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
                 Use Unspecified - Other
               </Button>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Uses code <span className="font-medium text-slate-700">R69</span> as fallback when no exact code fits.
+            <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
+              Uses code <span className="font-medium text-slate-700 dark:text-foreground">R69</span> as fallback when no exact code fits.
             </p>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-muted-foreground">
             Showing {filteredCodes.length} codes.
-            {catalogBacked ? " Using full catalog search." : " Using bundled curated set."}
-            {" "}Favorites are pinned to the top.
-            {saving ? " Saving favorites..." : ""}
-            {loadingCatalog ? " Loading catalog..." : ""}
+            {category === "all" ? " Bundled + custom catalog." : catalogBacked ? " From catalog." : " From bundled set."}
+            {" "}Favorites pinned to top.
+            {saving ? " Saving..." : ""}
+            {loadingCatalog ? " Loading..." : ""}
           </p>
         </CardContent>
       </Card>

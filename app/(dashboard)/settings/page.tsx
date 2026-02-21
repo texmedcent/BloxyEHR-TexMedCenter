@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isHospitalManager } from "@/lib/roles";
 import { AccountSettingsForm } from "@/components/settings/AccountSettingsForm";
+import { ThemeSettings } from "@/components/settings/ThemeSettings";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -31,6 +32,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Settings</h1>
+      <ThemeSettings />
       {userId && (
         <AccountSettingsForm
           userId={userId}
@@ -47,7 +49,7 @@ export default async function SettingsPage() {
             <CardTitle>Institution</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-600 mb-3">
+            <p className="text-sm text-slate-600 dark:text-muted-foreground mb-3">
               Manage user roles for your institution.
             </p>
             <Link

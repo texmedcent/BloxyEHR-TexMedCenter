@@ -93,7 +93,7 @@ export default async function ChartPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-xl font-semibold text-slate-900">Chart Dashboard</h1>
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-foreground">Chart Dashboard</h1>
         <LiveClock />
       </div>
 
@@ -106,25 +106,25 @@ export default async function ChartPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">
+            <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">
               {activeEncounterCount ?? 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Status = active</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">Status = active</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-[#1a4d8c]" />
+              <ClipboardList className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
               Recent Orders
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">
+            <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">
               {recentOrders?.length ?? 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Last 8 entries</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">Last 8 entries</p>
           </CardContent>
         </Card>
 
@@ -136,10 +136,10 @@ export default async function ChartPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">
+            <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">
               {recentResults?.length ?? 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Last 8 entries</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">Last 8 entries</p>
           </CardContent>
         </Card>
       </div>
@@ -164,7 +164,7 @@ export default async function ChartPage() {
                 return (
                   <div
                     key={q.id}
-                    className="flex items-center justify-between gap-2 p-3 rounded-md border border-amber-300 bg-amber-50"
+                    className="flex items-center justify-between gap-2 p-3 rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50"
                   >
                     <Link
                       href={`/chart/${p.id}`}
@@ -172,19 +172,19 @@ export default async function ChartPage() {
                     >
                       <User className="h-4 w-4 text-amber-700" />
                       <div className="min-w-0">
-                        <p className="font-medium text-sm truncate text-slate-900">
+                        <p className="font-medium text-sm truncate text-slate-900 dark:text-foreground">
                           {p.last_name}, {p.first_name}
                         </p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-slate-600 dark:text-muted-foreground">
                           MRN: {p.mrn} · {q.campus}
                         </p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-slate-600 dark:text-muted-foreground">
                           {(q.acuity_level || "acuity not set").replaceAll("_", " ").toUpperCase()}
                           {typeof q.pain_score === "number" ? ` · Pain ${q.pain_score}/10` : ""}
                           {q.arrival_mode ? ` · ${q.arrival_mode.replaceAll("_", " ")}` : ""}
                         </p>
                         {q.chief_complaint && (
-                          <p className="text-xs text-slate-600 truncate">
+                          <p className="text-xs text-slate-600 dark:text-muted-foreground truncate">
                             CC: {q.chief_complaint}
                           </p>
                         )}
@@ -208,19 +208,19 @@ export default async function ChartPage() {
                 <Link
                   key={p.id}
                   href={`/chart/${p.id}`}
-                  className="flex items-center gap-3 p-3 rounded-md border bg-white hover:bg-[#1a4d8c]/5 transition-colors text-left"
+                  className="flex items-center gap-3 p-3 rounded-md border border-border bg-white dark:bg-card hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
-                  <User className="h-4 w-4 text-[#1a4d8c]" />
+                  <User className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">
                       {p.last_name}, {p.first_name}
                     </p>
-                    <p className="text-xs text-slate-500">MRN: {p.mrn}</p>
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground">MRN: {p.mrn}</p>
                   </div>
                 </Link>
               ))
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-muted-foreground">
                 No active encounters right now.
               </p>
             )}

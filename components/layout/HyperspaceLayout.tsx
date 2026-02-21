@@ -73,7 +73,7 @@ export function HyperspaceLayout({
   };
 
   return (
-    <div className="flex h-screen bg-slate-100 overflow-hidden">
+    <div className="flex h-screen bg-slate-100 dark:bg-background overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
@@ -139,12 +139,12 @@ export function HyperspaceLayout({
       <div className="flex flex-col flex-1 min-w-0">
         {/* Toolbar */}
         <header
-          className="h-14 bg-white border-b border-slate-200 flex items-center gap-3 px-3 shrink-0"
+          className="h-14 bg-white dark:bg-card border-b border-slate-200 dark:border-[hsl(var(--border))] flex items-center gap-3 px-3 shrink-0"
           role="banner"
         >
           <Link
             href="/dashboard"
-            className="shrink-0 hidden sm:block"
+            className="shrink-0 hidden sm:block [&_*]:text-foreground"
             aria-label="BloxyEHR Home"
           >
             <BehrLogo compact />
@@ -152,7 +152,7 @@ export function HyperspaceLayout({
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 h-8"
+            className="gap-2 h-8 text-foreground border-border bg-background/80 hover:bg-accent"
             onClick={() => setChartSearchOpen(true)}
             aria-label="Open Chart Search"
           >
@@ -211,7 +211,7 @@ export function HyperspaceLayout({
 
         {/* Main content */}
         <main
-          className="flex-1 overflow-auto p-3 md:p-4 min-w-0"
+          className="flex-1 overflow-auto p-3 md:p-4 min-w-0 bg-slate-100 dark:bg-background"
           role="main"
           id="main-content"
         >

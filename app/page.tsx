@@ -2,6 +2,7 @@ import { EnvVarWarning } from "@/components/env-var-warning";
 import { AuthButton } from "@/components/auth-button";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
+import { LandingNav } from "@/components/layout/LandingNav";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -28,12 +29,9 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 text-slate-900">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 dark:from-background dark:to-[hsl(222,47%,14%)] text-slate-900 dark:text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-10 pt-4 sm:px-6">
-        <nav className="flex h-16 items-center justify-between rounded-xl border border-slate-200 bg-white/90 px-4 shadow-sm backdrop-blur">
-          <Link href="/" className="group inline-flex items-center gap-3">
-            <BehrLogo compact />
-          </Link>
+        <LandingNav>
           {!hasEnvVars ? (
             <EnvVarWarning />
           ) : (
@@ -41,7 +39,7 @@ export default async function Home() {
               <AuthButton />
             </Suspense>
           )}
-        </nav>
+        </LandingNav>
 
         <section className="mt-8 grid flex-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
@@ -58,7 +56,7 @@ export default async function Home() {
               <span className="text-[#1a4d8c]"> Roblox healthcare teams</span>.
             </h1>
 
-            <p className="max-w-2xl text-lg text-slate-600">
+            <p className="max-w-2xl text-lg text-slate-600 dark:text-muted-foreground">
               BEHR brings realistic charting, documentation, order entry, results,
               and medication workflows into one modern system designed for roleplay hospitals.
             </p>
@@ -66,7 +64,7 @@ export default async function Home() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/demo"
-                className="inline-flex h-11 items-center rounded-md border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex h-11 items-center rounded-md border border-slate-300 dark:border-input bg-white dark:bg-card px-5 text-sm font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted"
               >
                 View Interactive Demo
               </Link>
@@ -85,8 +83,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg shadow-blue-100/60">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <div className="rounded-2xl border border-slate-200 dark:border-[hsl(var(--border))] bg-white dark:bg-card p-5 shadow-lg shadow-blue-100/60 dark:shadow-none">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
               Why teams choose BEHR
             </h2>
             <div className="space-y-3">
@@ -98,7 +96,7 @@ export default async function Home() {
               ].map((item) => (
                 <div
                   key={item}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                  className="rounded-lg border border-slate-200 dark:border-[hsl(var(--border))] bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-700 dark:text-foreground"
                 >
                   {item}
                 </div>

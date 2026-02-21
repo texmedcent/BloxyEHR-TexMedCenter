@@ -160,7 +160,7 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as MedicationCategory)}
-              className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
             >
               {MEDICATION_CATEGORIES.map((key) => (
                 <option key={key} value={key}>
@@ -170,8 +170,8 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
             </select>
           </div>
 
-          <div className="rounded border border-slate-200">
-            <div className="grid grid-cols-[auto_280px_1fr_120px] border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+          <div className="rounded border border-slate-200 dark:border-border">
+            <div className="grid grid-cols-[auto_280px_1fr_120px] border-b bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-semibold text-slate-600 dark:text-muted-foreground">
               <span>Fav</span>
               <span>Medication</span>
               <span>Alias / Class</span>
@@ -185,7 +185,7 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
                   <button
                     type="button"
                     key={medication.name}
-                    className="grid w-full grid-cols-[auto_280px_1fr_120px] items-start gap-2 border-b px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    className="grid w-full grid-cols-[auto_280px_1fr_120px] items-start gap-2 border-b px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-muted"
                     onClick={() => {
                       onSelect(medication);
                       onClose();
@@ -205,8 +205,8 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
                         }`}
                       />
                     </span>
-                    <span className="font-medium text-slate-900">{medication.name}</span>
-                    <span className="text-slate-700">
+                    <span className="font-medium text-slate-900 dark:text-foreground">{medication.name}</span>
+                    <span className="text-slate-700 dark:text-foreground">
                       {aliasText || MEDICATION_CATEGORY_LABELS[medication.category]}
                     </span>
                     <span
@@ -223,7 +223,7 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
               })}
             </div>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-muted-foreground">
             Showing {filteredMeds.length} medications.
             {catalogBacked ? " Using full formulary search." : " Using bundled curated formulary."}
             {" "}Favorites are pinned to the top.

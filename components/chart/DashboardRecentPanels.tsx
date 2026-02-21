@@ -101,7 +101,7 @@ export function DashboardRecentPanels({
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium capitalize">{order.type}</p>
-                      <p className="text-xs text-slate-500 truncate">
+                      <p className="text-xs text-slate-500 dark:text-muted-foreground truncate">
                         {patient
                           ? `${patient.last_name}, ${patient.first_name} (MRN: ${patient.mrn})`
                           : "Unknown patient"}
@@ -115,7 +115,7 @@ export function DashboardRecentPanels({
               })}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">No recent orders</p>
+            <p className="text-sm text-slate-500 dark:text-muted-foreground">No recent orders</p>
           )}
         </CardContent>
       </Card>
@@ -145,7 +145,7 @@ export function DashboardRecentPanels({
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium capitalize">{result.type}</p>
-                      <p className="text-xs text-slate-500 truncate">
+                      <p className="text-xs text-slate-500 dark:text-muted-foreground truncate">
                         {patient
                           ? `${patient.last_name}, ${patient.first_name} (MRN: ${patient.mrn})`
                           : "Unknown patient"}
@@ -159,7 +159,7 @@ export function DashboardRecentPanels({
               })}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">No recent results</p>
+            <p className="text-sm text-slate-500 dark:text-muted-foreground">No recent results</p>
           )}
         </CardContent>
       </Card>

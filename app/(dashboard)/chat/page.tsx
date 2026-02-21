@@ -44,9 +44,9 @@ export default async function ChatPage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h1 className="text-2xl font-semibold">Employee Chat</h1>
-        <p className="text-sm text-slate-600">
+      <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+        <h1 className="text-2xl font-semibold text-foreground">Employee Chat</h1>
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
           Secure internal messaging for on-duty staff.
         </p>
         {groupsWithMembership.length === 0 && (

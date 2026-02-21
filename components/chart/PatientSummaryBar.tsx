@@ -26,22 +26,22 @@ export function PatientSummaryBar({ patient, className }: PatientSummaryBarProps
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-4 px-3 py-2 bg-white border rounded-md shadow-sm text-sm",
+        "flex flex-wrap items-center gap-4 px-3 py-2 bg-white dark:bg-muted border rounded-md shadow-sm text-sm dark:border-[hsl(var(--border))]",
         className
       )}
     >
-      <span className="font-semibold text-slate-900">
+      <span className="font-semibold text-slate-900 dark:text-foreground">
         {patient.last_name}, {patient.first_name}
       </span>
-      <span className="text-slate-500">
+      <span className="text-slate-500 dark:text-muted-foreground">
         DOB: {patient.dob ? format(new Date(patient.dob), "MM/dd/yyyy") : "—"}
       </span>
-      <span className="text-slate-500">MRN: {patient.mrn}</span>
-      <span className="text-slate-500">
+      <span className="text-slate-500 dark:text-muted-foreground">MRN: {patient.mrn}</span>
+      <span className="text-slate-500 dark:text-muted-foreground">
         {patient.gender || "—"}
       </span>
       {allergyList.length > 0 && (
-        <span className="text-amber-700 font-medium">
+        <span className="text-amber-700 dark:text-amber-400 font-medium">
           Allergies: {allergyList.join(", ")}
         </span>
       )}

@@ -141,20 +141,20 @@ export default async function InstitutionSettingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-slate-900">Institution</h1>
-      <p className="text-sm text-slate-600">
+      <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">Institution</h1>
+      <p className="text-sm text-slate-600 dark:text-muted-foreground">
         Manage role assignments for users in your hospital.
       </p>
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">Audit Trail</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Audit Trail</h2>
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
           Logs patient actions and operational admin actions (including department chat group management).
         </p>
         <InstitutionAuditTrail initialRows={mappedAuditRows} />
       </div>
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">Safety Queue</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Safety Queue</h2>
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
           Review and close reported adverse events.
         </p>
         <InstitutionSafetyQueue
@@ -163,15 +163,15 @@ export default async function InstitutionSettingsPage() {
         />
       </div>
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">ICD-10 Catalog</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">ICD-10 Catalog</h2>
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
           Add custom diagnosis entries by section. The system auto-generates a random ICD-style code.
         </p>
         <InstitutionIcd10Manager initialRows={icdRows || []} />
       </div>
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">Department Chat Groups</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Department Chat Groups</h2>
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
           Create department channels and manage which staff can read/post in each chat group.
         </p>
         <InstitutionChatGroupsManager

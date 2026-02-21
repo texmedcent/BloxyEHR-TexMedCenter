@@ -61,7 +61,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
   const renderResultValue = () => {
     if (!result.value || typeof result.value !== "object" || Array.isArray(result.value)) {
       return (
-        <pre className="text-sm bg-gray-50 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+        <pre className="text-sm bg-gray-50 dark:bg-muted dark:text-foreground p-3 rounded overflow-x-auto whitespace-pre-wrap">
           {valueDisplay}
         </pre>
       );
@@ -78,12 +78,12 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
           : {};
       const rows = Object.entries(values);
       return (
-        <div className="rounded border border-slate-200">
-          <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+        <div className="rounded border border-slate-200 dark:border-border">
+          <div className="border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-medium text-slate-600 dark:text-muted-foreground">
             {typeof record.panel_label === "string" ? record.panel_label : "Lab Panel"}
           </div>
           {rows.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-slate-500">No analyte values documented.</p>
+            <p className="px-3 py-2 text-sm text-slate-500 dark:text-muted-foreground">No analyte values documented.</p>
           ) : (
             <div className="divide-y divide-slate-100">
               {rows.map(([key, rawValue]) => {
@@ -95,7 +95,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
                     ? "bg-red-50 text-red-700"
                     : flag.includes("abnormal")
                     ? "bg-amber-50 text-amber-700"
-                    : "bg-slate-100 text-slate-600";
+                    : "bg-slate-100 dark:bg-secondary text-slate-600 dark:text-muted-foreground";
                 const flagLabel =
                   flag === "critical_high"
                     ? "Critical High"
@@ -110,7 +110,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
                     : "Unrated";
                 return (
                   <div key={key} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                    <span className="font-medium text-slate-700">{key.replaceAll("_", " ")}</span>
+                    <span className="font-medium text-slate-700 dark:text-foreground">{key.replaceAll("_", " ")}</span>
                     <div className="flex items-center gap-2">
                       <span>{String(rawValue)}</span>
                       <span className={`rounded px-1.5 py-0.5 text-xs ${badgeClass}`}>{flagLabel}</span>
@@ -121,7 +121,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
             </div>
           )}
           {typeof record.comments === "string" && record.comments.trim() && (
-            <p className="border-t border-slate-200 px-3 py-2 text-xs text-slate-600">
+            <p className="border-t border-slate-200 dark:border-border px-3 py-2 text-xs text-slate-600 dark:text-muted-foreground">
               {record.comments}
             </p>
           )}
@@ -132,12 +132,12 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
     const simplePairs = Object.entries(record).filter(([k]) => k !== "format");
     if (simplePairs.length > 0 && simplePairs.length <= 8) {
       return (
-        <div className="rounded border border-slate-200">
-          <div className="divide-y divide-slate-100">
+        <div className="rounded border border-slate-200 dark:border-border">
+          <div className="divide-y divide-slate-100 dark:divide-border">
             {simplePairs.map(([key, val]) => (
               <div key={key} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                <span className="font-medium text-slate-700">{key.replaceAll("_", " ")}</span>
-                <span className="text-slate-700">{typeof val === "string" ? val : JSON.stringify(val)}</span>
+                <span className="font-medium text-slate-700 dark:text-foreground">{key.replaceAll("_", " ")}</span>
+                <span className="text-slate-700 dark:text-foreground">{typeof val === "string" ? val : JSON.stringify(val)}</span>
               </div>
             ))}
           </div>
@@ -146,7 +146,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
     }
 
     return (
-      <pre className="text-sm bg-gray-50 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+      <pre className="text-sm bg-gray-50 dark:bg-muted dark:text-foreground p-3 rounded overflow-x-auto whitespace-pre-wrap">
         {valueDisplay}
       </pre>
     );
@@ -262,184 +262,169 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="flex justify-between items-start mb-2">
-          <span className="font-medium capitalize">
-            {result.type}
-            {result.is_critical && (
-              <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-700">
-                Critical
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="border-b border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/50 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold capitalize text-slate-900 dark:text-foreground">{result.type}</span>
+              {result.is_critical && (
+                <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  Critical
+                </span>
+              )}
+              <span
+                className={`rounded-md px-2 py-0.5 text-xs font-medium ${
+                  result.status === "final"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : result.status === "preliminary"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-slate-200 dark:bg-secondary text-slate-700 dark:text-foreground"
+                }`}
+              >
+                {result.status}
+              </span>
+            </div>
+            <span className="text-sm text-slate-600 dark:text-muted-foreground">
+              {format(new Date(result.reported_at), "MM/dd/yyyy HH:mm")}
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {renderResultValue()}
+
+          {result.critical_reason && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <p className="text-sm font-medium text-amber-900">Critical reason</p>
+              <p className="text-sm text-amber-800">{result.critical_reason}</p>
+            </div>
+          )}
+
+          {updateError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {updateError}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-md bg-slate-100 dark:bg-secondary px-2 py-1 font-medium text-slate-700 dark:text-foreground">
+              {(result.acknowledgment_status || "new").toUpperCase()}
+            </span>
+            {result.acknowledged_by_name && result.acknowledged_at && (
+              <span className="text-slate-600 dark:text-muted-foreground">
+                Reviewed by {result.acknowledged_by_name} · {format(new Date(result.acknowledged_at), "MM/dd HH:mm")}
               </span>
             )}
-          </span>
-          <span className="text-sm text-gray-500 inline-flex items-center gap-2">
-            {format(new Date(result.reported_at), "MM/dd/yyyy HH:mm")}
-            <span
-              className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-                result.status === "final"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : result.status === "preliminary"
-                  ? "bg-amber-50 text-amber-700"
-                  : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {result.status}
-            </span>
-          </span>
-        </div>
-        {renderResultValue()}
-        {result.critical_reason && (
-          <p className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
-            Critical reason: {result.critical_reason}
-          </p>
-        )}
-        {updateError && (
-          <div className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {updateError}
-          </div>
-        )}
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded bg-slate-100 px-2 py-1">
-            Acknowledgment: {(result.acknowledgment_status || "new").toUpperCase()}
-          </span>
-          {result.acknowledged_by_name && result.acknowledged_at && (
-            <span className="text-slate-600">
-              Reviewed by {result.acknowledged_by_name} ·{" "}
-              {format(new Date(result.acknowledged_at), "MM/dd HH:mm")}
-            </span>
-          )}
-          {result.actioned_by_name && result.actioned_at && (
-            <span className="text-slate-600">
-              Actioned by {result.actioned_by_name} ·{" "}
-              {format(new Date(result.actioned_at), "MM/dd HH:mm")}
-            </span>
-          )}
-          {typeof result.reviewed_latency_minutes === "number" && (
-            <span className="rounded bg-blue-50 px-2 py-1 text-blue-700">
-              Review TAT: {result.reviewed_latency_minutes} min
-            </span>
-          )}
-          {typeof result.action_latency_minutes === "number" && (
-            <span className="rounded bg-indigo-50 px-2 py-1 text-indigo-700">
-              Action TAT: {result.action_latency_minutes} min
-            </span>
-          )}
-          {result.sla_violation_reviewed && (
-            <span className="rounded bg-red-50 px-2 py-1 text-red-700">
-              Review SLA Breach
-            </span>
-          )}
-          {result.sla_violation_actioned && (
-            <span className="rounded bg-red-50 px-2 py-1 text-red-700">
-              Action SLA Breach
-            </span>
-          )}
-          {result.escalation_triggered_at && (
-            <span className="rounded bg-amber-50 px-2 py-1 text-amber-700">
-              Escalated{result.escalation_recipient_name ? ` to ${result.escalation_recipient_name}` : ""}
-            </span>
-          )}
-          <span
-            className={`rounded px-2 py-1 ${
-              result.released_to_patient
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-slate-100 text-slate-600"
-            }`}
-          >
-            Patient Release: {result.released_to_patient ? "Released" : "Held"}
-          </span>
-        </div>
-        {result.is_critical && (
-          <div className="mt-3 space-y-2 rounded border border-red-200 bg-red-50/50 p-2">
-            <p className="text-xs font-medium text-red-800">
-              Critical workflow: reviewed note and action note are required.
-            </p>
-            <label className="block text-xs text-red-800">
-              Reviewed Note
-              <textarea
-                className="mt-1 min-h-[60px] w-full rounded border border-red-200 bg-white p-2 text-sm"
-                value={reviewedNote}
-                onChange={(e) => setReviewedNote(e.target.value)}
-                placeholder="Document interpretation and who was notified."
-              />
-            </label>
-            <label className="block text-xs text-red-800">
-              Action Taken Note
-              <textarea
-                className="mt-1 min-h-[60px] w-full rounded border border-red-200 bg-white p-2 text-sm"
-                value={actionNote}
-                onChange={(e) => setActionNote(e.target.value)}
-                placeholder="Document treatment changes, escalation, callback details."
-              />
-            </label>
-            <label className="inline-flex items-center gap-2 text-xs text-red-800">
-              <input
-                type="checkbox"
-                checked={callbackDocumented}
-                onChange={(e) => setCallbackDocumented(e.target.checked)}
-              />
-              Critical callback documented
-            </label>
-            {result.critical_callback_documented_by_name && result.critical_callback_documented_at && (
-              <p className="text-xs text-red-800">
-                Callback documented by {result.critical_callback_documented_by_name} ·{" "}
-                {format(new Date(result.critical_callback_documented_at), "MM/dd HH:mm")}
-              </p>
+            {result.actioned_by_name && result.actioned_at && (
+              <span className="text-slate-600 dark:text-muted-foreground">
+                Actioned by {result.actioned_by_name} · {format(new Date(result.actioned_at), "MM/dd HH:mm")}
+              </span>
+            )}
+            {typeof result.reviewed_latency_minutes === "number" && (
+              <span className="rounded-md bg-sky-100 px-2 py-1 text-sky-800">TAT: {result.reviewed_latency_minutes}m</span>
+            )}
+            {result.released_to_patient ? (
+              <span className="rounded-md bg-emerald-100 px-2 py-1 text-emerald-800">Released</span>
+            ) : (
+              <span className="rounded-md bg-slate-100 dark:bg-secondary px-2 py-1 text-slate-600 dark:text-muted-foreground">Held</span>
             )}
           </div>
-        )}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Button
+
+          {result.is_critical && (
+            <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/50 p-4 space-y-4">
+              <p className="text-sm font-medium text-slate-700 dark:text-foreground">
+                Document review and action (required to mark as actioned)
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block space-y-1">
+                  <span className="text-xs font-medium text-slate-600 dark:text-muted-foreground">Reviewed note</span>
+                  <textarea
+                    className="min-h-[72px] w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background p-2 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={reviewedNote}
+                    onChange={(e) => setReviewedNote(e.target.value)}
+                    placeholder="Interpretation, who was notified"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-xs font-medium text-slate-600 dark:text-muted-foreground">Action note</span>
+                  <textarea
+                    className="min-h-[72px] w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background p-2 text-sm text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={actionNote}
+                    onChange={(e) => setActionNote(e.target.value)}
+                    placeholder="Treatment changes, escalation, callback"
+                  />
+                </label>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-foreground">
+                <input
+                  type="checkbox"
+                  checked={callbackDocumented}
+                  onChange={(e) => setCallbackDocumented(e.target.checked)}
+                  className="rounded border-slate-300 dark:border-input"
+                />
+                Critical callback documented
+              </label>
+              {result.critical_callback_documented_by_name && result.critical_callback_documented_at && (
+                <p className="text-xs text-slate-600 dark:text-muted-foreground">
+                  By {result.critical_callback_documented_by_name} · {format(new Date(result.critical_callback_documented_at), "MM/dd HH:mm")}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-border">
+            <Button
             size="sm"
             variant="outline"
             disabled={saving || !canAcknowledge}
             onClick={() => updateAcknowledgment("reviewed")}
             title={!canAcknowledge ? `${formatRoleLabel(currentUserRole)} cannot acknowledge results` : undefined}
           >
-            Mark Reviewed
-          </Button>
-          <Button
+              Mark Reviewed
+            </Button>
+            <Button
             size="sm"
             variant="outline"
             disabled={saving || !canAcknowledge}
             onClick={() => updateAcknowledgment("actioned")}
             title={!canAcknowledge ? `${formatRoleLabel(currentUserRole)} cannot action results` : undefined}
           >
-            Mark Actioned
-          </Button>
-          <Button
+              Mark Actioned
+            </Button>
+            <Button
             size="sm"
             variant="outline"
             disabled={saving}
             onClick={() => updatePatientRelease(true)}
           >
-            Release to Patient
-          </Button>
-          <Button
+              Release to Patient
+            </Button>
+            <Button
             size="sm"
             variant="outline"
             disabled={saving || !releaseHold}
             onClick={() => updatePatientRelease(false)}
           >
-            Save Hold
-          </Button>
-          <label className="inline-flex items-center gap-2 text-xs text-slate-700">
+              Save Hold
+            </Button>
+            <label className="inline-flex items-center gap-2 text-xs text-slate-700 dark:text-foreground">
             <input
               type="checkbox"
               checked={releaseHold}
               onChange={(e) => setReleaseHold(e.target.checked)}
             />
-            Hold from patient portal
-          </label>
-          {releaseHold && (
-            <input
-              className="h-8 rounded border border-slate-300 px-2 text-xs"
+              Hold from patient portal
+            </label>
+            {releaseHold && (
+              <input
+              className="h-8 rounded border border-slate-300 dark:border-input bg-background px-2 text-xs text-foreground"
               value={releaseHoldReason}
               onChange={(e) => setReleaseHoldReason(e.target.value)}
               placeholder="Hold reason"
-            />
-          )}
+              />
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
