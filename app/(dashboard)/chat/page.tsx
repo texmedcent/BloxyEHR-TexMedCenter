@@ -52,11 +52,12 @@ export default async function ChatPage() {
         .order("full_name")
     : { data: [] };
 
+  type DmThreadRow = { id: string; other_user_id: string; other_user_name: string | null; last_message_at: string };
   let dmThreads: { id: string; other_user_id: string; other_user_name: string; last_message_at: string }[] = [];
   let dmMessages: { id: string; sender_id: string; sender_name: string; sender_role: string | null; message: string; created_at: string; thread_id: string }[] = [];
   if (user) {
     const { data: threads } = await supabase.rpc("fetch_my_dm_threads");
-    dmThreads = (threads || []).map((t) => ({
+    dmThreads = (threads || []).map((t: DmThreadRow) => ({
       id: t.id,
       other_user_id: t.other_user_id,
       other_user_name: t.other_user_name || "Unknown",
