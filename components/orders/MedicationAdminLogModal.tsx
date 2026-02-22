@@ -126,8 +126,13 @@ export function MedicationAdminLogModal({ order, bypassPharmacyVerification = fa
       return;
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
     const documentedByName =
-      (user.user_metadata?.full_name as string) ||
+      (profile?.full_name?.trim() as string) ||
       (user.email ? user.email.split("@")[0] : null) ||
       "Clinician";
 
