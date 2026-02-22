@@ -2,12 +2,40 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { addProviderToCareTeam } from "@/lib/care_team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
+import {
+  UserPlus,
+  Users,
+  Clock,
+  FileText,
+  CalendarCheck,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  Stethoscope,
+} from "lucide-react";
+
+interface CareTeamMember {
+  provider_id: string;
+  full_name: string | null;
+  added_at: string;
+  added_via: string;
+}
+
+const ADDED_VIA_LABELS: Record<string, string> = {
+  encounter_assign: "Assigned",
+  encounter_edit: "Edited encounter",
+  documentation: "Documentation",
+  order: "Order",
+  disposition: "Disposition",
+};
 
 interface EncounterStatusPanelProps {
   patientId: string;
@@ -39,6 +67,36 @@ interface EncounterStatusPanelProps {
     role: string | null;
   } | null;
   onUpdated?: () => void;
+}
+
+function CollapsibleSection({
+  title,
+  icon: Icon,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-medium text-slate-700 dark:text-foreground hover:bg-slate-100 dark:hover:bg-muted/50 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+          {title}
+        </span>
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </button>
+      {open && <div className="px-3 pb-3 pt-1 space-y-3">{children}</div>}
+    </div>
+  );
 }
 
 export function EncounterStatusPanel({
@@ -74,17 +132,15 @@ export function EncounterStatusPanel({
       title: string;
       owner_name: string | null;
       due_at: string | null;
-      status: "open" | "in_progress" | "completed" | "cancelled";
-      priority: "low" | "normal" | "high" | "critical";
+      status: string;
+      priority: string;
       sla_violation: boolean;
       escalation_triggered_at: string | null;
     }[]
   >([]);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDueAt, setTaskDueAt] = useState("");
-  const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high" | "critical">(
-    "normal"
-  );
+  const [taskPriority, setTaskPriority] = useState<"low" | "normal" | "high" | "critical">("normal");
   const [savingTask, setSavingTask] = useState(false);
   const [savingAvs, setSavingAvs] = useState(false);
   const [latestAvs, setLatestAvs] = useState<{
@@ -93,6 +149,7 @@ export function EncounterStatusPanel({
     created_by_name: string | null;
     created_at: string;
   } | null>(null);
+  const [careTeamMembers, setCareTeamMembers] = useState<CareTeamMember[]>([]);
 
   useEffect(() => {
     setEncounterState(encounter);
@@ -102,6 +159,68 @@ export function EncounterStatusPanel({
     setReturnPrecautions(encounter?.return_precautions || "");
     setFollowUpDestination(encounter?.follow_up_destination || "");
   }, [encounter]);
+
+  useEffect(() => {
+    const loadCareTeam = async () => {
+      if (!patientId) return;
+      const supabase = createClient();
+      try {
+        const { data: careRows } = await supabase
+          .from("patient_care_team")
+          .select("provider_id, added_at, added_via")
+          .eq("patient_id", patientId)
+          .order("added_at", { ascending: false });
+
+        const { data: encounters } = await supabase
+          .from("encounters")
+          .select("assigned_to, assigned_to_name, assigned_at")
+          .eq("patient_id", patientId)
+          .not("assigned_to", "is", null);
+
+        const providerIds = [
+          ...new Set([
+            ...(careRows || []).map((r) => r.provider_id),
+            ...(encounters || []).map((e) => e.assigned_to).filter(Boolean) as string[],
+          ]),
+        ];
+
+        const { data: profiles } =
+          providerIds.length > 0
+            ? await supabase.from("profiles").select("id, full_name").in("id", providerIds)
+            : { data: [] };
+        const profileMap = new Map((profiles || []).map((p) => [p.id, p.full_name]));
+
+        const members: CareTeamMember[] = (careRows || []).map((r) => ({
+          provider_id: r.provider_id,
+          full_name: profileMap.get(r.provider_id) || null,
+          added_at: r.added_at,
+          added_via: r.added_via,
+        }));
+
+        const inCareTeam = new Set(members.map((m) => m.provider_id));
+        for (const enc of encounters || []) {
+          const id = enc.assigned_to;
+          if (id && !inCareTeam.has(id)) {
+            members.push({
+              provider_id: id,
+              full_name: enc.assigned_to_name || profileMap.get(id) || null,
+              added_at: enc.assigned_at || new Date().toISOString(),
+              added_via: "encounter_assign",
+            });
+          }
+        }
+
+        setCareTeamMembers(
+          Array.from(new Map(members.map((m) => [m.provider_id, m])).values()).sort(
+            (a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+          )
+        );
+      } catch {
+        setCareTeamMembers([]);
+      }
+    };
+    void loadCareTeam();
+  }, [patientId]);
 
   useEffect(() => {
     const loadAudit = async () => {
@@ -116,7 +235,7 @@ export function EncounterStatusPanel({
         .eq("encounter_id", encounterState.id)
         .order("created_at", { ascending: false })
         .limit(6);
-      setAuditRows((data || []) as { id: string; action: string; created_by_name: string | null; created_at: string }[]);
+      setAuditRows((data || []) as typeof auditRows);
     };
     void loadAudit();
   }, [encounterState?.id]);
@@ -151,16 +270,12 @@ export function EncounterStatusPanel({
 
   if (!encounterState) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Encounter Status Panel</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-500 dark:text-muted-foreground">
-            No encounter available yet. Start an encounter to track assignment and audit details.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-8 text-center">
+        <Stethoscope className="mx-auto h-12 w-12 text-slate-300 dark:text-muted-foreground mb-3" />
+        <p className="text-sm text-slate-600 dark:text-muted-foreground">
+          No encounter selected. Pick an encounter from the history to view and manage its status.
+        </p>
+      </div>
     );
   }
 
@@ -175,6 +290,7 @@ export function EncounterStatusPanel({
         Math.floor((Date.now() - new Date(encounterState.admit_date).getTime()) / 60000)
       )
     : null;
+  const isAssignedToMe = currentUser && encounterState.assigned_to === currentUser.id;
 
   const logAudit = async (action: string, fieldChanges: Record<string, unknown>) => {
     if (!currentUser) return;
@@ -218,6 +334,7 @@ export function EncounterStatusPanel({
       workflow_status: "in_progress",
       assigned_at: nowIso,
     });
+    await addProviderToCareTeam(supabase, patientId, "encounter_assign");
     await supabase.from("recent_patients").upsert(
       {
         user_id: currentUser.id,
@@ -240,8 +357,18 @@ export function EncounterStatusPanel({
           }
         : prev
     );
-    setMessage("Encounter assigned.");
+    setMessage("You're now assigned to this encounter.");
     onUpdated?.();
+    setCareTeamMembers((prev) => {
+      const next = [...prev.filter((m) => m.provider_id !== currentUser.id)];
+      next.unshift({
+        provider_id: currentUser.id,
+        full_name: currentUser.name,
+        added_at: nowIso,
+        added_via: "encounter_assign",
+      });
+      return next;
+    });
   };
 
   const saveAttending = async () => {
@@ -266,9 +393,7 @@ export function EncounterStatusPanel({
       return;
     }
 
-    await logAudit("updated_supervising_attending", {
-      supervising_attending: attending.trim() || null,
-    });
+    await logAudit("updated_supervising_attending", { supervising_attending: attending.trim() || null });
     setEncounterState((prev) =>
       prev
         ? {
@@ -335,7 +460,7 @@ export function EncounterStatusPanel({
           }
         : prev
     );
-    setMessage("Disposition updated.");
+    setMessage("Disposition saved.");
     onUpdated?.();
   };
 
@@ -453,14 +578,11 @@ export function EncounterStatusPanel({
           typeof d.test === "string"
             ? d.test
             : typeof d.study === "string"
-            ? d.study
-            : o.type.toUpperCase();
+              ? d.study
+              : o.type.toUpperCase();
         return `- ${label}`;
       })
       .join("\n");
-    const dx = encounterState.disposition_type
-      ? `Disposition: ${encounterState.disposition_type.replaceAll("_", " ")}`
-      : "Disposition: Not documented";
     const summaryText = [
       `After Visit Summary (AVS)`,
       `Patient: ${patient?.last_name || "Patient"}, ${patient?.first_name || ""} (MRN ${patient?.mrn || "n/a"})`,
@@ -479,8 +601,6 @@ export function EncounterStatusPanel({
       "",
       `Pending Tests`,
       pendingLines || "- None",
-      "",
-      dx,
     ].join("\n");
 
     const { data, error } = await supabase
@@ -504,337 +624,357 @@ export function EncounterStatusPanel({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Encounter Status Panel</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <div className="grid gap-2 md:grid-cols-2">
-          <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Encounter ID:</span>{" "}
-            <span className="font-medium">{encounterIdLabel}</span>
+    <div className="space-y-4">
+      {/* Quick actions & status summary */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-slate-100 dark:bg-muted/50 p-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="text-xs font-mono text-slate-500 dark:text-muted-foreground">
+              {encounterIdLabel}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                workflow === "in_progress"
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
+                  : "bg-slate-200 text-slate-700 dark:bg-muted dark:text-muted-foreground"
+              }`}
+            >
+              {workflow.replaceAll("_", " ")}
+            </span>
+            {elapsedMinutes !== null && (
+              <span className="flex items-center gap-1 text-xs text-slate-600 dark:text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                {elapsedMinutes} min
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-medium text-slate-800 dark:text-foreground">
+            Assigned to: {assignedLabel}
           </p>
-          <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Status:</span>{" "}
-            <span className="font-medium capitalize">{workflow.replaceAll("_", " ")}</span>
+          {encounterState.assigned_at && (
+            <p className="text-xs text-slate-500 dark:text-muted-foreground">
+              {format(new Date(encounterState.assigned_at), "MMM d, yyyy · h:mm a")}
+            </p>
+          )}
+        </div>
+        {!isAssignedToMe && currentUser && (
+          <Button
+            onClick={assignToMe}
+            disabled={savingAssign}
+            className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 shrink-0"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            {savingAssign ? "Assigning…" : "Assign to Me"}
+          </Button>
+        )}
+        {isAssignedToMe && (
+          <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 text-sm font-medium shrink-0">
+            <CheckCircle2 className="h-4 w-4" />
+            You&apos;re assigned
+          </div>
+        )}
+      </div>
+
+      {message && (
+        <div
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+            message.startsWith("Failed")
+              ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
+              : "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
+          }`}
+        >
+          {message.startsWith("Failed") ? (
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+          )}
+          {message}
+        </div>
+      )}
+
+      {/* Care Team */}
+      <CollapsibleSection title="Care Team" icon={Users} defaultOpen={true}>
+        {careTeamMembers.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">
+            No providers on care team yet. Assign yourself or document to add.
           </p>
+        ) : (
+          <ul className="space-y-2">
+            {careTeamMembers.map((m) => (
+              <li
+                key={m.provider_id}
+                className="flex items-center justify-between gap-3 py-1.5 border-b border-slate-200/50 dark:border-border/50 last:border-0"
+              >
+                <span className="font-medium text-sm">
+                  {m.full_name || "Provider"}
+                  {m.provider_id === currentUser?.id && (
+                    <span className="ml-1.5 text-xs text-slate-500 dark:text-muted-foreground">(you)</span>
+                  )}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-muted-foreground">
+                  {ADDED_VIA_LABELS[m.added_via] || m.added_via} · {format(new Date(m.added_at), "MM/dd")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CollapsibleSection>
+
+      {/* Discharge / AVS */}
+      <CollapsibleSection title="Discharge Packet & AVS" icon={FileText} defaultOpen={true}>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <Button size="sm" variant="outline" onClick={generateAvs} disabled={savingAvs}>
+            {savingAvs ? "Generating…" : "Generate AVS"}
+          </Button>
+          <span className="text-xs text-slate-500 dark:text-muted-foreground">
+            Diagnosis, meds, follow-up, return precautions
+          </span>
+        </div>
+        {latestAvs && (
+          <div className="rounded-lg bg-white dark:bg-card border border-slate-200 dark:border-border p-3">
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mb-2">
+              By {latestAvs.created_by_name || "Clinician"} ·{" "}
+              {format(new Date(latestAvs.created_at), "MM/dd HH:mm")}
+            </p>
+            <pre className="max-h-36 overflow-auto whitespace-pre-wrap text-xs">
+              {latestAvs.summary_text}
+            </pre>
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* Supervising Attending */}
+      <CollapsibleSection title="Supervising Attending" icon={Stethoscope} defaultOpen={false}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            value={attending}
+            onChange={(e) => setAttending(e.target.value)}
+            placeholder="e.g. D. Schlossberg, MD"
+            className="max-w-xs"
+          />
+          <Button size="sm" variant="outline" onClick={saveAttending} disabled={savingAttending}>
+            {savingAttending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      </CollapsibleSection>
+
+      {/* Tasks */}
+      <CollapsibleSection title="Tasks" icon={ClipboardList} defaultOpen={true}>
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 mb-3">
+          <Input
+            value={taskTitle}
+            onChange={(e) => setTaskTitle(e.target.value)}
+            placeholder="e.g. Reassess pain, redraw lactate"
+            className="sm:col-span-2"
+          />
+          <Input
+            type="datetime-local"
+            value={taskDueAt}
+            onChange={(e) => setTaskDueAt(e.target.value)}
+            className="text-sm"
+          />
+          <select
+            value={taskPriority}
+            onChange={(e) =>
+              setTaskPriority(e.target.value as "low" | "normal" | "high" | "critical")
+            }
+            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={addTask}
+          disabled={savingTask || !taskTitle.trim()}
+          className="mb-3"
+        >
+          {savingTask ? "Adding…" : "Add Task"}
+        </Button>
+        {taskRows.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">No open tasks.</p>
+        ) : (
+          <ul className="space-y-2">
+            {taskRows.map((task) => (
+              <li
+                key={task.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-border p-2 bg-white dark:bg-card"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">{task.title}</p>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground">
+                    {task.owner_name || "Unassigned"}
+                    {task.due_at ? ` · due ${format(new Date(task.due_at), "MM/dd HH:mm")}` : ""} · {task.priority}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => completeTask(task.id)}>
+                  Complete
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CollapsibleSection>
+
+      {/* Disposition */}
+      <CollapsibleSection title="Disposition" icon={CalendarCheck} defaultOpen={true}>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select
+            value={dispositionType}
+            onChange={(e) => setDispositionType(e.target.value)}
+            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
+            disabled={!canSetDisposition || savingDisposition}
+          >
+            <option value="">Select disposition</option>
+            <option value="admit">Admit</option>
+            <option value="discharge">Discharge</option>
+            <option value="transfer">Transfer</option>
+            <option value="eloped">Eloped</option>
+            <option value="ama">AMA</option>
+            <option value="expired">Expired</option>
+          </select>
+          <Input
+            value={followUpDestination}
+            onChange={(e) => setFollowUpDestination(e.target.value)}
+            placeholder="Follow-up destination"
+            disabled={!canSetDisposition || savingDisposition}
+          />
+          <Textarea
+            value={dischargeInstructions}
+            onChange={(e) => setDischargeInstructions(e.target.value)}
+            placeholder="Discharge instructions"
+            className="sm:col-span-2 min-h-[80px]"
+            disabled={!canSetDisposition || savingDisposition}
+          />
+          <Textarea
+            value={returnPrecautions}
+            onChange={(e) => setReturnPrecautions(e.target.value)}
+            placeholder="Return precautions"
+            className="sm:col-span-2 min-h-[80px]"
+            disabled={!canSetDisposition || savingDisposition}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={saveDisposition}
+            disabled={!canSetDisposition || savingDisposition}
+          >
+            {savingDisposition ? "Saving…" : "Save Disposition"}
+          </Button>
+          {!canSetDisposition && (
+            <span className="text-xs text-amber-600 dark:text-amber-500">
+              {formatRoleLabel(currentUser?.role)} cannot set disposition
+            </span>
+          )}
+          {encounterState.disposition_set_by_name && (
+            <span className="text-xs text-slate-500 dark:text-muted-foreground">
+              Last set by {encounterState.disposition_set_by_name}
+              {encounterState.disposition_set_at &&
+                ` · ${format(new Date(encounterState.disposition_set_at), "MM/dd HH:mm")}`}
+            </span>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {/* ED Pathway Timers */}
+      <CollapsibleSection title="ED Pathway Timers" icon={Clock} defaultOpen={false}>
+        <div className="grid gap-2 sm:grid-cols-3 text-sm">
           <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Assigned To:</span>{" "}
-            <span className="font-medium">{assignedLabel}</span>
-          </p>
-          <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Timestamp:</span>{" "}
+            Provider seen:{" "}
             <span className="font-medium">
-              {encounterState.assigned_at
-                ? format(new Date(encounterState.assigned_at), "MM/dd/yyyy HH:mm")
+              {encounterState.first_provider_seen_at
+                ? format(new Date(encounterState.first_provider_seen_at), "MM/dd HH:mm")
                 : "—"}
             </span>
           </p>
           <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Last Updated By:</span>{" "}
-            <span className="font-medium">{encounterState.last_updated_by_name || "—"}</span>
+            First med ordered:{" "}
+            <span className="font-medium">
+              {encounterState.first_med_ordered_at
+                ? format(new Date(encounterState.first_med_ordered_at), "MM/dd HH:mm")
+                : "—"}
+            </span>
           </p>
           <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Encounter State:</span>{" "}
-            <span className="font-medium capitalize">{encounterState.status}</span>
-          </p>
-          <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Elapsed:</span>{" "}
-            <span className="font-medium">{elapsedMinutes !== null ? `${elapsedMinutes} min` : "—"}</span>
-          </p>
-          <p>
-            <span className="text-slate-500 dark:text-muted-foreground">Disposition:</span>{" "}
-            <span className="font-medium capitalize">
-              {(encounterState.disposition_type || "not set").replaceAll("_", " ")}
+            First med admin:{" "}
+            <span className="font-medium">
+              {encounterState.first_med_admin_at
+                ? format(new Date(encounterState.first_med_admin_at), "MM/dd HH:mm")
+                : "—"}
             </span>
           </p>
         </div>
+      </CollapsibleSection>
 
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            ED Pathway Timers
-          </p>
-          <div className="grid gap-2 text-xs md:grid-cols-3">
-            <p>
-              Provider Seen:{" "}
-              <span className="font-medium">
-                {encounterState.first_provider_seen_at
-                  ? format(new Date(encounterState.first_provider_seen_at), "MM/dd HH:mm")
-                  : "—"}
-              </span>
-            </p>
-            <p>
-              First Med Ordered:{" "}
-              <span className="font-medium">
-                {encounterState.first_med_ordered_at
-                  ? format(new Date(encounterState.first_med_ordered_at), "MM/dd HH:mm")
-                  : "—"}
-              </span>
-            </p>
-            <p>
-              First Med Admin:{" "}
-              <span className="font-medium">
-                {encounterState.first_med_admin_at
-                  ? format(new Date(encounterState.first_med_admin_at), "MM/dd HH:mm")
-                  : "—"}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-              Discharge Packet / AVS
-            </p>
-            <Button size="sm" variant="outline" onClick={generateAvs} disabled={savingAvs}>
-              {savingAvs ? "Generating..." : "Generate AVS"}
-            </Button>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-muted-foreground">
-            Auto-generates diagnosis, meds, follow-up, return precautions, and pending tests.
-          </p>
-          {latestAvs && (
-            <div className="mt-2 rounded bg-slate-50 dark:bg-muted p-2">
-              <p className="mb-1 text-xs text-slate-500 dark:text-muted-foreground">
-                Latest AVS by {latestAvs.created_by_name || "Clinician"} ·{" "}
-                {format(new Date(latestAvs.created_at), "MM/dd HH:mm")}
-              </p>
-              <pre className="max-h-44 overflow-auto whitespace-pre-wrap text-xs">
-                {latestAvs.summary_text}
-              </pre>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            Supervising Attending
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={attending}
-              onChange={(e) => setAttending(e.target.value)}
-              placeholder="e.g. D. Schlossberg, MD"
-              className="max-w-sm"
-            />
-            <Button size="sm" variant="outline" onClick={saveAttending} disabled={savingAttending}>
-              {savingAttending ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            Encounter Task Board
-          </p>
-          <div className="mb-2 grid gap-2 md:grid-cols-4">
-            <Input
-              className="md:col-span-2"
-              value={taskTitle}
-              onChange={(e) => setTaskTitle(e.target.value)}
-              placeholder="e.g. Reassess pain, redraw lactate, callback patient"
-            />
-            <Input
-              type="datetime-local"
-              value={taskDueAt}
-              onChange={(e) => setTaskDueAt(e.target.value)}
-            />
-            <select
-              value={taskPriority}
-              onChange={(e) =>
-                setTaskPriority(e.target.value as "low" | "normal" | "high" | "critical")
-              }
-              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-            >
-              <option value="low">Low</option>
-              <option value="normal">Normal</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-          <div className="mb-2">
-            <Button size="sm" variant="outline" onClick={addTask} disabled={savingTask || !taskTitle.trim()}>
-              {savingTask ? "Adding..." : "Add Task"}
-            </Button>
-          </div>
-          {taskRows.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-muted-foreground">No open tasks for this encounter.</p>
-          ) : (
-            <ul className="space-y-1">
-              {taskRows.map((task) => (
-                <li key={task.id} className="flex items-center justify-between gap-2 rounded bg-slate-50 dark:bg-muted px-2 py-1 text-xs">
-                  <div>
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-slate-500 dark:text-muted-foreground">
-                      {task.owner_name || "Unassigned"}
-                      {task.due_at ? ` · due ${format(new Date(task.due_at), "MM/dd HH:mm")}` : ""}
-                      {` · ${task.priority}`}
-                    </p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1">
-                      {task.sla_violation && (
-                        <span className="rounded bg-red-50 px-1.5 py-0.5 text-[11px] text-red-700">
-                          SLA overdue
-                        </span>
-                      )}
-                      {task.escalation_triggered_at && (
-                        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-700">
-                          Escalated
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => completeTask(task.id)}>
-                    Complete
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            Disposition
-          </p>
-          <div className="grid gap-2 md:grid-cols-2">
-            <select
-              value={dispositionType}
-              onChange={(e) => setDispositionType(e.target.value)}
-              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-              disabled={!canSetDisposition || savingDisposition}
-            >
-              <option value="">Select disposition</option>
-              <option value="admit">Admit</option>
-              <option value="discharge">Discharge</option>
-              <option value="transfer">Transfer</option>
-              <option value="eloped">Eloped</option>
-              <option value="ama">AMA</option>
-              <option value="expired">Expired</option>
-            </select>
-            <Input
-              value={followUpDestination}
-              onChange={(e) => setFollowUpDestination(e.target.value)}
-              placeholder="Follow-up destination"
-              disabled={!canSetDisposition || savingDisposition}
-            />
-            <Textarea
-              value={dischargeInstructions}
-              onChange={(e) => setDischargeInstructions(e.target.value)}
-              placeholder="Discharge instructions"
-              className="md:col-span-2 min-h-[80px]"
-              disabled={!canSetDisposition || savingDisposition}
-            />
-            <Textarea
-              value={returnPrecautions}
-              onChange={(e) => setReturnPrecautions(e.target.value)}
-              placeholder="Return precautions"
-              className="md:col-span-2 min-h-[80px]"
-              disabled={!canSetDisposition || savingDisposition}
-            />
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={saveDisposition}
-              disabled={!canSetDisposition || savingDisposition}
-            >
-              {savingDisposition ? "Saving..." : "Save Disposition"}
-            </Button>
-            {!canSetDisposition && (
-              <span className="text-xs text-amber-700">
-                {formatRoleLabel(currentUser?.role)} cannot set disposition.
-              </span>
-            )}
-            {encounterState.disposition_set_by_name && (
-              <span className="text-xs text-slate-500 dark:text-muted-foreground">
-                Last set by {encounterState.disposition_set_by_name}
-                {encounterState.disposition_set_at
-                  ? ` · ${format(new Date(encounterState.disposition_set_at), "MM/dd HH:mm")}`
-                  : ""}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            Patient Safety Event
-          </p>
-          <div className="grid gap-2 md:grid-cols-2">
-            <select
-              value={adverseType}
-              onChange={(e) => setAdverseType(e.target.value)}
-              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-            >
-              <option value="medication">Medication Event</option>
-              <option value="fall">Fall</option>
-              <option value="procedure">Procedure Complication</option>
-              <option value="delay_in_care">Delay in Care</option>
-              <option value="other">Other</option>
-            </select>
-            <select
-              value={adverseSeverity}
-              onChange={(e) => setAdverseSeverity(e.target.value)}
-              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-            >
-              <option value="low">Low</option>
-              <option value="moderate">Moderate</option>
-              <option value="high">High</option>
-              <option value="sentinel">Sentinel</option>
-            </select>
-            <Textarea
-              className="md:col-span-2 min-h-[70px]"
-              value={adverseDescription}
-              onChange={(e) => setAdverseDescription(e.target.value)}
-              placeholder="Describe the event and immediate actions taken."
-            />
-          </div>
-          <div className="mt-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={reportAdverseEvent}
-              disabled={savingAdverseEvent || !adverseDescription.trim()}
-            >
-              {savingAdverseEvent ? "Reporting..." : "Report Event"}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            onClick={assignToMe}
-            disabled={savingAssign || !currentUser}
-            className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
+      {/* Patient Safety Event */}
+      <CollapsibleSection title="Patient Safety Event" icon={AlertTriangle} defaultOpen={false}>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select
+            value={adverseType}
+            onChange={(e) => setAdverseType(e.target.value)}
+            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
           >
-            {savingAssign ? "Assigning..." : "Assign to Me"}
-          </Button>
-          {message && <p className="text-xs text-slate-600 dark:text-muted-foreground">{message}</p>}
+            <option value="medication">Medication Event</option>
+            <option value="fall">Fall</option>
+            <option value="procedure">Procedure Complication</option>
+            <option value="delay_in_care">Delay in Care</option>
+            <option value="other">Other</option>
+          </select>
+          <select
+            value={adverseSeverity}
+            onChange={(e) => setAdverseSeverity(e.target.value)}
+            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
+          >
+            <option value="low">Low</option>
+            <option value="moderate">Moderate</option>
+            <option value="high">High</option>
+            <option value="sentinel">Sentinel</option>
+          </select>
+          <Textarea
+            className="sm:col-span-2 min-h-[70px]"
+            value={adverseDescription}
+            onChange={(e) => setAdverseDescription(e.target.value)}
+            placeholder="Describe the event and immediate actions taken."
+          />
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={reportAdverseEvent}
+          disabled={savingAdverseEvent || !adverseDescription.trim()}
+          className="mt-2"
+        >
+          {savingAdverseEvent ? "Reporting…" : "Report Event"}
+        </Button>
+      </CollapsibleSection>
 
-        <div className="rounded border border-slate-200 dark:border-border p-2">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-            Audit Trail
-          </p>
-          {auditRows.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-muted-foreground">No audit events yet.</p>
-          ) : (
-            <ul className="space-y-1 text-xs">
-              {auditRows.map((row) => (
-                <li key={row.id} className="rounded bg-slate-50 dark:bg-muted px-2 py-1">
-                  <span className="font-medium">{row.action.replaceAll("_", " ")}</span>
-                  {" · "}
-                  {row.created_by_name || "Clinician"}
-                  {" · "}
-                  {format(new Date(row.created_at), "MM/dd HH:mm")}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Audit Trail */}
+      <CollapsibleSection title="Audit Trail" icon={FileText} defaultOpen={false}>
+        {auditRows.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">No events yet.</p>
+        ) : (
+          <ul className="space-y-1.5 text-sm">
+            {auditRows.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-lg bg-slate-100 dark:bg-muted/50 px-2 py-1.5"
+              >
+                <span className="font-medium">{row.action.replaceAll("_", " ")}</span>
+                {" · "}
+                {row.created_by_name || "Clinician"}
+                {" · "}
+                {format(new Date(row.created_at), "MM/dd HH:mm")}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CollapsibleSection>
+    </div>
   );
 }

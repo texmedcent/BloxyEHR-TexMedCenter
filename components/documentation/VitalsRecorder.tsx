@@ -153,21 +153,21 @@ export function VitalsRecorder({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="h-4 w-4" />
+          <Activity className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
           Vitals
         </CardTitle>
         <Link
           href={`/chart/${patientId}#vitals`}
-          className="text-xs font-medium text-[#1a4d8c] hover:underline"
+          className="text-xs font-medium text-[#1a4d8c] dark:text-primary hover:underline"
         >
           Quick View in Summary
         </Link>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+        <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-4">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {VITAL_TYPE_OPTIONS.map((option) => (
               <button
@@ -177,8 +177,8 @@ export function VitalsRecorder({
                 className={cn(
                   "inline-flex h-7 items-center rounded-md border px-2 text-xs",
                   type === option.value
-                    ? "border-[#1a4d8c] bg-blue-50 font-medium text-[#1a4d8c]"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border-[#1a4d8c] dark:border-primary bg-blue-50 dark:bg-primary/10 font-medium text-[#1a4d8c] dark:text-primary"
+                    : "border-slate-300 dark:border-input bg-white dark:bg-background text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted/50"
                 )}
               >
                 {option.label}
@@ -242,8 +242,8 @@ export function VitalsRecorder({
                 className={cn(
                   "rounded border px-2 py-0.5 text-[11px]",
                   value === quickValue
-                    ? "border-[#1a4d8c] bg-blue-50 text-[#1a4d8c]"
-                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "border-[#1a4d8c] dark:border-primary bg-blue-50 dark:bg-primary/10 text-[#1a4d8c] dark:text-primary"
+                    : "border-slate-300 dark:border-input bg-white dark:bg-background text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50"
                 )}
               >
                 {quickValue}
@@ -252,23 +252,29 @@ export function VitalsRecorder({
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-800 dark:text-red-200">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
         {!activeEncounterId && (
-          <p className="text-sm text-amber-700">
+          <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             Vitals are encounter-scoped and only charted during an active encounter.
-          </p>
+          </div>
         )}
 
         {vitals.length === 0 ? (
-          <p className="text-sm text-slate-500">No vitals recorded yet.</p>
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">No vitals recorded yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-slate-50">
-                  <th className="py-2 pr-4 text-left font-semibold text-slate-600">Type</th>
-                  <th className="py-2 pr-4 text-left font-semibold text-slate-600">Value</th>
-                  <th className="py-2 text-left font-semibold text-slate-600">Recorded</th>
+                <tr className="border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50">
+                  <th className="py-2 pr-4 text-left font-semibold text-slate-700 dark:text-foreground">Type</th>
+                  <th className="py-2 pr-4 text-left font-semibold text-slate-700 dark:text-foreground">Value</th>
+                  <th className="py-2 text-left font-semibold text-slate-700 dark:text-foreground">Recorded</th>
                 </tr>
               </thead>
               <tbody>
@@ -289,7 +295,7 @@ export function VitalsRecorder({
                         {v.value}
                         {v.unit ? <span className="text-slate-500"> {v.unit}</span> : null}
                       </td>
-                      <td className="py-2 text-slate-500">
+                      <td className="py-2 text-slate-500 dark:text-muted-foreground">
                         {format(new Date(v.recorded_at), "MM/dd/yyyy HH:mm")}
                       </td>
                     </tr>

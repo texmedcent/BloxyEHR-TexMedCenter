@@ -164,20 +164,20 @@ export default async function PatientDashboardPage() {
     .maybeSingle();
 
   return (
-    <main className="min-h-screen bg-slate-100 p-4 md:p-6">
+    <main className="min-h-screen bg-slate-100 dark:bg-background p-4 md:p-6">
       <div className="mx-auto max-w-5xl space-y-4">
-        <div className="rounded-md border border-slate-200 bg-white p-4">
+        <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold text-slate-900">
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
               MyChart
             </h1>
             <LogoutButton />
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-slate-600 dark:text-muted-foreground mt-1">
             Hello! {profile?.full_name || claims.email || "Patient"}
           </p>
           {linkedPatient?.id && (
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">
               Patient: {linkedPatient.last_name}, {linkedPatient.first_name} (MRN: {linkedPatient.mrn})
             </p>
           )}
@@ -187,45 +187,45 @@ export default async function PatientDashboardPage() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <Card>
+          <Card className="border-slate-200 dark:border-border">
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-[#1a4d8c]" />
+              <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+                <CalendarDays className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
                 Appointments
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold">{appointmentCount ?? 0}</div>
+              <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">{appointmentCount ?? 0}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-slate-200 dark:border-border">
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="h-4 w-4 text-emerald-600" />
+              <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+                <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 Active Encounters
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold">{activeEncounterCount}</div>
+              <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">{activeEncounterCount}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-slate-200 dark:border-border">
             <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4 text-indigo-600" />
+              <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+                <FileText className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
                 Results
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-semibold">{resultCount ?? 0}</div>
+              <div className="text-2xl font-semibold text-slate-900 dark:text-foreground">{resultCount ?? 0}</div>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
+        <Card className="border-slate-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 text-indigo-600" />
+            <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+              <FlaskConical className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
               MyChart Clinical Workspace
             </CardTitle>
           </CardHeader>

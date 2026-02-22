@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ICD10PickerModal } from "./ICD10PickerModal";
 import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
+import { Stethoscope, Search, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface EncounterDiagnosisPanelProps {
   encounterId: string;
@@ -84,40 +85,47 @@ export function EncounterDiagnosisPanel({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Diagnosis & Treatment Plan</CardTitle>
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Stethoscope className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+          Diagnosis & Treatment Plan
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <Label>ICD-10</Label>
-          <div className="mt-1 flex gap-2">
+      <CardContent className="space-y-4">
+        <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-4">
+          <Label className="text-sm font-medium">ICD-10</Label>
+          <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5 mb-2">
+            Search or browse the ICD-10 catalog.
+          </p>
+          <div className="flex gap-2">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onClick={() => setPickerOpen(true)}
               disabled={!canSubmitTreatmentPlan}
-              placeholder='Click to open picker (or type "fracture", "burn", "W54")'
+              placeholder='Search "fracture", "burn", "W54"…'
+              className="flex-1 rounded-lg"
             />
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setPickerOpen(true)}
               disabled={!canSubmitTreatmentPlan}
+              className="gap-1.5 shrink-0"
             >
-              Browse ICD-10
+              <Search className="h-4 w-4" />
+              Browse
             </Button>
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Opens a full searchable ICD-10 list with favorites.
-          </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label>Final Diagnosis Code</Label>
+            <Label className="text-sm">Final Diagnosis Code</Label>
             <Input
-              className="mt-1"
+              className="mt-1.5 rounded-lg"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               disabled={!canSubmitTreatmentPlan}
@@ -125,9 +133,9 @@ export function EncounterDiagnosisPanel({
             />
           </div>
           <div>
-            <Label>Final Diagnosis Description</Label>
+            <Label className="text-sm">Final Diagnosis Description</Label>
             <Input
-              className="mt-1"
+              className="mt-1.5 rounded-lg"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={!canSubmitTreatmentPlan}
@@ -137,9 +145,9 @@ export function EncounterDiagnosisPanel({
         </div>
 
         <div>
-          <Label>Differential Diagnosis (DDx)</Label>
+          <Label className="text-sm">Differential Diagnosis (DDx)</Label>
           <Textarea
-            className="mt-1 min-h-[90px]"
+            className="mt-1.5 min-h-[80px] rounded-lg"
             value={ddx}
             onChange={(e) => setDdx(e.target.value)}
             disabled={!canSubmitTreatmentPlan}
@@ -148,9 +156,9 @@ export function EncounterDiagnosisPanel({
         </div>
 
         <div>
-          <Label>Final Treatment Plan</Label>
+          <Label className="text-sm">Final Treatment Plan</Label>
           <Textarea
-            className="mt-1 min-h-[110px]"
+            className="mt-1.5 min-h-[100px] rounded-lg"
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
             disabled={!canSubmitTreatmentPlan}
@@ -159,17 +167,36 @@ export function EncounterDiagnosisPanel({
         </div>
 
         {!canSubmitTreatmentPlan && (
-          <p className="text-sm text-amber-700">
-            Read-only for {formatRoleLabel(currentUserRole)}. A provider role is required
-            to submit final diagnosis and treatment plan.
-          </p>
+          <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            Read-only for {formatRoleLabel(currentUserRole)}. A provider role is required.
+          </div>
         )}
 
-        {message && <p className="text-sm text-slate-600">{message}</p>}
+        {message && (
+          <div
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+              message.startsWith("Failed")
+                ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
+                : "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
+            }`}
+          >
+            {message.startsWith("Failed") ? (
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            )}
+            {message}
+          </div>
+        )}
 
-        <div className="flex justify-end">
-          <Button onClick={saveDiagnosis} disabled={saving || !canSubmitTreatmentPlan}>
-            {saving ? "Saving..." : "Save Diagnosis"}
+        <div className="flex justify-end pt-2">
+          <Button
+            onClick={saveDiagnosis}
+            disabled={saving || !canSubmitTreatmentPlan}
+            className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
+          >
+            {saving ? "Saving…" : "Save Diagnosis"}
           </Button>
         </div>
       </CardContent>

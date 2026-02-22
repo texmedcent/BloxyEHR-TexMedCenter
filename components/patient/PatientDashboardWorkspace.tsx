@@ -34,15 +34,6 @@ type EncounterRow = {
   return_precautions?: string | null;
 };
 
-type OrderRow = {
-  id: string;
-  encounter_id: string | null;
-  type: string;
-  status: string;
-  ordered_at: string;
-  details: unknown;
-};
-
 type ResultRow = {
   id: string;
   order_id: string | null;
@@ -260,7 +251,7 @@ export function PatientDashboardWorkspace({
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
+        <Card className="border-slate-200 dark:border-border">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <TestTube2 className="h-4 w-4 text-indigo-600" />
@@ -319,7 +310,7 @@ export function PatientDashboardWorkspace({
                   key={result.id}
                   type="button"
                   onClick={() => setSelectedResult(result)}
-                  className="w-full rounded border border-slate-200 px-3 py-2 text-left hover:border-[#1a4d8c]/40 hover:bg-slate-50"
+                  className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium capitalize">{result.type}</p>
@@ -357,7 +348,7 @@ export function PatientDashboardWorkspace({
               const latestLog = logs[0];
               const administeredCount = logs.filter((l) => l.event_type === "administered").length;
               return (
-                <div key={med.id} className="rounded border border-slate-200 px-3 py-2">
+                <div key={med.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium">
                       {label}
@@ -414,7 +405,7 @@ export function PatientDashboardWorkspace({
           </CardHeader>
           <CardContent className="space-y-2">
             {encounters.slice(0, 12).map((enc) => (
-              <div key={enc.id} className="rounded border border-slate-200 px-3 py-2">
+              <div key={enc.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-medium capitalize">{enc.type.replaceAll("_", " ")}</p>
                   <span className="text-xs uppercase text-slate-500">{enc.status}</span>
@@ -444,7 +435,7 @@ export function PatientDashboardWorkspace({
           </CardHeader>
           <CardContent className="space-y-2">
             {upcomingAppointments.slice(0, 10).map((appt) => (
-              <div key={appt.id} className="rounded border border-slate-200 px-3 py-2">
+              <div key={appt.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
                 <p className="text-sm font-medium">{appt.type || "Visit"}</p>
                 <p className="mt-1 text-xs text-slate-600">
                   {format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")} -{" "}
@@ -501,7 +492,7 @@ export function PatientDashboardWorkspace({
               <button
                 key={note.id}
                 type="button"
-                className="w-full rounded border border-slate-200 px-3 py-2 text-left hover:border-[#1a4d8c]/40 hover:bg-slate-50"
+                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 onClick={() =>
                   setSelectedDoc({
                     title: note.type.replaceAll("_", " "),
@@ -517,7 +508,7 @@ export function PatientDashboardWorkspace({
               <button
                 key={proc.id}
                 type="button"
-                className="w-full rounded border border-slate-200 px-3 py-2 text-left hover:border-[#1a4d8c]/40 hover:bg-slate-50"
+                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 onClick={() =>
                   setSelectedDoc({
                     title: `Procedure (${proc.status})`,
@@ -544,13 +535,13 @@ export function PatientDashboardWorkspace({
           </CardHeader>
           <CardContent className="space-y-2">
             {actionItems.map((item) => (
-              <div key={item.key} className="rounded border border-amber-200 bg-amber-50 px-3 py-2">
+              <div key={item.key} className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 px-3 py-2">
                 <p className="text-sm font-medium text-amber-900">{item.title}</p>
                 <p className="mt-1 text-xs text-amber-800">{item.details}</p>
               </div>
             ))}
             {tasks.slice(0, 8).map((task) => (
-              <div key={task.id} className="rounded border border-slate-200 px-3 py-2">
+              <div key={task.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">{task.title}</p>
                   <span className="text-[11px] uppercase text-slate-500">{task.status}</span>
@@ -578,7 +569,7 @@ export function PatientDashboardWorkspace({
         <CardContent className="space-y-3">
           <div className="space-y-2">
             {messageThreads.slice(0, 8).map((thread) => (
-              <div key={thread.id} className="rounded border border-slate-200 px-3 py-2">
+              <div key={thread.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
                 <p className="text-sm font-medium">{thread.title.replace(/^Message:\s*/i, "") || "Portal message"}</p>
                 {thread.details && <p className="mt-1 text-xs text-slate-600 whitespace-pre-wrap">{thread.details}</p>}
                 <p className="mt-1 text-xs text-slate-500">
@@ -590,7 +581,7 @@ export function PatientDashboardWorkspace({
               <p className="text-sm text-slate-500">No messages yet. Send one below to contact your care team.</p>
             )}
           </div>
-          <div className="rounded border border-slate-200 p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border p-3">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Send a new message</p>
             <div className="space-y-2">
               <Input
@@ -634,7 +625,7 @@ export function PatientDashboardWorkspace({
                   Critical result
                 </div>
               )}
-              <pre className="whitespace-pre-wrap rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              <pre className="whitespace-pre-wrap rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-3 text-sm text-slate-700 dark:text-foreground">
                 {typeof selectedResult.value === "string"
                   ? selectedResult.value
                   : JSON.stringify(selectedResult.value, null, 2)}
@@ -654,7 +645,7 @@ export function PatientDashboardWorkspace({
               </Button>
             </CardHeader>
             <CardContent className="overflow-y-auto space-y-3">
-              <pre className="whitespace-pre-wrap rounded border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              <pre className="whitespace-pre-wrap rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted p-3 text-sm text-slate-700 dark:text-foreground">
                 {selectedDoc.body}
               </pre>
               <div className="inline-flex items-center gap-2 rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-700">

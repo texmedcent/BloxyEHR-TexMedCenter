@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { addProviderToCareTeam } from "@/lib/care_team";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, FileText, AlertTriangle } from "lucide-react";
 
 const NOTE_TEMPLATES = {
   progress: `Chief Complaint:
@@ -53,6 +55,48 @@ Abnormal Findings:
 Clinical Impression:
 
 Plan:
+`,
+  triage: `Triage Note
+
+Chief Complaint:
+Vital Signs: BP / HR / RR / SpO2 / Temp / Pain
+Allergies:
+Medications:
+Brief HPI:
+Acuity Level:
+`,
+  sample_opqrst: `SAMPLE / OPQRST
+
+SAMPLE:
+- Signs/Symptoms:
+- Allergies:
+- Medications:
+- Past history:
+- Last oral intake:
+- Events leading to presentation:
+
+OPQRST:
+- Onset:
+- Provocation/Palliation:
+- Quality:
+- Region/Radiation:
+- Severity:
+- Timing:
+`,
+  trauma: `Trauma Note
+
+Mechanism of Injury:
+GCS:
+Primary Survey (ABCDE):
+- Airway:
+- Breathing:
+- Circulation:
+- Disability:
+- Exposure:
+
+Injuries Identified:
+Interventions:
+Disposition:
 `,
   emergency_department_note: `Emergency Department Note
 
@@ -119,6 +163,9 @@ type NoteTemplateKey = keyof typeof NOTE_TEMPLATES;
 const TEMPLATE_LABELS: Record<NoteTemplateKey, string> = {
   progress: "Progress Note",
   soap: "SOAP Note",
+  triage: "Triage Note",
+  sample_opqrst: "SAMPLE / OPQRST",
+  trauma: "Trauma Note",
   operative_note: "Operative Note",
   procedure_note_non_or: "Procedure Note (Non-OR)",
   lab_interpretation: "Lab Interpretation Note",
@@ -130,11 +177,12 @@ const TEMPLATE_LABELS: Record<NoteTemplateKey, string> = {
 
 interface NoteEditorProps {
   encounterId: string;
+  patientId: string;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
+export function NoteEditor({ encounterId, patientId, onClose, onSaved }: NoteEditorProps) {
   const [type, setType] = useState<NoteTemplateKey>("progress");
   const [content, setContent] = useState(NOTE_TEMPLATES.progress);
   const [soapSubjective, setSoapSubjective] = useState("");
@@ -144,6 +192,7 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
   const [sign, setSign] = useState(false);
   const [saving, setSaving] = useState(false);
   const [signature, setSignature] = useState<string>("Clinician");
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const loadSignature = async () => {
@@ -209,31 +258,39 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
       content: signedContent,
       signed_at: sign ? new Date().toISOString() : null,
     });
-    setSaving(false);
     if (error) {
       console.error(error);
+      setSaving(false);
       return;
     }
+    await addProviderToCareTeam(supabase, patientId, "documentation");
+    setSaving(false);
     onSaved();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between shrink-0">
-          <CardTitle>Add Clinical Note</CardTitle>
+      <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col border-slate-200 dark:border-border">
+        <CardHeader className="flex flex-row items-center justify-between shrink-0 border-b border-slate-200 dark:border-border">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
+            Add Clinical Note
+          </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="flex min-h-0 flex-col gap-4 overflow-y-auto">
-          <div>
-            <Label>Template</Label>
-            <div className="mt-1 grid gap-2 md:grid-cols-[1fr_auto]">
+        <CardContent className="flex min-h-0 flex-col gap-5 overflow-y-auto pt-5">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-4">
+            <Label className="text-sm font-medium">Template</Label>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5 mb-3">
+              Choose a note structure. You can change it anytime.
+            </p>
+            <div className="flex flex-wrap gap-2">
               <select
                 value={type}
                 onChange={(e) => applyTemplate(e.target.value as NoteTemplateKey)}
-                className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
+                className="h-9 flex-1 min-w-[200px] rounded-lg border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm"
               >
                 {Object.keys(NOTE_TEMPLATES).map((key) => (
                   <option key={key} value={key}>
@@ -241,48 +298,56 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
                   </option>
                 ))}
               </select>
-              <Button variant="outline" size="sm" onClick={() => applyTemplate(type)}>
-                Apply Suggested Template
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyTemplate(type)}
+                className="shrink-0"
+              >
+                Reset template
               </Button>
             </div>
           </div>
-          <div className="flex-1 min-h-0">
+
+          <div className="flex-1 min-h-0 space-y-3">
             {type === "soap" ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <p className="text-xs text-slate-500 dark:text-muted-foreground">
-                  SOAP template encourages complete clinical documentation.
+                  SOAP encourages complete documentation: Subjective, Objective, Assessment, Plan.
                 </p>
-                <div>
-                  <Label>Subjective</Label>
-                  <Textarea
-                    className="mt-1 min-h-[80px]"
-                    value={soapSubjective}
-                    onChange={(e) => setSoapSubjective(e.target.value)}
-                    placeholder="What the patient reports"
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label className="text-sm">Subjective</Label>
+                    <Textarea
+                      className="mt-1.5 min-h-[90px] rounded-lg"
+                      value={soapSubjective}
+                      onChange={(e) => setSoapSubjective(e.target.value)}
+                      placeholder="What the patient reports"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Objective</Label>
+                    <Textarea
+                      className="mt-1.5 min-h-[90px] rounded-lg"
+                      value={soapObjective}
+                      onChange={(e) => setSoapObjective(e.target.value)}
+                      placeholder="Exam findings, vitals, tests"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label>Objective</Label>
+                  <Label className="text-sm">Assessment</Label>
                   <Textarea
-                    className="mt-1 min-h-[80px]"
-                    value={soapObjective}
-                    onChange={(e) => setSoapObjective(e.target.value)}
-                    placeholder="Exam findings, vitals, tests"
-                  />
-                </div>
-                <div>
-                  <Label>Assessment</Label>
-                  <Textarea
-                    className="mt-1 min-h-[80px]"
+                    className="mt-1.5 min-h-[70px] rounded-lg"
                     value={soapAssessment}
                     onChange={(e) => setSoapAssessment(e.target.value)}
                     placeholder="Clinical impression / diagnosis"
                   />
                 </div>
                 <div>
-                  <Label>Plan</Label>
+                  <Label className="text-sm">Plan</Label>
                   <Textarea
-                    className="mt-1 min-h-[80px]"
+                    className="mt-1.5 min-h-[90px] rounded-lg"
                     value={soapPlan}
                     onChange={(e) => setSoapPlan(e.target.value)}
                     placeholder="Treatment and follow-up plan"
@@ -290,37 +355,51 @@ export function NoteEditor({ encounterId, onClose, onSaved }: NoteEditorProps) {
                 </div>
               </div>
             ) : (
-              <>
-                <Label>Content</Label>
+              <div>
+                <Label className="text-sm font-medium">Content</Label>
                 <Textarea
-                  className="mt-1 min-h-[200px] resize-y"
+                  ref={contentTextareaRef}
+                  className="mt-1.5 min-h-[240px] resize-y rounded-lg"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Enter note content..."
+                  placeholder="Enter note content…"
                 />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setSign((s) => !s)}
+              className={cn(
+                "transition-colors",
+                sign && "ring-2 ring-red-500 ring-offset-2 dark:ring-offset-background"
+              )}
+            >
+              Sign note on save
+            </Button>
+            {sign && (
+              <>
+                <p className="text-xs text-slate-500 dark:text-muted-foreground">
+                  Signature: {signature}
+                </p>
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  Note will be locked upon save. Signed notes cannot be edited.
+                </div>
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="sign"
-              checked={sign}
-              onChange={(e) => setSign(e.target.checked)}
-            />
-            <Label htmlFor="sign">Sign note on save</Label>
-            {sign && (
-              <span className="text-xs text-slate-500 dark:text-muted-foreground">
-                Signature: {signature}
-              </span>
-            )}
-          </div>
-          <div className="flex justify-end gap-2 shrink-0">
+
+          <div className="flex justify-end gap-2 shrink-0 pt-2 border-t border-slate-200 dark:border-border">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save Note"}
+            <Button onClick={handleSave} disabled={saving} className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90">
+              {saving ? "Saving…" : "Save Note"}
             </Button>
           </div>
         </CardContent>

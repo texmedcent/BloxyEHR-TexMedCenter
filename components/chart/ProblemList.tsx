@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 
 interface Problem {
@@ -63,24 +63,33 @@ export function ProblemList({ patientId, problems: initialProblems }: ProblemLis
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-semibold tracking-normal">Problem List</CardTitle>
-        <Button size="sm" variant="outline" className="h-8" onClick={() => setShowAdd(true)}>
-          <Plus className="h-4 w-4 mr-1" />
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-semibold tracking-normal flex items-center gap-2">
+          <ClipboardList className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+          Problem List
+        </CardTitle>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 gap-1.5"
+          onClick={() => setShowAdd(true)}
+        >
+          <Plus className="h-4 w-4" />
           Add
         </Button>
       </CardHeader>
       <CardContent>
         {showAdd && (
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 p-3 rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30">
             <Input
               placeholder="Problem description"
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addProblem()}
+              className="rounded-lg"
             />
-            <Button size="sm" onClick={addProblem}>
+            <Button size="sm" onClick={addProblem} disabled={!newDesc.trim()} className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90">
               Save
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>
@@ -89,14 +98,26 @@ export function ProblemList({ patientId, problems: initialProblems }: ProblemLis
           </div>
         )}
         {problems.length === 0 ? (
-          <p className="text-sm text-slate-500">No problems documented</p>
+          <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-6 text-center">
+            <ClipboardList className="mx-auto h-10 w-10 text-slate-300 dark:text-muted-foreground mb-2" />
+            <p className="text-sm text-slate-500 dark:text-muted-foreground">
+              No problems documented yet.
+            </p>
+            {!showAdd && (
+              <Button size="sm" variant="outline" className="mt-3" onClick={() => setShowAdd(true)}>
+                Add first problem
+              </Button>
+            )}
+          </div>
         ) : (
           <ul className="space-y-2">
             {problems.map((p) => (
               <li
                 key={p.id}
-                className={`p-2 rounded border text-sm ${
-                  p.status === "resolved" ? "bg-slate-50 text-slate-500" : "bg-white"
+                className={`rounded-lg border p-3 text-sm transition-colors ${
+                  p.status === "resolved"
+                    ? "border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 text-slate-500 dark:text-muted-foreground"
+                    : "border-slate-200 dark:border-border bg-white dark:bg-card"
                 }`}
               >
                 <div className="flex justify-between items-start gap-2">
@@ -104,7 +125,7 @@ export function ProblemList({ patientId, problems: initialProblems }: ProblemLis
                   <select
                     value={p.status}
                     onChange={(e) => updateStatus(p.id, e.target.value)}
-                    className="text-xs rounded border px-1 py-0.5"
+                    className="text-xs rounded-lg border border-slate-300 dark:border-input bg-white dark:bg-background px-2 py-1"
                   >
                     <option value="active">Active</option>
                     <option value="resolved">Resolved</option>
@@ -112,7 +133,7 @@ export function ProblemList({ patientId, problems: initialProblems }: ProblemLis
                   </select>
                 </div>
                 {p.onset_date && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">
                     Onset: {format(new Date(p.onset_date), "MM/dd/yyyy")}
                   </p>
                 )}

@@ -4,6 +4,8 @@ interface BehrLogoProps {
   className?: string;
   compact?: boolean;
   iconOnly?: boolean;
+  /** Use white/light styling when logo is on a dark background (e.g. sidebar) */
+  inverted?: boolean;
 }
 
 function HexMark({ compact }: { compact?: boolean }) {
@@ -19,15 +21,29 @@ function HexMark({ compact }: { compact?: boolean }) {
   );
 }
 
-export function BehrLogo({ className, compact = false, iconOnly = false }: BehrLogoProps) {
+export function BehrLogo({
+  className,
+  compact = false,
+  iconOnly = false,
+  inverted = false,
+}: BehrLogoProps) {
+  const textColor = inverted ? "text-white" : "text-[#1a4d8c] dark:text-primary";
   return (
-    <div className={cn("inline-flex items-center gap-3 text-[#1a4d8c]", className)}>
+    <div
+      className={cn(
+        "inline-flex items-center gap-2",
+        !inverted && "text-[#1a4d8c] dark:text-primary",
+        inverted && "text-white",
+        className
+      )}
+    >
       <HexMark compact={compact} />
       {!iconOnly && (
-        <div className="leading-none">
+        <div className={cn("leading-none", textColor)}>
           <p
             className={cn(
-              "font-black tracking-tight text-[#1a4d8c]",
+              "font-black tracking-tight",
+              inverted ? "text-white" : "text-[#1a4d8c] dark:text-primary",
               compact ? "text-xl" : "text-4xl sm:text-5xl"
             )}
           >
@@ -35,7 +51,8 @@ export function BehrLogo({ className, compact = false, iconOnly = false }: BehrL
           </p>
           <p
             className={cn(
-              "font-extrabold tracking-tight text-[#1a4d8c]",
+              "font-extrabold tracking-tight",
+              inverted ? "text-white" : "text-[#1a4d8c] dark:text-primary",
               compact ? "text-sm" : "text-2xl sm:text-3xl"
             )}
           >

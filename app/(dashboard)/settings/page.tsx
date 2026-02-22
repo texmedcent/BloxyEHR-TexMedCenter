@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings, Building2, ChevronRight } from "lucide-react";
 import { isHospitalManager } from "@/lib/roles";
 import { AccountSettingsForm } from "@/components/settings/AccountSettingsForm";
 import { ThemeSettings } from "@/components/settings/ThemeSettings";
@@ -30,8 +31,15 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Settings</h1>
+    <div className="space-y-8 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+          <Settings className="h-6 w-6 text-primary shrink-0" />
+          Settings
+        </h1>
+        <p className="mt-1 text-muted-foreground text-sm">Manage your account and preferences.</p>
+      </div>
+
       <ThemeSettings />
       {userId && (
         <AccountSettingsForm
@@ -43,20 +51,23 @@ export default async function SettingsPage() {
           role={role}
         />
       )}
+
       {isHospitalManager(role) && (
         <Card>
           <CardHeader>
-            <CardTitle>Institution</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Institution
+            </CardTitle>
+            <CardDescription>Manage roles, audit logs, safety queue, and more.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-600 dark:text-muted-foreground mb-3">
-              Manage user roles for your institution.
-            </p>
             <Link
               href="/settings/institution"
-              className="inline-flex h-9 items-center rounded-md bg-[#1a4d8c] px-3 text-sm font-medium text-white hover:bg-[#1a4d8c]/90"
+              className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
             >
               Open Institution Settings
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
           </CardContent>
         </Card>

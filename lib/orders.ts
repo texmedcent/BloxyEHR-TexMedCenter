@@ -32,6 +32,18 @@ export function formatOrderDetails(type: string, details: unknown): string {
   const note = stringField(record, "note");
   if (note) return note;
 
+  if (type === "lab") {
+    const test = stringField(record, "test");
+    const priority = stringField(record, "priority");
+    if (test) return priority ? `${test} (${priority})` : test;
+  }
+
+  if (type === "imaging") {
+    const study = stringField(record, "study");
+    const priority = stringField(record, "priority");
+    if (study) return priority ? `${study} (${priority})` : study;
+  }
+
   return JSON.stringify(record);
 }
 

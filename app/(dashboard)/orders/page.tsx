@@ -25,6 +25,7 @@ export default async function OrdersPage({
     med_reconciled_at: string | null;
     med_reconciled_by_name: string | null;
     high_risk_med: boolean;
+    pharmacy_verified_at: string | null;
     next_due_at: string | null;
     administration_frequency: string | null;
     imaging_status: string;
@@ -39,6 +40,14 @@ export default async function OrdersPage({
     specimen_rejection_reason: string | null;
     recollect_requested: boolean;
   }[] = [];
+  let bypassPharmacyVerification = false;
+  const { data: instSettings } = await supabase
+    .from("institution_settings")
+    .select("bypass_pharmacy_verification")
+    .eq("id", 1)
+    .maybeSingle();
+  bypassPharmacyVerification = instSettings?.bypass_pharmacy_verification ?? false;
+
   let resultByOrderId: Record<
     string,
     { id: string; status: string; value: unknown; reported_at: string }
@@ -89,7 +98,7 @@ export default async function OrdersPage({
       let orderQuery = supabase
         .from("orders")
         .select(
-          "id, type, status, ordered_at, details, patient_id, encounter_id, is_controlled_substance, med_reconciled_at, med_reconciled_by_name, high_risk_med, next_due_at, administration_frequency, imaging_status, imaging_wet_read_text, imaging_final_impression, imaging_addendum_text, specimen_status, specimen_collected_at, specimen_collected_by_name, specimen_received_at, specimen_received_by_name, specimen_rejection_reason, recollect_requested"
+          "id, type, status, ordered_at, details, patient_id, encounter_id, is_controlled_substance, med_reconciled_at, med_reconciled_by_name, high_risk_med, pharmacy_verified_at, next_due_at, administration_frequency, imaging_status, imaging_wet_read_text, imaging_final_impression, imaging_addendum_text, specimen_status, specimen_collected_at, specimen_collected_by_name, specimen_received_at, specimen_received_by_name, specimen_rejection_reason, recollect_requested"
         )
         .eq("patient_id", patientId)
         .order("ordered_at", { ascending: false })
@@ -165,6 +174,7 @@ export default async function OrdersPage({
       claimedPatients={claimedPatients}
       currentUserRole={currentUserRole}
       selectedEncounterId={encounterId || null}
+      bypassPharmacyVerification={bypassPharmacyVerification}
     />
   );
 }

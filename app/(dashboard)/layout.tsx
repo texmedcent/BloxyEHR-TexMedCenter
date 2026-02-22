@@ -37,6 +37,7 @@ export default async function DashboardLayout({
     <HyperspaceLayout
       userEmail={claims.email}
       userName={profile?.full_name ?? undefined}
+      userRole={profile?.role ?? undefined}
     >
       {children}
     </HyperspaceLayout>

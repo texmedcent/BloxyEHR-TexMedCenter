@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClipboardCheck } from "lucide-react";
 
 const CAMPUSES = ["Primary Care Office", "Emergency Room", "Urgent Care"] as const;
 const ACUITY_LEVELS = ["esi_1", "esi_2", "esi_3", "esi_4", "esi_5"] as const;
@@ -122,13 +123,16 @@ export function CheckInCard({
   };
 
   return (
-    <Card>
+    <Card className="border-slate-200 dark:border-border">
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">Check In</CardTitle>
+        <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900 dark:text-foreground">
+          <ClipboardCheck className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+          Check In
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {activeCheckin ? (
-          <div className="rounded border border-amber-200 bg-amber-50 p-3 text-sm">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 p-3 text-sm">
             <p className="font-medium text-amber-800">Current status: {activeCheckin.status.toUpperCase()}</p>
             <p className="text-amber-700">Campus: {activeCheckin.campus}</p>
             {activeCheckin.chief_complaint && (
@@ -147,7 +151,7 @@ export function CheckInCard({
                 <select
                   value={campus}
                   onChange={(e) => setCampus(e.target.value as (typeof CAMPUSES)[number])}
-                  className="h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                   disabled={saving}
                 >
                   {CAMPUSES.map((c) => (
@@ -162,7 +166,7 @@ export function CheckInCard({
                 <select
                   value={arrivalMode}
                   onChange={(e) => setArrivalMode(e.target.value as (typeof ARRIVAL_MODES)[number])}
-                  className="h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                   disabled={saving}
                 >
                   {ARRIVAL_MODES.map((mode) => (
@@ -177,7 +181,7 @@ export function CheckInCard({
                 <select
                   value={acuityLevel}
                   onChange={(e) => setAcuityLevel(e.target.value as (typeof ACUITY_LEVELS)[number])}
-                  className="h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                   disabled={saving}
                 >
                   {ACUITY_LEVELS.map((acuity) => (
@@ -195,7 +199,7 @@ export function CheckInCard({
                   max={10}
                   value={painScore}
                   onChange={(e) => setPainScore(e.target.value)}
-                  className="h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                  className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                   disabled={saving}
                 />
               </div>
@@ -205,7 +209,7 @@ export function CheckInCard({
               <input
                 value={chiefComplaint}
                 onChange={(e) => setChiefComplaint(e.target.value)}
-                className="h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                 placeholder="Reason for visit"
                 disabled={saving}
               />

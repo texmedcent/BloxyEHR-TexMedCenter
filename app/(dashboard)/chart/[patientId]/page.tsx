@@ -138,41 +138,40 @@ async function PatientChartContent({
     (med) => (med.status || "").toLowerCase() !== "discontinued"
   );
 
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <RecordRecentPatient patientId={patientId} />
-      <div className="rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
-        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-xs">
-          <span className="px-2 py-1 font-semibold text-slate-700 dark:text-foreground border-b-2 border-[#1a4d8c] dark:border-primary dark:bg-card">
+      <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden">
+        <div className="flex items-center gap-4 border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2.5 text-sm">
+          <span className="px-3 py-1.5 font-semibold text-slate-800 dark:text-foreground rounded-t-lg bg-white dark:bg-card border border-b-0 border-slate-200 dark:border-border -mb-px">
             Summary
           </span>
           <Link
             href={`/documentation?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
           >
-            <FileText className="h-3.5 w-3.5" />
+            <FileText className="h-4 w-4" />
             Documentation
           </Link>
           <Link
             href={`/orders?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
           >
-            <ClipboardList className="h-3.5 w-3.5" />
+            <ClipboardList className="h-4 w-4" />
             Orders
           </Link>
           <Link
             href={`/procedures?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
           >
-            <ClipboardCheck className="h-3.5 w-3.5" />
+            <ClipboardCheck className="h-4 w-4" />
             Procedures
           </Link>
           <Link
             href={`/results?patientId=${patientId}`}
-            className="inline-flex items-center gap-1 text-[#1a4d8c] dark:text-primary hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
           >
-            <TestTube className="h-3.5 w-3.5" />
+            <TestTube className="h-4 w-4" />
             Results
           </Link>
         </div>
@@ -197,9 +196,7 @@ async function PatientChartContent({
       </div>
       <MedicationListPanel medications={activeMedications} />
       <EncounterTrendPanel vitals={vitals || []} labs={trendLabs} />
-      <div id="vitals">
-        <VitalsPanel patientId={patientId} vitals={vitals || []} />
-      </div>
+      <VitalsPanel patientId={patientId} vitals={vitals || []} />
     </div>
   );
 }

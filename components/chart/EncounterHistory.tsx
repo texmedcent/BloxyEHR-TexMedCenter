@@ -138,16 +138,19 @@ export function EncounterHistory({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Encounter History</CardTitle>
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <svg className="h-4 w-4 text-slate-500 dark:text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          Encounter History
+        </CardTitle>
         <div className="flex items-center gap-2">
           <select
             value={encounterType}
             onChange={(e) =>
               setEncounterType(e.target.value as "outpatient" | "inpatient" | "ed")
             }
-            className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+            className="h-8 rounded-lg border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
           >
             <option value="outpatient">Outpatient</option>
             <option value="inpatient">Inpatient</option>
@@ -171,18 +174,23 @@ export function EncounterHistory({
       </CardHeader>
       <CardContent>
         {endEncounterError && (
-          <p className="mb-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
+          <div className="mb-3 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-800 dark:text-red-200">
             Could not finalize encounter: {endEncounterError}
-          </p>
+          </div>
         )}
         {encounters.length === 0 ? (
-          <p className="text-sm text-gray-500">No encounters</p>
+          <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-6 text-center">
+            <p className="text-sm text-slate-500 dark:text-muted-foreground mb-3">No encounters yet.</p>
+            <Button size="sm" variant="outline" onClick={startNewEncounter} disabled={starting || !canStartEncounter}>
+              Start first encounter
+            </Button>
+          </div>
         ) : (
           <ul className="space-y-2">
             {encounters.map((e) => (
               <li key={e.id}>
                 <div
-                  className="flex items-center justify-between gap-2 rounded border p-2"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-border p-3 hover:bg-slate-50 dark:hover:bg-muted/30 transition-colors"
                   onContextMenu={(event) => {
                     event.preventDefault();
                     setContextMenu({
@@ -197,7 +205,7 @@ export function EncounterHistory({
                     className="min-w-0 flex-1 hover:text-[#1a4d8c]"
                   >
                     <span className="font-medium capitalize">{e.type}</span>
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-slate-500 dark:text-muted-foreground ml-2">
                       {e.admit_date
                         ? format(new Date(e.admit_date), "MM/dd/yyyy")
                         : "—"}
@@ -206,10 +214,10 @@ export function EncounterHistory({
                       )}
                     </span>
                     <span
-                      className={`ml-2 text-xs px-1.5 py-0.5 rounded ${
+                      className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
                         e.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-600"
+                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                          : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground"
                       }`}
                     >
                       {e.status}
@@ -297,6 +305,7 @@ export function EncounterHistory({
       {editEncounterId && (
         <EncounterEditModal
           encounterId={editEncounterId}
+          patientId={patientId}
           currentUserRole={currentUserRole}
           onClose={() => setEditEncounterId(null)}
           onSaved={() => {

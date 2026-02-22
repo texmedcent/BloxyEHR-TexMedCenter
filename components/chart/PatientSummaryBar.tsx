@@ -26,7 +26,7 @@ export function PatientSummaryBar({ patient, className }: PatientSummaryBarProps
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-4 px-3 py-2 bg-white dark:bg-muted border rounded-md shadow-sm text-sm dark:border-[hsl(var(--border))]",
+        "flex flex-wrap items-center gap-4 px-4 py-3 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-lg text-sm shadow-sm",
         className
       )}
     >

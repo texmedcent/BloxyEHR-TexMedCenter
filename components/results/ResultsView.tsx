@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TestTube } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TestTube, UserSearch } from "lucide-react";
 import { PatientSearchSelect } from "@/components/documentation/PatientSearchSelect";
 import { ResultDetail } from "./ResultDetail";
 
@@ -86,29 +87,36 @@ export function ResultsView({
   if (!patient) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Results Management</h1>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600 mb-4">
-              Search for a patient to view results.
+        <div className="flex items-center gap-3">
+          <TestTube className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+          <div>
+            <h1 className="text-2xl font-semibold">Results</h1>
+            <p className="text-sm text-slate-600 dark:text-muted-foreground">
+              View lab, imaging, and other result types.
             </p>
+          </div>
+        </div>
+        <Card className="border-slate-200 dark:border-border">
+          <CardContent className="pt-6">
             {claimedPatients.length > 0 && (
               <div className="mb-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Quick Open Claimed Patients
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
+                  Quick Open
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {claimedPatients.map((p) => (
-                    <button
+                    <Button
                       key={p.id}
-                      type="button"
-                      className="inline-flex h-8 items-center rounded border border-slate-300 bg-white px-2 text-xs hover:bg-slate-50"
+                      size="sm"
+                      variant="outline"
                       onClick={() =>
                         updateParams({ patientId: p.id, encounterId: undefined })
                       }
+                      className="gap-1.5"
                     >
+                      <UserSearch className="h-3.5 w-3.5" />
                       {p.last_name}, {p.first_name}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -124,43 +132,53 @@ export function ResultsView({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Results Management</h1>
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="font-medium">
-          {patient.last_name}, {patient.first_name}
-        </span>
-        <span className="text-sm text-gray-500">MRN: {patient.mrn}</span>
-        {selectedEncounterId && (
-          <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-700">
-            Encounter Filter Active
-          </span>
-        )}
-        <select
-          value={filterType || ""}
-          onChange={(e) =>
-            updateParams({ type: e.target.value || undefined })
-          }
-          className="rounded border px-2 py-1 text-sm"
-        >
-          <option value="">All types</option>
-          {RESULT_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+      <div className="flex items-center gap-3">
+        <TestTube className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-semibold">Results</h1>
+          <div className="flex flex-wrap items-center gap-3 mt-1">
+            <span className="font-medium text-slate-800 dark:text-foreground">
+              {patient.last_name}, {patient.first_name}
+            </span>
+            <span className="text-sm text-slate-500 dark:text-muted-foreground">
+              MRN {patient.mrn}
+            </span>
+            {selectedEncounterId && (
+              <span className="rounded-full bg-blue-100 dark:bg-primary/20 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-primary">
+                Encounter filter active
+              </span>
+            )}
+            <select
+              value={filterType || ""}
+              onChange={(e) => updateParams({ type: e.target.value || undefined })}
+              className="rounded-lg border border-slate-300 dark:border-input bg-white dark:bg-background px-2 py-1.5 text-sm"
+            >
+              <option value="">All types</option>
+              {RESULT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border-slate-200 dark:border-border">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <TestTube className="h-4 w-4" />
+            <TestTube className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
             Results
           </CardTitle>
         </CardHeader>
         <CardContent>
           {results.length === 0 ? (
-            <p className="text-sm text-gray-500">No results found</p>
+            <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-8 text-center">
+              <TestTube className="mx-auto h-12 w-12 text-slate-300 dark:text-muted-foreground mb-3" />
+              <p className="text-sm text-slate-500 dark:text-muted-foreground">
+                No results found for this selection.
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {results.map((r) => (

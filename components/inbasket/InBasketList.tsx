@@ -142,11 +142,11 @@ export function InBasketList({ items }: InBasketListProps) {
   };
 
   return (
-    <Card>
+    <Card className="border-slate-200 dark:border-border">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2">
-            <Inbox className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-foreground">
+            <Inbox className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
             Tasks & Notifications
           </CardTitle>
           <Button
@@ -161,31 +161,31 @@ export function InBasketList({ items }: InBasketListProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+        <div className="mb-3 rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50 p-3">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Create Task
           </p>
           <div className="grid gap-2 md:grid-cols-[1.5fr_1fr_170px_150px_auto]">
             <input
-              className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+              className="h-8 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-xs text-slate-900 dark:text-foreground"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="Task title"
             />
             <input
-              className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+              className="h-8 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-xs text-slate-900 dark:text-foreground"
               value={newTaskDetails}
               onChange={(e) => setNewTaskDetails(e.target.value)}
               placeholder="Task details"
             />
             <input
-              className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+              className="h-8 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-xs text-slate-900 dark:text-foreground"
               type="datetime-local"
               value={newTaskDueAt}
               onChange={(e) => setNewTaskDueAt(e.target.value)}
             />
             <select
-              className="h-8 rounded border border-slate-300 bg-white px-2 text-xs"
+              className="h-8 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-xs text-slate-900 dark:text-foreground"
               value={newTaskPriority}
               onChange={(e) => setNewTaskPriority(e.target.value)}
             >
@@ -200,14 +200,18 @@ export function InBasketList({ items }: InBasketListProps) {
           </div>
         </div>
         {sorted.length === 0 ? (
-          <p className="text-gray-600">No items in your In Basket</p>
+          <div className="rounded-lg border border-dashed border-slate-300 dark:border-border bg-slate-50 dark:bg-muted/30 p-8 text-center">
+            <Inbox className="mx-auto h-10 w-10 text-slate-400 dark:text-muted-foreground mb-2" />
+            <p className="text-sm font-medium text-slate-700 dark:text-foreground">No items in your In Basket</p>
+            <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">Tasks and notifications will appear here.</p>
+          </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-slate-200 dark:divide-border">
             {sorted.map((item) => (
               <li
                 key={item.id}
-                className={`py-3 flex justify-between items-start gap-4 ${
-                  !item.read_at ? "font-medium" : "text-gray-600"
+                className={`py-3 flex justify-between items-start gap-4 rounded-lg px-2 -mx-2 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors ${
+                  !item.read_at ? "font-medium text-slate-900 dark:text-foreground" : "text-slate-600 dark:text-muted-foreground"
                 }`}
               >
                 <div className="min-w-0">
@@ -215,30 +219,30 @@ export function InBasketList({ items }: InBasketListProps) {
                     {item.headline || `${item.type} notification`}
                   </p>
                   {item.details && (
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5">
                       {item.details}
                     </p>
                   )}
                   {item.patientName && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground">
                       {item.patientName}
                       {item.patientMrn ? ` (MRN: ${item.patientMrn})` : ""}
                     </p>
                   )}
                   {item.taskStatus && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-muted-foreground">
                       Task status: {item.taskStatus.replaceAll("_", " ")}
                     </p>
                   )}
                   {(item.taskSlaViolation || item.taskEscalated) && (
                     <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
                       {item.taskSlaViolation && (
-                        <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-700">
+                        <span className="rounded-md bg-red-50 dark:bg-red-950/50 px-1.5 py-0.5 text-red-700 dark:text-red-300 text-[11px]">
                           SLA overdue
                         </span>
                       )}
                       {item.taskEscalated && (
-                        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">
+                        <span className="rounded-md bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 text-amber-700 dark:text-amber-300 text-[11px]">
                           Escalated
                         </span>
                       )}
@@ -261,7 +265,7 @@ export function InBasketList({ items }: InBasketListProps) {
                       <Link href={`/chart/${item.relatedPatientId}`}>Open Chart</Link>
                     </Button>
                   )}
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-slate-500 dark:text-muted-foreground">
                     {format(new Date(item.created_at), "MM/dd/yyyy HH:mm")}
                   </span>
                   {!item.read_at && (

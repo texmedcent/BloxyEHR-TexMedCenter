@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, UserSearch } from "lucide-react";
 import { OrderForm } from "./OrderForm";
 import { OrderResultForm } from "./OrderResultForm";
 import { MedicationAdminLogModal } from "./MedicationAdminLogModal";
@@ -33,6 +33,7 @@ interface Order {
   med_reconciled_at: string | null;
   med_reconciled_by_name: string | null;
   high_risk_med: boolean;
+  pharmacy_verified_at: string | null;
   next_due_at: string | null;
   administration_frequency: string | null;
   imaging_status: string;
@@ -59,6 +60,7 @@ interface OrderViewProps {
   claimedPatients: Patient[];
   currentUserRole: string | null;
   selectedEncounterId: string | null;
+  bypassPharmacyVerification?: boolean;
 }
 
 export function OrderView({
@@ -69,6 +71,7 @@ export function OrderView({
   claimedPatients,
   currentUserRole,
   selectedEncounterId,
+  bypassPharmacyVerification = false,
 }: OrderViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -245,16 +248,21 @@ export function OrderView({
   if (!patient) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Order Entry</h1>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-gray-600 mb-4">
-              Search for a patient to place orders.
+        <div className="flex items-center gap-3">
+          <ClipboardList className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+          <div>
+            <h1 className="text-2xl font-semibold">Order Entry</h1>
+            <p className="text-sm text-slate-600 dark:text-muted-foreground">
+              Place medication, lab, imaging, and procedure orders.
             </p>
+          </div>
+        </div>
+        <Card className="border-slate-200 dark:border-border">
+          <CardContent className="pt-6">
             {claimedPatients.length > 0 && (
               <div className="mb-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Quick Order for Claimed Patients
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
+                  Quick Open
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {claimedPatients.map((p) => (
@@ -263,7 +271,9 @@ export function OrderView({
                       size="sm"
                       variant="outline"
                       onClick={() => updateParams(p.id)}
+                      className="gap-1.5"
                     >
+                      <UserSearch className="h-3.5 w-3.5" />
                       {p.last_name}, {p.first_name}
                     </Button>
                   ))}
@@ -279,62 +289,83 @@ export function OrderView({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Order Entry</h1>
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="font-medium">
-          {patient.last_name}, {patient.first_name}
-        </span>
-        <span className="text-sm text-gray-500">MRN: {patient.mrn}</span>
-        <Button
-          onClick={() => setShowForm(true)}
-          disabled={!canPlaceOrders}
-          title={
-            !canPlaceOrders
-              ? `${formatRoleLabel(currentUserRole)} cannot place new orders`
-              : undefined
-          }
-        >
-          Place Order
-        </Button>
+      <div className="flex items-center gap-3">
+        <ClipboardList className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-semibold">Order Entry</h1>
+          <div className="flex flex-wrap items-center gap-3 mt-1">
+            <span className="font-medium text-slate-800 dark:text-foreground">
+              {patient.last_name}, {patient.first_name}
+            </span>
+            <span className="text-sm text-slate-500 dark:text-muted-foreground">
+              MRN {patient.mrn}
+            </span>
+            <Button
+              size="sm"
+              onClick={() => setShowForm(true)}
+              disabled={!canPlaceOrders}
+              title={
+                !canPlaceOrders
+                  ? `${formatRoleLabel(currentUserRole)} cannot place new orders`
+                  : undefined
+              }
+              className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
+            >
+              Place Order
+            </Button>
+          </div>
+        </div>
       </div>
       {!canPlaceOrders && (
-        <p className="text-sm text-amber-700">
-          {formatRoleLabel(currentUserRole)} cannot place new medication, lab, imaging,
-          or procedure orders. You can still add results and eMAR logs.
-        </p>
+        <div className="flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+          {formatRoleLabel(currentUserRole)} cannot place new orders. You can still add results and eMAR logs.
+        </div>
       )}
       {actionError && (
-        <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-800 dark:text-red-200">
           Order action failed: {actionError}
-        </p>
+        </div>
       )}
 
-      <Card>
-        <CardHeader>
+      <Card className="border-slate-200 dark:border-border">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
+            <ClipboardList className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
             Recent Orders
           </CardTitle>
         </CardHeader>
         <CardContent>
           {orders.length === 0 ? (
-            <p className="text-sm text-gray-500">No orders yet</p>
+            <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-8 text-center">
+              <ClipboardList className="mx-auto h-12 w-12 text-slate-300 dark:text-muted-foreground mb-3" />
+              <p className="text-sm text-slate-500 dark:text-muted-foreground mb-3">
+                No orders yet.
+              </p>
+              <Button size="sm" onClick={() => setShowForm(true)} disabled={!canPlaceOrders}>
+                Place first order
+              </Button>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-border">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 pr-4">Type</th>
-                    <th className="text-left py-2 pr-4">Status</th>
-                    <th className="text-left py-2 pr-4">Details</th>
-                    <th className="text-left py-2 pr-4">Ordered</th>
-                    <th className="text-left py-2 pr-4">Med Rec</th>
-                    <th className="text-left py-2">Actions</th>
+                  <tr className="border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50">
+                    <th className="text-left py-3 pr-4 pl-4 font-semibold text-slate-700 dark:text-foreground">Type</th>
+                    <th className="text-left py-3 pr-4 font-semibold text-slate-700 dark:text-foreground">Status</th>
+                    <th className="text-left py-3 pr-4 font-semibold text-slate-700 dark:text-foreground">Details</th>
+                    <th className="text-left py-3 pr-4 font-semibold text-slate-700 dark:text-foreground">Ordered</th>
+                    <th className="text-left py-3 pr-4 font-semibold text-slate-700 dark:text-foreground">Med Rec</th>
+                    <th className="text-left py-3 pr-4 font-semibold text-slate-700 dark:text-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((o) => {
                     const hasEmarLog = emarLoggedOrderIds.includes(o.id);
+                    const needsPharmacyVerification =
+                      o.type === "med" &&
+                      (o.is_controlled_substance || o.high_risk_med) &&
+                      !o.pharmacy_verified_at &&
+                      !bypassPharmacyVerification;
                     const displayStatus =
                       o.type === "lab" || o.type === "imaging"
                         ? resultByOrderId[o.id]?.status || "pending"
@@ -342,100 +373,100 @@ export function OrderView({
                         ? "completed"
                         : o.status;
                     return (
-                    <tr key={o.id} className="border-b last:border-0">
-                      <td className="py-2 pr-4 capitalize">
+                    <tr key={o.id} className="border-b border-slate-200 dark:border-border last:border-0 hover:bg-slate-50 dark:hover:bg-muted/30">
+                      <td className="py-3 pr-4 pl-4 capitalize align-top">
                         {o.type}
                         {o.type === "med" && o.is_controlled_substance && (
-                          <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
+                          <span className="ml-2 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
                             Controlled
                           </span>
                         )}
                         {o.type === "med" && o.high_risk_med && (
-                          <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
-                            High Risk
+                            <span className="ml-2 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
+                              High Risk
+                            </span>
+                          )}
+                        {needsPharmacyVerification && (
+                          <span className="ml-2 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                            Awaiting pharmacy verification
                           </span>
                         )}
                       </td>
-                      <td className="py-2 pr-4 capitalize">
-                        {displayStatus}
-                        {o.type === "imaging" && (
-                          <p className="text-[11px] text-slate-500">{formatLifecycle(o.imaging_status)}</p>
-                        )}
-                        {o.type === "lab" && (
-                          <p className="text-[11px] text-slate-500">{formatLifecycle(o.specimen_status)}</p>
-                        )}
+                      <td className="py-3 pr-4 capitalize align-top">
+                        <div className="flex flex-col gap-1">
+                          <span>{displayStatus}</span>
+                          {o.type === "imaging" && (
+                            <span className="text-xs text-slate-500 dark:text-muted-foreground">{formatLifecycle(o.imaging_status)}</span>
+                          )}
+                          {o.type === "lab" && (
+                            <span className="text-xs text-slate-500 dark:text-muted-foreground">{formatLifecycle(o.specimen_status)}</span>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-2 pr-4">
+                      <td className="py-3 pr-4 align-top">
                         {formatOrderDetails(o.type, o.details)}
                       </td>
-                      <td className="py-2 text-gray-500">
+                      <td className="py-3 pr-4 text-slate-500 dark:text-muted-foreground align-top">
                         {format(new Date(o.ordered_at), "MM/dd/yyyy HH:mm")}
                       </td>
-                      <td className="py-2 pr-4">
+                      <td className="py-3 pr-4 align-top">
                         {o.type !== "med" ? (
                           <span className="text-slate-400">—</span>
-                        ) : o.med_reconciled_at ? (
-                          <div className="text-xs">
-                            <p className="font-medium text-emerald-700">Reconciled</p>
-                            <p className="text-slate-500">
-                              {o.med_reconciled_by_name || "Clinician"} ·{" "}
-                              {format(new Date(o.med_reconciled_at), "MM/dd HH:mm")}
-                            </p>
-                          </div>
                         ) : (
-                          <span className="text-xs text-amber-700">Pending</span>
-                        )}
-                          {o.type === "med" && o.next_due_at && (
-                          <p className="text-xs text-slate-500">
-                            Next due {format(new Date(o.next_due_at), "MM/dd HH:mm")}
-                          </p>
-                        )}
-                          {o.type === "med" &&
-                            o.next_due_at &&
-                            new Date(o.next_due_at).getTime() < Date.now() &&
-                            o.status !== "discontinued" && (
-                              <p className="text-xs text-red-700">Dose overdue</p>
+                          <div className="flex flex-col gap-1 text-xs">
+                            {o.med_reconciled_at ? (
+                              <>
+                                <span className="font-medium text-emerald-700">Reconciled</span>
+                                <span className="text-slate-500 dark:text-muted-foreground">
+                                  {o.med_reconciled_by_name || "Clinician"} ·{" "}
+                                  {format(new Date(o.med_reconciled_at), "MM/dd HH:mm")}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-amber-700 dark:text-amber-400">Pending</span>
                             )}
+                            {o.next_due_at && (
+                              <span className="text-slate-500 dark:text-muted-foreground">
+                                Next due {format(new Date(o.next_due_at), "MM/dd HH:mm")}
+                              </span>
+                            )}
+                            {o.next_due_at &&
+                              new Date(o.next_due_at).getTime() < Date.now() &&
+                              o.status !== "discontinued" && (
+                                <span className="text-red-700 dark:text-red-400">Dose overdue</span>
+                              )}
+                          </div>
+                        )}
                       </td>
-                      <td className="py-2">
+                      <td className="py-3 pr-4 align-top">
                         <div className="flex flex-wrap items-center gap-2">
-                          {(o.type === "lab" || o.type === "imaging") && resultByOrderId[o.id] ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                              onClick={() =>
-                                router.push(
-                                  `/results?patientId=${o.patient_id}${
-                                    o.encounter_id ? `&encounterId=${o.encounter_id}` : ""
-                                  }&type=${o.type}`
-                                )
-                              }
-                            >
-                              View Result
-                            </Button>
-                          ) : o.type === "lab" || o.type === "imaging" ? (
-                            <Button
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={() => setSelectedOrderForResult(o)}
-                            >
-                              Enter Preliminary
-                            </Button>
-                          ) : null}
                           {(o.type === "lab" || o.type === "imaging") &&
-                            resultByOrderId[o.id]?.status !== "final" && (
+                            (resultByOrderId[o.id]?.status === "final" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 className="h-7 text-xs"
+                                onClick={() =>
+                                  router.push(
+                                    `/results?patientId=${o.patient_id}${
+                                      o.encounter_id ? `&encounterId=${o.encounter_id}` : ""
+                                    }&type=${o.type}`
+                                  )
+                                }
+                              >
+                                View Result
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs"
                                 onClick={() => setSelectedOrderForResult(o)}
                               >
                                 {resultByOrderId[o.id]
-                                  ? "Update / Finalize"
+                                  ? "Update Result"
                                   : "Enter Result"}
                               </Button>
-                            )}
+                            ))}
                           {o.type === "med" && o.status !== "discontinued" && (
                             <Button
                               size="sm"
@@ -453,6 +484,8 @@ export function OrderView({
                               variant="outline"
                               className="h-7 text-xs"
                               onClick={() => setSelectedOrderForEmar(o)}
+                              disabled={needsPharmacyVerification}
+                              title={needsPharmacyVerification ? "This order requires pharmacist verification before administration. Have a pharmacist verify it in the Pharmacist Panel." : undefined}
                             >
                               eMAR Log
                             </Button>
@@ -587,7 +620,11 @@ export function OrderView({
             details: selectedOrderForEmar.details,
             next_due_at: selectedOrderForEmar.next_due_at,
             administration_frequency: selectedOrderForEmar.administration_frequency,
+            is_controlled_substance: selectedOrderForEmar.is_controlled_substance,
+            high_risk_med: selectedOrderForEmar.high_risk_med,
+            pharmacy_verified_at: selectedOrderForEmar.pharmacy_verified_at,
           }}
+          bypassPharmacyVerification={bypassPharmacyVerification}
           onLogged={() => router.refresh()}
           onClose={() => {
             setSelectedOrderForEmar(null);

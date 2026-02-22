@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings } from "lucide-react";
+import { User } from "lucide-react";
 import { formatRoleLabel } from "@/lib/roles";
 
 interface AccountSettingsFormProps {
@@ -71,9 +71,10 @@ export function AccountSettingsForm({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5" />
+          <User className="h-5 w-5 text-primary" />
           Account
         </CardTitle>
+        <CardDescription>Your profile and display preferences.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -118,21 +119,21 @@ export function AccountSettingsForm({
 
           <div>
             <Label>Email</Label>
-            <Input value={email ?? ""} disabled className="mt-1 bg-slate-50" />
+            <Input value={email ?? ""} disabled className="mt-1 bg-slate-50 dark:bg-muted" />
           </div>
 
           <div>
             <Label>Role</Label>
-            <Input value={formatRoleLabel(role)} disabled className="mt-1 bg-slate-50" />
+            <Input value={formatRoleLabel(role)} disabled className="mt-1 bg-slate-50 dark:bg-muted" />
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {message && <p className="text-sm text-emerald-700">{message}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {message && <p className="text-sm text-emerald-600 dark:text-emerald-400">{message}</p>}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-2">
           <Button onClick={saveSettings} disabled={saving}>
-            {saving ? "Saving..." : "Save Settings"}
+            {saving ? "Saving..." : "Save"}
           </Button>
         </div>
       </CardContent>

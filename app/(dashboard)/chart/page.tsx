@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Activity, ClipboardList, FlaskConical, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LiveClock } from "@/components/chart/LiveClock";
 import { StartEncounterButton } from "@/components/chart/StartEncounterButton";
 import { StartChartCard } from "@/components/chart/StartChartCard";
 import { DashboardRecentPanels } from "@/components/chart/DashboardRecentPanels";
@@ -92,16 +91,13 @@ export default async function ChartPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-foreground">Chart Dashboard</h1>
-        <LiveClock />
-      </div>
+      <h1 className="text-xl font-semibold text-slate-900 dark:text-foreground">Chart Dashboard</h1>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
+        <Card className="border-slate-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Activity className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+              <Activity className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Ongoing Encounters
             </CardTitle>
           </CardHeader>
@@ -113,9 +109,9 @@ export default async function ChartPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
+            <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
               <ClipboardList className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
               Recent Orders
             </CardTitle>
@@ -128,10 +124,10 @@ export default async function ChartPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 dark:border-border">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 text-indigo-600" />
+            <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+              <FlaskConical className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
               Recent Results
             </CardTitle>
           </CardHeader>
@@ -150,9 +146,12 @@ export default async function ChartPage() {
         patients={mappedPatients || []}
       />
 
-      <Card>
+      <Card className="border-slate-200 dark:border-border">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm">Quick Access: Patients</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+            <User className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+            Quick Access: Patients
+          </CardTitle>
           <StartChartCard />
         </CardHeader>
         <CardContent>
@@ -164,7 +163,7 @@ export default async function ChartPage() {
                 return (
                   <div
                     key={q.id}
-                    className="flex items-center justify-between gap-2 p-3 rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50"
+                    className="flex items-center justify-between gap-2 p-3 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50"
                   >
                     <Link
                       href={`/chart/${p.id}`}
@@ -208,7 +207,7 @@ export default async function ChartPage() {
                 <Link
                   key={p.id}
                   href={`/chart/${p.id}`}
-                  className="flex items-center gap-3 p-3 rounded-md border border-border bg-white dark:bg-card hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 transition-colors text-left"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
                   <User className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
                   <div className="min-w-0">
@@ -220,9 +219,10 @@ export default async function ChartPage() {
                 </Link>
               ))
             ) : (
-              <p className="text-sm text-slate-500 dark:text-muted-foreground">
-                No active encounters right now.
-              </p>
+              <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-6 text-center">
+                <User className="mx-auto h-8 w-8 text-slate-400 dark:text-muted-foreground mb-2" />
+                <p className="text-sm text-slate-500 dark:text-muted-foreground">No active encounters right now.</p>
+              </div>
             )}
           </div>
         </CardContent>

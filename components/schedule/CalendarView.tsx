@@ -3,7 +3,7 @@
 import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentSlot } from "./AppointmentSlot";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 
 interface Patient {
   id: string;
@@ -19,6 +19,7 @@ interface Appointment {
   type: string | null;
   status: string;
   patient?: Patient | null;
+  provider_name?: string | null;
 }
 
 interface CalendarViewProps {
@@ -48,29 +49,29 @@ export function CalendarView({
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
+          <Calendar className="h-4 w-4 text-primary" />
           Day View
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="rounded-lg border border-border overflow-hidden">
           {HOURS.map((hour) => {
             const slotApps = getAppointmentsForHour(hour);
             return (
               <div
                 key={hour}
-                className="flex border-b last:border-b-0 min-h-[60px]"
+                className="flex border-b border-border last:border-b-0 min-h-[80px] bg-card"
               >
                 <div
-                  className="w-20 shrink-0 p-2 text-sm text-gray-500 border-r"
+                  className="w-24 shrink-0 py-3 px-4 text-sm text-muted-foreground border-r border-border"
                   aria-label={`${hour}:00 time slot`}
                 >
                   {hour}:00
                 </div>
-                <div className="flex-1 p-2 flex flex-wrap gap-2">
+                <div className="flex-1 py-3 px-4 flex flex-wrap gap-3">
                   {slotApps.map((a) => (
                     <AppointmentSlot key={a.id} appointment={a} />
                   ))}
@@ -84,7 +85,7 @@ export function CalendarView({
                         end.setHours(hour + 1, 0, 0, 0);
                         onSlotClick(start.toISOString(), end.toISOString());
                       }}
-                      className="text-sm text-gray-400 hover:text-[#1a4d8c] focus:outline-none focus:ring-2 focus:ring-[#1a4d8c] rounded"
+                      className="text-sm text-muted-foreground hover:text-primary rounded-lg px-3 py-2 hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                       aria-label={`Add appointment at ${hour}:00`}
                     >
                       + Add

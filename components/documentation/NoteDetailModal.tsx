@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import {
+  X,
+  FileText,
+  FileSignature,
+  Share2,
+  Lock,
+  AlertTriangle,
+} from "lucide-react";
 
 interface Note {
   id: string;
@@ -181,47 +188,57 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between shrink-0">
-          <CardTitle>Edit Clinical Note</CardTitle>
+      <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col border-slate-200 dark:border-border">
+        <CardHeader className="flex flex-row items-center justify-between shrink-0 border-b border-slate-200 dark:border-border">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <FileText className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
+            Edit Clinical Note
+          </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="flex min-h-0 flex-col gap-4 overflow-y-auto">
-          <div>
-            <Label>Content</Label>
+        <CardContent className="flex min-h-0 flex-col gap-5 overflow-y-auto pt-5">
+          <div className="rounded-lg border border-slate-200 dark:border-border p-4">
+            <Label className="text-sm font-medium">Content</Label>
             <Textarea
-              className="mt-1 min-h-[260px] resize-y"
+              className="mt-1.5 min-h-[220px] resize-y rounded-lg"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={noteLocked}
             />
             {noteLocked && (
-              <p className="mt-1 text-xs text-amber-700">
-                Signed/co-signed note content is locked. Create an addendum instead.
-              </p>
+              <div className="mt-2 flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                <Lock className="h-4 w-4 shrink-0" />
+                Signed/co-signed content is locked. Create an addendum to add information.
+              </div>
             )}
           </div>
 
           {note.signed_at && parsed.signature && (
-            <div>
-              <Label>Signature</Label>
-              <p className="mt-1 whitespace-pre-wrap rounded border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-700 dark:text-foreground">
+            <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-4">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <FileSignature className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+                Signature
+              </Label>
+              <p className="mt-1.5 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-3 py-2 text-sm text-slate-700 dark:text-foreground">
                 {parsed.signature}
-              </p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
-                Signature is shown on a separate line below the note text.
               </p>
             </div>
           )}
 
-          <div className="rounded border border-slate-200 dark:border-border p-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
+          <div className="rounded-lg border border-slate-200 dark:border-border p-4 space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
               Patient Portal Release
-            </p>
+            </Label>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" disabled={saving} onClick={() => updateRelease(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={saving}
+                onClick={() => updateRelease(true)}
+              >
                 Release to Patient
               </Button>
               <Button
@@ -232,7 +249,7 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
               >
                 Save Hold
               </Button>
-              <label className="inline-flex items-center gap-2 text-xs text-slate-700 dark:text-foreground">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={releaseHold}
@@ -242,7 +259,7 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
               </label>
               {releaseHold && (
                 <input
-                  className="h-8 rounded border border-slate-300 dark:border-input bg-background px-2 text-xs"
+                  className="h-8 rounded-lg border border-slate-300 dark:border-input bg-background px-2 text-sm"
                   value={releaseHoldReason}
                   onChange={(e) => setReleaseHoldReason(e.target.value)}
                   placeholder="Hold reason"
@@ -252,46 +269,59 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
           </div>
 
           {noteLocked && (
-            <div className="rounded border border-slate-200 dark:border-border p-3">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
-                Addendum
+            <div className="rounded-lg border border-slate-200 dark:border-border p-4 space-y-3">
+              <Label className="text-sm font-medium">Addendum</Label>
+              <p className="text-xs text-slate-500 dark:text-muted-foreground">
+                Add new information to a signed note without changing the original.
               </p>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div>
-                  <Label>Addendum Reason</Label>
+                  <Label className="text-xs">Reason</Label>
                   <Textarea
-                    className="mt-1 min-h-[60px]"
+                    className="mt-1 min-h-[60px] rounded-lg"
                     value={addendumReason}
                     onChange={(e) => setAddendumReason(e.target.value)}
                     placeholder="Why this addendum is needed."
                   />
                 </div>
                 <div>
-                  <Label>Addendum Content</Label>
+                  <Label className="text-xs">Content</Label>
                   <Textarea
-                    className="mt-1 min-h-[120px]"
+                    className="mt-1 min-h-[100px] rounded-lg"
                     value={addendumContent}
                     onChange={(e) => setAddendumContent(e.target.value)}
                     placeholder="Addendum narrative."
                   />
                 </div>
-                <div>
-                  <Button size="sm" variant="outline" onClick={createAddendum} disabled={savingAddendum}>
-                    {savingAddendum ? "Saving..." : "Create Addendum"}
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={createAddendum}
+                  disabled={savingAddendum || !addendumReason.trim() || !addendumContent.trim()}
+                >
+                  {savingAddendum ? "Saving…" : "Create Addendum"}
+                </Button>
               </div>
             </div>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-800 dark:text-red-200">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
 
-          <div className="flex justify-end gap-2 shrink-0">
+          <div className="flex justify-end gap-2 shrink-0 pt-2 border-t border-slate-200 dark:border-border">
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
-            <Button onClick={handleSave} disabled={saving || noteLocked}>
-              {saving ? "Saving..." : "Save Changes"}
+            <Button
+              onClick={handleSave}
+              disabled={saving || noteLocked}
+              className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
+            >
+              {saving ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </CardContent>

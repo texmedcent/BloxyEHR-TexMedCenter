@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
-
 interface PatientSearchSelectProps {
   onSelect: (patientId: string) => void;
 }
@@ -14,7 +12,6 @@ export function PatientSearchSelect({ onSelect }: PatientSearchSelectProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{ id: string; mrn: string; first_name: string; last_name: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (!query.trim()) {

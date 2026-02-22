@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { FileText, FlaskConical, X } from "lucide-react";
 import { hasRolePermission } from "@/lib/roles";
 
 interface OrderResultFormProps {
@@ -771,8 +771,13 @@ export function OrderResultForm({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/30 p-4">
       <Card className={`mx-auto my-4 flex w-full ${modalMaxWidthClass} max-h-[92vh] flex-col`}>
-        <CardHeader className="flex shrink-0 flex-row items-center justify-between border-b border-slate-200 pb-3">
-          <CardTitle>
+        <CardHeader className="flex shrink-0 flex-row items-center justify-between border-b border-slate-200 dark:border-border pb-4">
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-foreground">
+            {mode === "result" ? (
+              <FlaskConical className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
+            ) : (
+              <FileText className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
+            )}
             {mode === "note"
               ? order.type === "procedure"
                 ? `${existingResult ? "Update" : "Add"} Procedure Note`
@@ -786,11 +791,11 @@ export function OrderResultForm({
         <CardContent className="flex-1 overflow-y-auto p-0">
           <form onSubmit={handleSave} className="space-y-4 p-6">
             <div>
-              <Label>{mode === "note" ? "Entry Status" : "Result Status"}</Label>
+              <Label className="text-slate-700 dark:text-foreground">{mode === "note" ? "Entry Status" : "Result Status"}</Label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                className="mt-1.5 h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
               >
                 {mode === "result" && <option value="pending">Pending</option>}
                 <option value="preliminary">Preliminary</option>
@@ -1038,9 +1043,9 @@ export function OrderResultForm({
                   </>
                 ) : (
                   <div>
-                    <Label>Result Value (JSON or text)</Label>
+                    <Label className="text-slate-700 dark:text-foreground">Result Value (JSON or text)</Label>
                     <Textarea
-                      className="mt-1 min-h-[140px]"
+                      className="mt-1.5 min-h-[140px] rounded-md"
                       placeholder='e.g. {"finding":"No acute cardiopulmonary abnormality","impression":"Normal chest X-ray"}'
                       value={valueInput}
                       onChange={(e) => setValueInput(e.target.value)}
@@ -1050,13 +1055,13 @@ export function OrderResultForm({
               </div>
             ) : (
               <div>
-                <Label>
+                <Label className="text-slate-700 dark:text-foreground">
                   {mode === "note"
                     ? "Clinical Note (JSON or text)"
                     : "Result Value (JSON or text)"}
                 </Label>
                 <Textarea
-                  className="mt-1 min-h-[140px]"
+                  className="mt-1.5 min-h-[140px] rounded-md"
                   placeholder={
                     mode === "note"
                       ? 'e.g. "Medication administered without adverse reaction"'
@@ -1068,20 +1073,21 @@ export function OrderResultForm({
               </div>
             )}
             {mode === "result" && (
-              <div className="rounded border border-slate-200 p-3">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-3">
+                <label className="flex items-center gap-2.5 cursor-pointer text-sm text-slate-700 dark:text-foreground">
                   <input
                     type="checkbox"
                     checked={isCritical}
                     onChange={(e) => setIsCritical(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
                   />
                   Mark as critical result
                 </label>
                 {isCritical && (
                   <div className="mt-2">
-                    <Label>Critical Reason</Label>
+                    <Label className="text-slate-700 dark:text-foreground">Critical Reason</Label>
                     <Input
-                      className="mt-1"
+                      className="mt-1.5 rounded-md"
                       value={criticalReason}
                       onChange={(e) => setCriticalReason(e.target.value)}
                       placeholder="Why this result is urgent/critical"
@@ -1089,19 +1095,20 @@ export function OrderResultForm({
                   </div>
                 )}
                 {(isCritical || hasCriticalLabFlag) && (
-                  <div className="mt-2 space-y-2 rounded border border-red-200 bg-red-50/50 p-2">
-                    <label className="flex items-center gap-2 text-sm text-red-800">
+                  <div className="mt-2 space-y-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/30 p-3">
+                    <label className="flex items-center gap-2.5 cursor-pointer text-sm text-red-800 dark:text-red-200">
                       <input
                         type="checkbox"
                         checked={criticalCallbackDocumented}
                         onChange={(e) => setCriticalCallbackDocumented(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 dark:border-input text-red-600 focus:ring-red-500"
                       />
                       Critical callback documented
                     </label>
                     <div>
-                      <Label>Callback / Escalation Note</Label>
+                      <Label className="text-slate-700 dark:text-foreground">Callback / Escalation Note</Label>
                       <Textarea
-                        className="mt-1 min-h-[60px]"
+                        className="mt-1.5 min-h-[60px] rounded-md"
                         value={criticalCallbackNote}
                         onChange={(e) => setCriticalCallbackNote(e.target.value)}
                         placeholder="Who was notified, time, and action taken."
@@ -1111,12 +1118,25 @@ export function OrderResultForm({
                 )}
               </div>
             )}
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="sticky bottom-0 z-10 -mx-6 flex justify-end gap-2 border-t border-slate-200 bg-white px-6 py-3">
-              <Button type="button" variant="outline" onClick={onClose}>
+            {error && (
+              <p className="rounded-lg bg-red-50 dark:bg-red-950/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </p>
+            )}
+            <div className="sticky bottom-0 z-10 -mx-6 flex justify-end gap-2 border-t border-slate-200 dark:border-border bg-white dark:bg-card px-6 py-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="rounded-lg"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 dark:bg-primary dark:hover:bg-primary/90"
+              >
                 {saving ? "Saving..." : mode === "note" ? "Save Note" : "Save Result"}
               </Button>
             </div>

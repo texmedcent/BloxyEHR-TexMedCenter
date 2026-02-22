@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClipboardList, FlaskConical } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface RowPatient {
   id: string;
@@ -76,13 +78,16 @@ export function DashboardRecentPanels({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
+      <Card className="border-slate-200 dark:border-border">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm">Recent Orders</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+            <ClipboardList className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+            Recent Orders
+          </CardTitle>
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs"
+            className="h-7 text-xs rounded-lg"
             onClick={clearOrders}
             disabled={clearingOrders}
           >
@@ -97,7 +102,7 @@ export function DashboardRecentPanels({
                 return (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between rounded border border-slate-200 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-border px-3 py-2 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium capitalize">{order.type}</p>
@@ -107,7 +112,16 @@ export function DashboardRecentPanels({
                           : "Unknown patient"}
                       </p>
                     </div>
-                    <Badge variant="outline" className="capitalize">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "capitalize rounded-md",
+                        order.status?.toLowerCase() === "completed" &&
+                          "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+                        order.status?.toLowerCase() === "discontinued" &&
+                          "border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                      )}
+                    >
                       {order.status}
                     </Badge>
                   </div>
@@ -120,13 +134,16 @@ export function DashboardRecentPanels({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-slate-200 dark:border-border">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-sm">Recent Results</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
+            <FlaskConical className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+            Recent Results
+          </CardTitle>
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs"
+            className="h-7 text-xs rounded-lg"
             onClick={clearResults}
             disabled={clearingResults}
           >
@@ -141,7 +158,7 @@ export function DashboardRecentPanels({
                 return (
                   <div
                     key={result.id}
-                    className="flex items-center justify-between rounded border border-slate-200 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-border px-3 py-2 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium capitalize">{result.type}</p>
@@ -151,7 +168,16 @@ export function DashboardRecentPanels({
                           : "Unknown patient"}
                       </p>
                     </div>
-                    <Badge variant="outline" className="capitalize">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "capitalize rounded-md",
+                        result.status?.toLowerCase() === "final" &&
+                          "border-[#1a4d8c]/40 bg-[#1a4d8c]/10 text-[#1a4d8c] dark:border-primary/50 dark:bg-primary/20 dark:text-primary",
+                        result.status?.toLowerCase() === "preliminary" &&
+                          "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                      )}
+                    >
                       {result.status}
                     </Badge>
                   </div>

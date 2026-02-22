@@ -142,7 +142,7 @@ export function StartChartCard() {
     <>
       <Button
         size="sm"
-        className="h-8"
+        className="h-8 rounded-lg"
         onClick={() => {
           setError(null);
           setMatches([]);

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { CheckSquare, Clock, Pill, X } from "lucide-react";
 import { getMedicationName } from "@/lib/orders";
 
 interface MedicationAdminLogModalProps {
@@ -18,7 +18,11 @@ interface MedicationAdminLogModalProps {
     details: unknown;
     next_due_at?: string | null;
     administration_frequency?: string | null;
+    is_controlled_substance?: boolean;
+    high_risk_med?: boolean;
+    pharmacy_verified_at?: string | null;
   };
+  bypassPharmacyVerification?: boolean;
   onLogged?: () => void;
   onClose: () => void;
 }
@@ -43,7 +47,7 @@ function toLocalDateTimeInput(date: Date): string {
   return local.toISOString().slice(0, 16);
 }
 
-export function MedicationAdminLogModal({ order, onLogged, onClose }: MedicationAdminLogModalProps) {
+export function MedicationAdminLogModal({ order, bypassPharmacyVerification = false, onLogged, onClose }: MedicationAdminLogModalProps) {
   const [rows, setRows] = useState<AdminLogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,17 +94,21 @@ export function MedicationAdminLogModal({ order, onLogged, onClose }: Medication
   }, [order.next_due_at]);
 
   useEffect(() => {
-    const loadOrderRisk = async () => {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("orders")
-        .select("is_controlled_substance, high_risk_med")
-        .eq("id", order.id)
-        .maybeSingle();
-      setIsHighRisk(Boolean(data?.is_controlled_substance || data?.high_risk_med));
-    };
-    void loadOrderRisk();
-  }, [order.id]);
+    if (order.is_controlled_substance != null || order.high_risk_med != null) {
+      setIsHighRisk(Boolean(order.is_controlled_substance || order.high_risk_med));
+    } else {
+      const loadOrderRisk = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("orders")
+          .select("is_controlled_substance, high_risk_med")
+          .eq("id", order.id)
+          .maybeSingle();
+        setIsHighRisk(Boolean(data?.is_controlled_substance || data?.high_risk_med));
+      };
+      void loadOrderRisk();
+    }
+  }, [order.id, order.is_controlled_substance, order.high_risk_med]);
 
   const saveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,11 +126,24 @@ export function MedicationAdminLogModal({ order, onLogged, onClose }: Medication
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .maybeSingle();
+    const documentedByName =
+      (user.user_metadata?.full_name as string) ||
+      (user.email ? user.email.split("@")[0] : null) ||
+      "Clinician";
+
+    const needsPharmacyVerification =
+      eventType === "administered" &&
+      (order.is_controlled_substance || order.high_risk_med) &&
+      !order.pharmacy_verified_at &&
+      !bypassPharmacyVerification;
+
+    if (needsPharmacyVerification) {
+      setError(
+        "This order requires pharmacist verification before administration. Please have a pharmacist verify it in the Pharmacist Panel."
+      );
+      setSaving(false);
+      return;
+    }
 
     const eventDate = new Date(eventAt);
     const scheduledDate = new Date(scheduledFor);
@@ -171,7 +192,7 @@ export function MedicationAdminLogModal({ order, onLogged, onClose }: Medication
       },
       reason: reason.trim() || null,
       documented_by: user.id,
-      documented_by_name: profile?.full_name || user.email || "Clinician",
+      documented_by_name: documentedByName,
       witness_by_name: witnessName.trim() || null,
       cosigned_at: isHighRisk && witnessName.trim() ? new Date().toISOString() : null,
     });
@@ -208,105 +229,139 @@ export function MedicationAdminLogModal({ order, onLogged, onClose }: Medication
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between shrink-0">
-          <CardTitle>eMAR / Administration Log{medName ? ` - ${medName}` : ""}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between shrink-0 border-slate-200 dark:border-border">
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-foreground">
+            <Pill className="h-5 w-5 text-[#1a4d8c] dark:text-primary" />
+            eMAR / Administration Log{medName ? ` - ${medName}` : ""}
+          </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-4 overflow-auto">
           {order.administration_frequency && (
-            <p className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600">
-              Frequency: {order.administration_frequency}
-              {order.next_due_at
-                ? ` · Next due ${format(new Date(order.next_due_at), "MM/dd HH:mm")}`
-                : ""}
-            </p>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted/50 px-3 py-2">
+              <Clock className="h-4 w-4 text-[#1a4d8c] dark:text-primary shrink-0" />
+              <p className="text-sm text-slate-700 dark:text-foreground">
+                <span className="font-medium">Frequency:</span> {order.administration_frequency}
+                {order.next_due_at && (
+                  <span className="text-slate-500 dark:text-muted-foreground">
+                    {" "}· Next due {format(new Date(order.next_due_at), "MM/dd HH:mm")}
+                  </span>
+                )}
+              </p>
+            </div>
           )}
-          <form onSubmit={saveEvent} className="space-y-3 rounded border border-slate-200 p-3">
-            <div className="grid gap-3 md:grid-cols-2">
+          <form onSubmit={saveEvent} className="space-y-4 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Event Type</Label>
+                <Label className="text-slate-700 dark:text-foreground">Event Type</Label>
                 <select
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value as "administered" | "not_given")}
-                  className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                  className="mt-1.5 h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                 >
                   <option value="administered">Administered</option>
                   <option value="not_given">Not Given</option>
                 </select>
               </div>
               <div>
-                <Label>Scheduled Due Time</Label>
+                <Label className="text-slate-700 dark:text-foreground">Scheduled Due Time</Label>
                 <Input
                   type="datetime-local"
                   value={scheduledFor}
                   onChange={(e) => setScheduledFor(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Event Time</Label>
-                <Input
-                  type="datetime-local"
-                  value={eventAt}
-                  onChange={(e) => setEventAt(e.target.value)}
-                  className="mt-1"
+                  className="mt-1.5"
                 />
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <Label className="text-slate-700 dark:text-foreground">Event Time</Label>
+              <Input
+                type="datetime-local"
+                value={eventAt}
+                onChange={(e) => setEventAt(e.target.value)}
+                className="mt-1.5 max-w-xs"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Dose Given</Label>
+                <Label className="text-slate-700 dark:text-foreground">Dose Given</Label>
                 <Input
                   value={doseGiven}
                   onChange={(e) => setDoseGiven(e.target.value)}
-                  className="mt-1"
+                  className="mt-1.5"
                   placeholder="e.g. 4 mg"
                 />
               </div>
               <div>
-                <Label>Route Given</Label>
+                <Label className="text-slate-700 dark:text-foreground">Route Given</Label>
                 <Input
                   value={routeGiven}
                   onChange={(e) => setRouteGiven(e.target.value)}
-                  className="mt-1"
+                  className="mt-1.5"
                   placeholder="e.g. IV"
                 />
               </div>
             </div>
-            <div className="rounded border border-slate-200 p-2">
-              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                Barcode-style 5 Rights Checklist
+            <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-3">
+              <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-muted-foreground">
+                <CheckSquare className="h-3.5 w-3.5" />
+                5 Rights Checklist
               </p>
-              <div className="grid gap-1 text-xs md:grid-cols-2">
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" checked={rightPatient} onChange={(e) => setRightPatient(e.target.checked)} />
+              <div className="grid gap-2 text-sm sm:grid-cols-2">
+                <label className="inline-flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={rightPatient}
+                    onChange={(e) => setRightPatient(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
+                  />
                   Right patient verified
                 </label>
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" checked={rightMedication} onChange={(e) => setRightMedication(e.target.checked)} />
+                <label className="inline-flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={rightMedication}
+                    onChange={(e) => setRightMedication(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
+                  />
                   Right medication verified
                 </label>
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" checked={rightDose} onChange={(e) => setRightDose(e.target.checked)} />
+                <label className="inline-flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={rightDose}
+                    onChange={(e) => setRightDose(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
+                  />
                   Right dose verified
                 </label>
-                <label className="inline-flex items-center gap-2">
-                  <input type="checkbox" checked={rightRoute} onChange={(e) => setRightRoute(e.target.checked)} />
+                <label className="inline-flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={rightRoute}
+                    onChange={(e) => setRightRoute(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
+                  />
                   Right route verified
                 </label>
-                <label className="inline-flex items-center gap-2 md:col-span-2">
-                  <input type="checkbox" checked={rightTime} onChange={(e) => setRightTime(e.target.checked)} />
+                <label className="inline-flex items-center gap-2.5 cursor-pointer text-slate-700 dark:text-foreground sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={rightTime}
+                    onChange={(e) => setRightTime(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 dark:border-input text-[#1a4d8c] focus:ring-[#1a4d8c]"
+                  />
                   Right time verified
                 </label>
               </div>
             </div>
             {isHighRisk && (
               <div>
-                <Label>Witness / Co-sign (required for high-risk med)</Label>
+                <Label className="text-slate-700 dark:text-foreground">Witness / Co-sign (required for high-risk med)</Label>
                 <Input
-                  className="mt-1"
+                  className="mt-1.5"
                   value={witnessName}
                   onChange={(e) => setWitnessName(e.target.value)}
                   placeholder="Enter witness full name"
@@ -314,66 +369,86 @@ export function MedicationAdminLogModal({ order, onLogged, onClose }: Medication
               </div>
             )}
             <div>
-              <Label>Reason / Notes</Label>
+              <Label className="text-slate-700 dark:text-foreground">Reason / Notes</Label>
               <Textarea
-                className="mt-1 min-h-[80px]"
+                className="mt-1.5 min-h-[80px] rounded-md"
                 placeholder="Document reason, refusal, hold parameters, or notes."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
+            {error && (
+              <p className="rounded-lg bg-red-50 dark:bg-red-950/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </p>
+            )}
+            <div className="flex justify-end pt-1">
+              <Button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 dark:bg-primary dark:hover:bg-primary/90"
+              >
                 {saving ? "Saving..." : "Add Log Entry"}
               </Button>
             </div>
           </form>
 
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-slate-800">Recent Administration Events</h3>
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900 dark:text-foreground">
+              Recent Administration Events
+            </h3>
             {loading ? (
-              <p className="text-sm text-slate-500">Loading...</p>
+              <p className="text-sm text-slate-500 dark:text-muted-foreground">Loading...</p>
             ) : rows.length === 0 ? (
-              <p className="text-sm text-slate-500">No administration events logged yet.</p>
+              <div className="rounded-lg border border-dashed border-slate-300 dark:border-border py-8 text-center">
+                <Pill className="mx-auto h-10 w-10 text-slate-300 dark:text-muted-foreground mb-2" />
+                <p className="text-sm text-slate-500 dark:text-muted-foreground">
+                  No administration events logged yet.
+                </p>
+              </div>
             ) : (
               <ul className="space-y-2">
                 {rows.map((row) => (
-                  <li key={row.id} className="rounded border border-slate-200 p-2 text-sm">
+                  <li
+                    key={row.id}
+                    className="rounded-lg border border-slate-200 dark:border-border p-3 text-sm bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted/30 transition-colors"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span
-                        className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${
+                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${
                           row.event_type === "administered"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-amber-50 text-amber-700"
+                            ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
+                            : "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
                         }`}
                       >
                         {row.event_type === "administered" ? "Administered" : "Not Given"}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-500 dark:text-muted-foreground">
                         {format(new Date(row.event_at), "MM/dd/yyyy HH:mm")}
                       </span>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                       {row.scheduled_for && (
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-700">
+                        <span className="rounded-md bg-slate-100 dark:bg-muted px-2 py-0.5 text-slate-700 dark:text-foreground text-xs">
                           Due {format(new Date(row.scheduled_for), "MM/dd HH:mm")}
                         </span>
                       )}
                       {row.was_overdue && (
-                        <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-700">
+                        <span className="rounded-md bg-red-50 dark:bg-red-950/50 px-2 py-0.5 text-red-700 dark:text-red-300 text-xs">
                           Overdue
                         </span>
                       )}
                       {row.dose_given && <span>Dose: {row.dose_given}</span>}
                       {row.route_given && <span>Route: {row.route_given}</span>}
                     </div>
-                    {row.reason && <p className="mt-1 whitespace-pre-wrap text-slate-700">{row.reason}</p>}
-                    <p className="mt-1 text-xs text-slate-500">
+                    {row.reason && (
+                      <p className="mt-1.5 whitespace-pre-wrap text-slate-700 dark:text-foreground">{row.reason}</p>
+                    )}
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-muted-foreground">
                       Documented by {row.documented_by_name || "Clinician"}
                     </p>
                     {row.witness_by_name && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-slate-500 dark:text-muted-foreground">
                         Witness: {row.witness_by_name}
                         {row.cosigned_at
                           ? ` · ${format(new Date(row.cosigned_at), "MM/dd HH:mm")}`

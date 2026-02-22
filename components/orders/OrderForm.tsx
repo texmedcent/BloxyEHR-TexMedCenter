@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { ChevronDown, FlaskConical, Image, Pill, Stethoscope, X } from "lucide-react";
 import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
 import { MedicationPickerModal } from "@/components/orders/MedicationPickerModal";
 import { MEDICATION_FORMULARY } from "@/lib/medications";
@@ -20,7 +19,8 @@ interface OrderFormProps {
   onSaved: () => void;
 }
 
-const ORDER_TYPES = ["med", "lab", "imaging", "procedure"] as const;
+const ORDER_TYPES = ["lab", "med", "imaging", "procedure"] as const;
+const PRIORITY_OPTIONS = ["Routine", "Urgent", "STAT"] as const;
 const ROUTE_DEFAULT_FREQUENCY: Record<string, string> = {
   PO: "BID",
   IV: "Q6H",
@@ -79,10 +79,13 @@ export function OrderForm({
   onClose,
   onSaved,
 }: OrderFormProps) {
-  const [type, setType] = useState<"med" | "lab" | "imaging" | "procedure">(
-    "lab"
-  );
+  const [type, setType] = useState<"med" | "lab" | "imaging" | "procedure">("lab");
   const [details, setDetails] = useState("");
+  const [labTest, setLabTest] = useState("");
+  const [labPriority, setLabPriority] = useState<string>("Routine");
+  const [imagingStudy, setImagingStudy] = useState("");
+  const [imagingPriority, setImagingPriority] = useState<string>("Routine");
+  const [procedureNote, setProcedureNote] = useState("");
   const [medication, setMedication] = useState("");
   const [dose, setDose] = useState("");
   const [route, setRoute] = useState("");
@@ -246,12 +249,13 @@ export function OrderForm({
   const explicitHighRiskMedication = useMemo(() => {
     if (type !== "med" || !medication.trim()) return false;
     const medLower = medication.toLowerCase();
-    return (
-      isControlledSubstance ||
-      ["insulin", "heparin", "warfarin", "enoxaparin", "morphine", "fentanyl", "hydromorphone"].some((k) =>
-        medLower.includes(k)
-      )
-    );
+    const highRiskKeywords = [
+      "insulin", "heparin", "warfarin", "enoxaparin", "apixaban", "rivaroxaban",
+      "morphine", "fentanyl", "hydromorphone", "methotrexate", "chemotherapy",
+      "succinylcholine", "rocuronium", "cisatracurium", "epinephrine", "norepinephrine",
+      "vasopressin", "dopamine", "dobutamine", "propofol", "midazolam", "ketamine",
+    ];
+    return isControlledSubstance || highRiskKeywords.some((k) => medLower.includes(k));
   }, [type, medication, isControlledSubstance]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -294,6 +298,21 @@ export function OrderForm({
         setSaving(false);
         return;
       }
+    } else if (type === "lab" && !labTest.trim() && !details.trim()) {
+      setError("Enter a lab test (e.g. CBC, BMP).");
+      setSaving(false);
+      return;
+    } else if (type === "imaging" && !imagingStudy.trim() && !details.trim()) {
+      setError("Enter an imaging study (e.g. Chest X-ray).");
+      setSaving(false);
+      return;
+    } else if (type === "procedure" && !procedureNote.trim() && !details.trim()) {
+      setError("Enter a procedure description.");
+      setSaving(false);
+      return;
+    }
+
+    if (type === "med") {
       parsedDetails = {
         medication: medication.trim(),
         dose: dose.trim(),
@@ -304,6 +323,15 @@ export function OrderForm({
         hold_reason: holdReason.trim(),
         ...(isControlledSubstance ? { controlled_code: controlledCode.trim() } : {}),
       };
+    } else if (type === "lab") {
+      const test = labTest.trim() || details.trim();
+      parsedDetails = test ? { test, priority: labPriority } : {};
+    } else if (type === "imaging") {
+      const study = imagingStudy.trim() || details.trim();
+      parsedDetails = study ? { study, priority: imagingPriority } : {};
+    } else if (type === "procedure") {
+      const note = procedureNote.trim() || details.trim();
+      parsedDetails = note ? { note } : {};
     } else {
       try {
         if (details.trim()) {
@@ -311,6 +339,24 @@ export function OrderForm({
         }
       } catch {
         parsedDetails = { note: details };
+      }
+    }
+
+    const isControlledOrHighRisk =
+      type === "med" &&
+      (isControlledSubstance ||
+        explicitHighRiskMedication ||
+        Boolean(maxDoseWarning || organRiskWarning || pregnancyLactationWarning));
+
+    let pharmacyVerifiedAt: string | null = null;
+    if (isControlledOrHighRisk) {
+      const { data: inst } = await supabase
+        .from("institution_settings")
+        .select("bypass_pharmacy_verification")
+        .eq("id", 1)
+        .maybeSingle();
+      if (inst?.bypass_pharmacy_verification) {
+        pharmacyVerifiedAt = new Date().toISOString();
       }
     }
 
@@ -325,6 +371,7 @@ export function OrderForm({
       high_risk_med:
         type === "med"
           ? isControlledSubstance ||
+            explicitHighRiskMedication ||
             Boolean(maxDoseWarning || organRiskWarning || pregnancyLactationWarning)
           : false,
       administration_frequency: type === "med" ? frequency.trim() || null : null,
@@ -334,6 +381,7 @@ export function OrderForm({
           : null,
       status: "pending",
       ordered_by: user.id,
+      ...(pharmacyVerifiedAt ? { pharmacy_verified_at: pharmacyVerifiedAt } : {}),
     });
     setSaving(false);
     if (error) {
@@ -343,166 +391,172 @@ export function OrderForm({
     onSaved();
   };
 
+  const typeTabs = [
+    { value: "lab" as const, label: "Lab", icon: FlaskConical },
+    { value: "med" as const, label: "Med", icon: Pill },
+    { value: "imaging" as const, label: "Imaging", icon: Image },
+    { value: "procedure" as const, label: "Procedure", icon: Stethoscope },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Place Order</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+      <Card className="w-full max-w-lg">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-lg">Place Order</CardTitle>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Order Type</Label>
-              <select
-                value={type}
-                onChange={(e) =>
-                  setType(e.target.value as "med" | "lab" | "imaging" | "procedure")
-                }
-                className="mt-1 w-full rounded border px-3 py-2"
-              >
-                {ORDER_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>ED Protocol Order Set (optional)</Label>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <select
-                  value={protocolSet}
-                  onChange={(e) => setProtocolSet(e.target.value)}
-                  className="h-9 min-w-[220px] rounded border border-slate-300 bg-white px-3 text-sm"
+            <div className="flex gap-1 rounded-lg bg-muted p-1">
+              {typeTabs.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setType(value)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                    type === value
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  <option value="">None</option>
-                  <option value="chest_pain">Chest Pain</option>
-                  <option value="abdominal_pain">Abdominal Pain</option>
-                  <option value="trauma">Trauma</option>
-                  <option value="sepsis">Sepsis</option>
-                </select>
-                {protocolSet && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const templates = ED_PROTOCOL_ORDER_SETS[protocolSet] || [];
-                      const templateForType = templates.find((row) => row.type === type);
-                      if (!templateForType) return;
-                      if (type === "med") {
-                        setIndication(templateForType.details.note || "");
-                      } else {
-                        setDetails(JSON.stringify(templateForType.details, null, 2));
-                      }
-                    }}
-                  >
-                    Apply Suggested {type.toUpperCase()} Template
-                  </Button>
-                )}
-              </div>
-              {protocolSet && (
-                <p className="mt-1 text-xs text-slate-500">
-                  Suggested orders for {protocolSet.replaceAll("_", " ")} can be applied per type.
-                </p>
-              )}
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </button>
+              ))}
             </div>
-            {type === "med" ? (
-              <div className="space-y-3 rounded border border-slate-200 p-3">
+
+            {type === "lab" && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="lab-test">Test</Label>
+                  <Input
+                    id="lab-test"
+                    placeholder="e.g. CBC, BMP, Troponin"
+                    value={labTest}
+                    onChange={(e) => setLabTest(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lab-priority">Priority</Label>
+                  <select
+                    id="lab-priority"
+                    value={labPriority}
+                    onChange={(e) => setLabPriority(e.target.value)}
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3"
+                  >
+                    {PRIORITY_OPTIONS.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {type === "imaging" && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="imaging-study">Study</Label>
+                  <Input
+                    id="imaging-study"
+                    placeholder="e.g. Chest X-ray, CT Head"
+                    value={imagingStudy}
+                    onChange={(e) => setImagingStudy(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="imaging-priority">Priority</Label>
+                  <select
+                    id="imaging-priority"
+                    value={imagingPriority}
+                    onChange={(e) => setImagingPriority(e.target.value)}
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3"
+                  >
+                    {PRIORITY_OPTIONS.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {type === "procedure" && (
+              <div>
+                <Label htmlFor="procedure-note">Procedure</Label>
+                <Input
+                  id="procedure-note"
+                  placeholder="e.g. Lumbar puncture, Paracentesis"
+                  value={procedureNote}
+                  onChange={(e) => setProcedureNote(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {type === "med" && (
+              <div className="space-y-3">
                 <div>
                   <Label>Medication</Label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <Input value={medication} readOnly placeholder="No medication selected" />
-                    <Button type="button" variant="outline" onClick={() => setShowMedicationPicker(true)}>
-                      Browse Medications
+                  <div className="mt-1 flex gap-2">
+                    <Input value={medication} readOnly placeholder="Select medication" className="flex-1" />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowMedicationPicker(true)}>
+                      Pick
                     </Button>
                   </div>
                   {selectedMedicationOption?.aliases?.length ? (
-                    <p className="mt-1 text-xs text-slate-500">
-                      Also known as: {selectedMedicationOption.aliases.join(", ")}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {selectedMedicationOption.aliases.join(", ")}
                     </p>
                   ) : null}
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Dose</Label>
-                    <Input
-                      className="mt-1"
-                      placeholder="e.g. 500 mg"
-                      value={dose}
-                      onChange={(e) => setDose(e.target.value)}
-                    />
+                    <Input placeholder="500 mg" value={dose} onChange={(e) => setDose(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label>Route</Label>
                     <Input
-                      className="mt-1"
-                      placeholder="e.g. PO"
+                      placeholder="PO, IV"
                       value={route}
                       onChange={(e) => {
                         const nextRoute = e.target.value;
                         setRoute(nextRoute);
-                        const suggestedFrequency = ROUTE_DEFAULT_FREQUENCY[nextRoute.toUpperCase()];
-                        if (!frequency.trim() && suggestedFrequency) {
-                          setFrequency(suggestedFrequency);
-                        }
+                        const suggested = ROUTE_DEFAULT_FREQUENCY[nextRoute.toUpperCase()];
+                        if (!frequency.trim() && suggested) setFrequency(suggested);
                       }}
+                      className="mt-1"
                     />
                   </div>
                   <div>
                     <Label>Frequency</Label>
-                    <Input
-                      className="mt-1"
-                      placeholder="e.g. BID"
-                      value={frequency}
-                      onChange={(e) => setFrequency(e.target.value)}
-                    />
+                    <Input placeholder="BID, Q6H" value={frequency} onChange={(e) => setFrequency(e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label>Duration</Label>
-                    <Input
-                      className="mt-1"
-                      placeholder="e.g. 7 days"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    />
+                    <Input placeholder="7 days" value={duration} onChange={(e) => setDuration(e.target.value)} className="mt-1" />
                   </div>
                 </div>
                 <div>
                   <Label>Indication</Label>
-                  <Input
-                    className="mt-1"
-                    placeholder="Reason for medication"
-                    value={indication}
-                    onChange={(e) => setIndication(e.target.value)}
-                  />
+                  <Input placeholder="Reason" value={indication} onChange={(e) => setIndication(e.target.value)} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Hold Parameters / Reason</Label>
-                  <Input
-                    className="mt-1"
-                    placeholder="e.g. Hold for SBP < 100"
-                    value={holdReason}
-                    onChange={(e) => setHoldReason(e.target.value)}
-                  />
+                  <Label>Hold (optional)</Label>
+                  <Input placeholder="e.g. Hold if SBP &lt; 100" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} className="mt-1" />
                 </div>
                 {isControlledSubstance && (
-                  <div className="rounded border border-amber-200 bg-amber-50 p-2">
-                    <p className="text-xs text-amber-800">
-                      This medication is a controlled substance. Access code required.
-                    </p>
-                    <div className="mt-2">
-                      <Label>Authorization Code</Label>
-                      <Input
-                        className="mt-1"
-                        value={controlledCode}
-                        onChange={(e) => setControlledCode(e.target.value)}
-                        placeholder="Enter controlled-substance code"
-                      />
-                    </div>
+                  <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-2">
+                    <Label>Auth code (required)</Label>
+                    <Input
+                      value={controlledCode}
+                      onChange={(e) => setControlledCode(e.target.value)}
+                      placeholder="Enter code"
+                      className="mt-1"
+                    />
                   </div>
                 )}
                 {explicitHighRiskMedication && (
@@ -534,22 +588,53 @@ export function OrderForm({
                   </p>
                 )}
                 {pregnancyLactationWarning && (
-                  <p className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-800">
-                    Pregnancy/Lactation warning: {pregnancyLactationWarning}
+                  <p className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+                    Pregnancy/Lactation: {pregnancyLactationWarning}
                   </p>
                 )}
               </div>
-            ) : (
-              <div>
-                <Label>Details (JSON or free text)</Label>
-                <Textarea
-                  className="mt-1 min-h-[90px]"
-                  placeholder='e.g. {"test":"CBC","priority":"STAT"}, or free text'
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
-                />
-              </div>
             )}
+
+            <details className="text-sm">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                From protocol…
+              </summary>
+              <div className="mt-2 flex gap-2">
+                <select
+                  value={protocolSet}
+                  onChange={(e) => setProtocolSet(e.target.value)}
+                  className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  <option value="">None</option>
+                  <option value="chest_pain">Chest Pain</option>
+                  <option value="abdominal_pain">Abdominal Pain</option>
+                  <option value="trauma">Trauma</option>
+                  <option value="sepsis">Sepsis</option>
+                </select>
+                {protocolSet && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const templates = ED_PROTOCOL_ORDER_SETS[protocolSet] || [];
+                      const t = templates.find((r) => r.type === type);
+                      if (!t) return;
+                      if (type === "med") setIndication(t.details.note || "");
+                      else if (type === "lab") {
+                        setLabTest(t.details.test || "");
+                        setLabPriority(t.details.priority || "STAT");
+                      } else if (type === "imaging") {
+                        setImagingStudy(t.details.study || "");
+                        setImagingPriority(t.details.priority || "STAT");
+                      }
+                    }}
+                  >
+                    Apply
+                  </Button>
+                )}
+              </div>
+            </details>
             {error && <p className="text-sm text-red-600">{error}</p>}
             {!canPlaceOrders && (
               <p className="text-sm text-amber-700">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { addProviderToCareTeam } from "@/lib/care_team";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import { formatRoleLabel, hasRolePermission } from "@/lib/roles";
 
 interface EncounterEditModalProps {
   encounterId: string;
+  patientId: string;
   currentUserRole: string | null;
   onClose: () => void;
   onSaved: () => void;
@@ -17,6 +19,7 @@ interface EncounterEditModalProps {
 
 export function EncounterEditModal({
   encounterId,
+  patientId,
   currentUserRole,
   onClose,
   onSaved,
@@ -95,6 +98,10 @@ export function EncounterEditModal({
       created_by: user?.id || null,
       created_by_name: clinicianName,
     });
+
+    if (user && patientId) {
+      await addProviderToCareTeam(supabase, patientId, "encounter_edit");
+    }
 
     setSaving(false);
     onSaved();

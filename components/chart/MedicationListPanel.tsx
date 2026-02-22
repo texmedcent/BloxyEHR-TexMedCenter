@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { formatOrderDetails, getMedicationName } from "@/lib/orders";
+import { Pill } from "lucide-react";
 
 interface MedicationOrder {
   id: string;
@@ -14,30 +15,49 @@ interface MedicationOrder {
 
 export function MedicationListPanel({ medications }: { medications: MedicationOrder[] }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Medication List</CardTitle>
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Pill className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+          Medication List
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {medications.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-muted-foreground">No active medications</p>
+          <div className="rounded-lg border border-dashed border-slate-300 dark:border-border p-6 text-center">
+            <Pill className="mx-auto h-10 w-10 text-slate-300 dark:text-muted-foreground mb-2" />
+            <p className="text-sm text-slate-500 dark:text-muted-foreground">
+              No active medications
+            </p>
+          </div>
         ) : (
           <ul className="space-y-2">
             {medications.map((med) => {
               const medName = getMedicationName(med.details);
               const display = medName || formatOrderDetails("med", med.details);
               return (
-                <li key={med.id} className="rounded border border-slate-200 dark:border-border p-2 text-sm">
+                <li
+                  key={med.id}
+                  className="rounded-lg border border-slate-200 dark:border-border p-3 text-sm"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium text-slate-900 dark:text-foreground">
                       {display}
                       {med.is_controlled_substance && (
-                        <span className="ml-2 rounded bg-red-50 dark:bg-red-950/50 px-1.5 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
+                        <span className="ml-2 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
                           Controlled
                         </span>
                       )}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-muted-foreground capitalize">{med.status}</span>
+                    <span
+                      className={`text-xs capitalize rounded-full px-2 py-0.5 ${
+                        med.status === "pending"
+                          ? "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200"
+                          : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground"
+                      }`}
+                    >
+                      {med.status}
+                    </span>
                   </div>
                   <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
                     Ordered {format(new Date(med.ordered_at), "MM/dd/yyyy HH:mm")}
@@ -48,7 +68,9 @@ export function MedicationListPanel({ medications }: { medications: MedicationOr
                       {format(new Date(med.med_reconciled_at), "MM/dd/yyyy HH:mm")}
                     </p>
                   ) : (
-                    <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">Medication reconciliation pending</p>
+                    <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                      Medication reconciliation pending
+                    </p>
                   )}
                 </li>
               );

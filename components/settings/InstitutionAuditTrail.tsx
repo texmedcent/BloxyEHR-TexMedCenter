@@ -52,8 +52,8 @@ export function InstitutionAuditTrail({ initialRows }: { initialRows: AuditRow[]
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3">
-        <p className="text-sm font-medium text-slate-700">
+      <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+        <p className="text-sm font-medium text-slate-700 dark:text-foreground">
           {minimized ? "Audit Trail is minimized" : "Audit Trail Filters"}
         </p>
         <Button
@@ -68,7 +68,7 @@ export function InstitutionAuditTrail({ initialRows }: { initialRows: AuditRow[]
 
       {!minimized && (
         <>
-      <div className="rounded-md border border-slate-200 bg-white p-3">
+      <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
         <div className="grid gap-2 md:grid-cols-[1fr_220px]">
           <Input
             value={query}

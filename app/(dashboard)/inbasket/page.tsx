@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { Inbox } from "lucide-react";
 import { InBasketList } from "@/components/inbasket/InBasketList";
 import { formatOrderDetails } from "@/lib/orders";
 
@@ -131,7 +132,10 @@ export default async function InBasketPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">In Basket</h1>
+      <div className="flex items-center gap-2">
+        <Inbox className="h-6 w-6 text-[#1a4d8c] dark:text-primary shrink-0" />
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">In Basket</h1>
+      </div>
       <InBasketList items={[...taskItems, ...items]} />
     </div>
   );

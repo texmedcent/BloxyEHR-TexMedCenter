@@ -17,6 +17,8 @@ import {
   Settings,
   Star,
   MessageCircle,
+  Pill,
+  Shield,
 } from "lucide-react";
 import { ChartSearch } from "./ChartSearch";
 import { NotificationCenter } from "./NotificationCenter";
@@ -33,8 +35,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { BehrLogo } from "@/components/branding/BehrLogo";
+import { LiveClock } from "@/components/chart/LiveClock";
+import { IdleLockOverlay } from "./IdleLockOverlay";
+import { isHospitalManager, isPharmacist } from "@/lib/roles";
 
-const navItems = [
+const navItems: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles?: string[];
+}[] = [
   { href: "/chart", label: "Patient Chart", icon: LayoutDashboard },
   { href: "/documentation", label: "Clinical Documentation", icon: FileText },
   { href: "/orders", label: "Order Entry", icon: ClipboardList },
@@ -43,18 +53,28 @@ const navItems = [
   { href: "/schedule", label: "Scheduling", icon: Calendar },
   { href: "/inbasket", label: "In Basket", icon: Inbox },
   { href: "/chat", label: "Team Chat", icon: MessageCircle },
+  { href: "/pharmacist", label: "Pharmacist", icon: Pill, roles: ["pharmacist"] },
+  { href: "/admin", label: "Admin", icon: Shield, roles: ["hospital_manager"] },
 ];
+
+function shouldShowNavItem(item: (typeof navItems)[0], userRole: string | undefined): boolean {
+  if (item.href === "/admin") return isHospitalManager(userRole);
+  if (item.href === "/pharmacist") return isPharmacist(userRole);
+  return !item.roles || (userRole != null && item.roles.includes(userRole));
+}
 
 interface HyperspaceLayoutProps {
   children: React.ReactNode;
   userEmail?: string;
   userName?: string;
+  userRole?: string;
 }
 
 export function HyperspaceLayout({
   children,
   userEmail,
   userName,
+  userRole,
 }: HyperspaceLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chartSearchOpen, setChartSearchOpen] = useState(false);
@@ -84,7 +104,7 @@ export function HyperspaceLayout({
         <div className="flex items-center justify-between p-3 border-b border-white/20">
           {!sidebarCollapsed && (
             <Link href="/dashboard" className="truncate">
-              <BehrLogo compact className="text-white [&_p]:text-white" />
+              <BehrLogo compact inverted />
             </Link>
           )}
           <Button
@@ -104,7 +124,9 @@ export function HyperspaceLayout({
           className="flex-1 overflow-y-auto py-2"
           aria-label="Main navigation"
         >
-          {navItems.map(({ href, label, icon: Icon }) => (
+          {navItems
+            .filter((item) => shouldShowNavItem(item, userRole))
+            .map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
@@ -139,40 +161,42 @@ export function HyperspaceLayout({
       <div className="flex flex-col flex-1 min-w-0">
         {/* Toolbar */}
         <header
-          className="h-14 bg-white dark:bg-card border-b border-slate-200 dark:border-[hsl(var(--border))] flex items-center gap-3 px-3 shrink-0"
+          className="h-14 bg-white dark:bg-card border-b border-slate-200 dark:border-[hsl(var(--border))] flex items-center shrink-0"
           role="banner"
         >
           <Link
             href="/dashboard"
-            className="shrink-0 hidden sm:block [&_*]:text-foreground"
+            className="hidden sm:flex shrink-0 items-center pl-3 pr-2"
             aria-label="BloxyEHR Home"
           >
             <BehrLogo compact />
           </Link>
+          <div className="flex items-center gap-2 pl-2 pr-3 flex-1 min-w-0">
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 h-8 text-foreground border-border bg-background/80 hover:bg-accent"
+            className="gap-2 h-8 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 hover:border-[#1a4d8c]/30 transition-colors"
             onClick={() => setChartSearchOpen(true)}
             aria-label="Open Chart Search"
           >
-            <LayoutDashboard className="h-4 w-4" />
+            <LayoutDashboard className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
             Chart Search
           </Button>
 
           {mounted ? <RecentPatientsDropdown /> : <span className="w-32" />}
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0" />
 
-          {mounted ? (
-            <NotificationCenter />
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="h-9 w-9" />
-              <span className="h-9 w-28" />
-            </div>
-          )}
-
+          <div className="flex items-center gap-3 shrink-0 pl-2">
+            {mounted && <LiveClock />}
+            {mounted ? (
+              <NotificationCenter />
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="h-9 w-9" />
+                <span className="h-9 w-28" />
+              </div>
+            )}
           {mounted ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -204,6 +228,8 @@ export function HyperspaceLayout({
               </span>
             </Button>
           )}
+          </div>
+          </div>
         </header>
 
         {/* Patient context bar when viewing a patient */}
@@ -224,6 +250,9 @@ export function HyperspaceLayout({
         open={chartSearchOpen}
         onClose={() => setChartSearchOpen(false)}
       />
+
+      {/* Idle lock overlay (Epic-style) */}
+      <IdleLockOverlay />
     </div>
   );
 }

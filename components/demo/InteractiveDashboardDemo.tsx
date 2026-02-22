@@ -99,7 +99,7 @@ export function InteractiveDashboardDemo() {
     { id: makeId(), patient_id: "", type: "imaging", status: "preliminary" },
     { id: makeId(), patient_id: "", type: "med", status: "completed" },
   ]);
-  const [results, setResults] = useState<DemoResult[]>([
+  const [results] = useState<DemoResult[]>([
     { id: makeId(), patient_id: "", type: "lab", status: "final" },
     { id: makeId(), patient_id: "", type: "imaging", status: "preliminary" },
   ]);

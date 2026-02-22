@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { EmployeeChatPanel } from "@/components/chat/EmployeeChatPanel";
+import { STAFF_ROLES } from "@/lib/roles";
 
 export default async function ChatPage() {
   const supabase = await createClient();
@@ -42,16 +43,45 @@ export default async function ChatPage() {
           .limit(200)
       : { data: [] };
 
+  const { data: staff } = user
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .in("role", STAFF_ROLES)
+        .neq("id", user.id)
+        .order("full_name")
+    : { data: [] };
+
+  let dmThreads: { id: string; other_user_id: string; other_user_name: string; last_message_at: string }[] = [];
+  let dmMessages: { id: string; sender_id: string; sender_name: string; sender_role: string | null; message: string; created_at: string; thread_id: string }[] = [];
+  if (user) {
+    const { data: threads } = await supabase.rpc("fetch_my_dm_threads");
+    dmThreads = (threads || []).map((t) => ({
+      id: t.id,
+      other_user_id: t.other_user_id,
+      other_user_name: t.other_user_name || "Unknown",
+      last_message_at: t.last_message_at,
+    }));
+
+    const firstThreadId = dmThreads[0]?.id || null;
+    if (firstThreadId) {
+      const { data: msgs } = await supabase.rpc("fetch_dm_messages", { p_thread_id: firstThreadId });
+      dmMessages = msgs || [];
+    }
+  }
+
+  const firstThreadId = dmThreads[0]?.id ?? null;
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-        <h1 className="text-2xl font-semibold text-foreground">Employee Chat</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Team Chat</h1>
         <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Secure internal messaging for on-duty staff.
+          Department groups and direct messages with hospital staff.
         </p>
         {groupsWithMembership.length === 0 && (
-          <p className="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-800">
-            You are not a member of any active department chat groups. Ask a Hospital Manager to assign you.
+          <p className="mt-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 px-2 py-1.5 text-xs text-amber-800 dark:text-amber-200">
+            You are not a member of any department chat groups. You can still message colleagues directly.
           </p>
         )}
       </div>
@@ -59,6 +89,10 @@ export default async function ChatPage() {
         initialGroups={groupsWithMembership}
         initialMessages={messages || []}
         initialGroupId={firstGroupId}
+        initialStaff={staff || []}
+        initialDmThreads={dmThreads}
+        initialDmThreadId={firstThreadId}
+        initialDmMessages={dmMessages || []}
       />
     </div>
   );

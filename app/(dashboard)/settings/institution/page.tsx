@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InstitutionRoleManager } from "@/components/settings/InstitutionRoleManager";
 import { InstitutionAuditTrail } from "@/components/settings/InstitutionAuditTrail";
 import { InstitutionSafetyQueue } from "@/components/settings/InstitutionSafetyQueue";
@@ -33,7 +36,7 @@ export default async function InstitutionSettingsPage() {
 
   const { data: institutionSettings } = await supabase
     .from("institution_settings")
-    .select("controlled_substance_code")
+    .select("controlled_substance_code, bypass_pharmacy_verification")
     .eq("id", 1)
     .maybeSingle();
 
@@ -140,50 +143,84 @@ export default async function InstitutionSettingsPage() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">Institution</h1>
-      <p className="text-sm text-slate-600 dark:text-muted-foreground">
-        Manage role assignments for users in your hospital.
-      </p>
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Audit Trail</h2>
-        <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Logs patient actions and operational admin actions (including department chat group management).
-        </p>
-        <InstitutionAuditTrail initialRows={mappedAuditRows} />
+    <div className="space-y-8 max-w-5xl">
+      <div className="flex items-center gap-4">
+        <Link
+          href="/settings"
+          className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Back to Settings"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary shrink-0" />
+            Institution Settings
+          </h1>
+          <p className="mt-1 text-muted-foreground text-sm">Manage roles, audit logs, and organizational settings.</p>
+        </div>
       </div>
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Safety Queue</h2>
-        <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Review and close reported adverse events.
-        </p>
-        <InstitutionSafetyQueue
-          initialRows={mappedSafetyRows}
-          currentUserRole={currentProfile?.role || null}
-        />
-      </div>
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">ICD-10 Catalog</h2>
-        <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Add custom diagnosis entries by section. The system auto-generates a random ICD-style code.
-        </p>
-        <InstitutionIcd10Manager initialRows={icdRows || []} />
-      </div>
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-foreground">Department Chat Groups</h2>
-        <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Create department channels and manage which staff can read/post in each chat group.
-        </p>
-        <InstitutionChatGroupsManager
-          initialGroups={chatGroups || []}
-          initialMembers={chatGroupMembers || []}
-          users={rows || []}
-        />
-      </div>
-      <InstitutionRoleManager
-        initialRows={rows || []}
-        initialControlledSubstanceCode={institutionSettings?.controlled_substance_code || ""}
-      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User Roles & Medication Settings</CardTitle>
+          <CardDescription>Assign roles and configure controlled substance workflow.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstitutionRoleManager
+            initialRows={rows || []}
+            initialControlledSubstanceCode={institutionSettings?.controlled_substance_code || ""}
+            initialBypassPharmacyVerification={institutionSettings?.bypass_pharmacy_verification ?? false}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Audit Trail</CardTitle>
+          <CardDescription>Patient and operational admin actions.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstitutionAuditTrail initialRows={mappedAuditRows} />
+        </CardContent>
+      </Card>
+
+      <Card id="safety">
+        <CardHeader>
+          <CardTitle>Safety Queue</CardTitle>
+          <CardDescription>Review and close reported adverse events.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstitutionSafetyQueue
+            initialRows={mappedSafetyRows}
+            currentUserRole={currentProfile?.role || null}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>ICD-10 Catalog</CardTitle>
+          <CardDescription>Custom diagnosis entries by section.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstitutionIcd10Manager initialRows={icdRows || []} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Department Chat Groups</CardTitle>
+          <CardDescription>Create channels and manage staff access.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstitutionChatGroupsManager
+            initialGroups={chatGroups || []}
+            initialMembers={chatGroupMembers || []}
+            users={rows || []}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

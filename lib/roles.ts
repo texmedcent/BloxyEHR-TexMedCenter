@@ -55,7 +55,8 @@ export type AppPermission =
   | "finalize_procedure_note"
   | "create_inbasket_task"
   | "review_adverse_event"
-  | "cosign_note";
+  | "cosign_note"
+  | "verify_pharmacy_order";
 
 export const CLINICAL_PROVIDER_ROLES: AppRole[] = [
   "hospital_manager",
@@ -92,6 +93,7 @@ const ROLE_PERMISSIONS: Record<AppPermission, AppRole[]> = {
   create_inbasket_task: CLINICAL_STAFF_ROLES,
   review_adverse_event: ["hospital_manager", "chief_medical_officer", "attending_physician"],
   cosign_note: CLINICAL_PROVIDER_ROLES,
+  verify_pharmacy_order: ["pharmacist"],
 };
 
 const ROLE_LABELS: Record<AppRole, string> = {
@@ -122,6 +124,10 @@ export function getRoleLandingPath(role: string | null | undefined): string {
 
 export function isHospitalManager(role: string | null | undefined): boolean {
   return role === "hospital_manager";
+}
+
+export function isPharmacist(role: string | null | undefined): boolean {
+  return role === "pharmacist";
 }
 
 export function hasRolePermission(

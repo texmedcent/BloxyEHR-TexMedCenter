@@ -17,6 +17,7 @@ interface AppointmentSlotProps {
     type: string | null;
     status: string;
     patient?: Patient | null;
+    provider_name?: string | null;
   };
 }
 
@@ -28,12 +29,15 @@ export function AppointmentSlot({ appointment }: AppointmentSlotProps) {
   return (
     <Link
       href={`/chart/${appointment.patient?.id || ""}`}
-      className="px-3 py-1.5 rounded bg-[#1a4d8c]/10 text-sm hover:bg-[#1a4d8c]/20 transition-colors block"
+      className="px-4 py-2.5 rounded-lg border border-primary/30 bg-primary/10 text-sm hover:bg-primary/20 transition-colors block"
       aria-label={`Appointment: ${patientName}${appointment.type ? `, ${appointment.type}` : ""}`}
     >
       <span className="font-medium">{patientName}</span>
       {appointment.type && (
-        <span className="text-gray-600 ml-2">({appointment.type})</span>
+        <span className="text-muted-foreground ml-2">({appointment.type})</span>
+      )}
+      {appointment.provider_name && (
+        <span className="block text-xs text-muted-foreground mt-0.5">{appointment.provider_name}</span>
       )}
     </Link>
   );

@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   MEDICATION_CATEGORIES,
   MEDICATION_CATEGORY_LABELS,
-  MEDICATION_FORMULARY,
+  MEDICATION_FORMULARY_DEDUPED,
+  searchMedications,
   type MedicationCategory,
   type MedicationItem,
 } from "@/lib/medications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Star, X } from "lucide-react";
+import { Search, Star, X } from "lucide-react";
 
 interface MedicationPickerModalProps {
   open: boolean;
@@ -26,9 +27,7 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
   const [favorites, setFavorites] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [catalogMeds, setCatalogMeds] = useState<MedicationItem[]>([]);
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
-  const [catalogBacked, setCatalogBacked] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -44,9 +43,10 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
         .select("medication_favorites")
         .eq("id", user.id)
         .maybeSingle();
-      const list = Array.isArray(profile?.medication_favorites)
-        ? (profile?.medication_favorites as unknown[])
-            .map((x) => (typeof x === "string" ? x : ""))
+      const raw = profile?.medication_favorites;
+      const list = Array.isArray(raw)
+        ? (raw as unknown[])
+            .map((x) => (typeof x === "string" ? x.trim() : ""))
             .filter(Boolean)
         : [];
       setFavorites(list);
@@ -55,112 +55,103 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (open) {
+      setSearch("");
+      setCategory("all");
+      const t = setTimeout(() => searchInputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
 
-    const loadCatalogMeds = async () => {
-      setLoadingCatalog(true);
-      const supabase = createClient();
-      let query = supabase
-        .from("medication_catalog")
-        .select("generic_name, brand_names, category_key, controlled, default_route, default_frequency")
-        .eq("is_active", true)
-        .order("generic_name", { ascending: true })
-        .limit(500);
+  const filteredMeds = useMemo(
+    () => searchMedications(MEDICATION_FORMULARY_DEDUPED, search, category, favorites),
+    [category, favorites, search],
+  );
 
-      if (category !== "all") {
-        query = query.eq("category_key", category);
+  const persistFavorites = useCallback(
+    async (next: string[]) => {
+      if (!userId) return;
+      setSaving(true);
+      try {
+        const supabase = createClient();
+        const { error } = await supabase
+          .from("profiles")
+          .update({ medication_favorites: next })
+          .eq("id", userId);
+        if (error) console.error("Failed to save favorites:", error);
+      } finally {
+        setSaving(false);
       }
-      if (search.trim()) {
-        const q = search.trim().replace(/[,{}]/g, " ");
-        query = query.or(`generic_name.ilike.%${q}%`);
-      }
+    },
+    [userId],
+  );
 
-      const { data, error } = await query;
-      if (error) {
-        setCatalogMeds([]);
-        setCatalogBacked(false);
-        setLoadingCatalog(false);
-        return;
-      }
+  const toggleFavorite = useCallback(
+    async (name: string) => {
+      const next = favorites.includes(name)
+        ? favorites.filter((item) => item !== name)
+        : [name, ...favorites];
+      setFavorites(next);
+      await persistFavorites(next);
+    },
+    [favorites, persistFavorites],
+  );
 
-      const rows: MedicationItem[] = (data || []).map((row) => ({
-        name: row.generic_name,
-        aliases: Array.isArray(row.brand_names) ? row.brand_names : [],
-        category: (row.category_key as MedicationItem["category"]) || "misc",
-        controlled: Boolean(row.controlled),
-        defaultRoute: row.default_route || undefined,
-        defaultFrequency: row.default_frequency || undefined,
-      }));
-      setCatalogMeds(rows);
-      setCatalogBacked(rows.length > 0);
-      setLoadingCatalog(false);
-    };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    },
+    [onClose],
+  );
 
-    void loadCatalogMeds();
-  }, [category, open, search]);
-
-  const filteredMeds = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const localByCategory =
-      category === "all"
-        ? MEDICATION_FORMULARY
-        : MEDICATION_FORMULARY.filter((med) => med.category === category);
-
-    const localRows = q
-      ? localByCategory.filter((med) => {
-          if (med.name.toLowerCase().includes(q)) return true;
-          return (med.aliases || []).some((alias) => alias.toLowerCase().includes(q));
-        })
-      : localByCategory;
-
-    const rows = catalogBacked ? catalogMeds : localRows;
-
-    return [...rows].sort((a, b) => {
-      const af = favorites.includes(a.name) ? 1 : 0;
-      const bf = favorites.includes(b.name) ? 1 : 0;
-      if (af !== bf) return bf - af;
-      return a.name.localeCompare(b.name);
-    });
-  }, [catalogBacked, catalogMeds, category, favorites, search]);
-
-  const persistFavorites = async (next: string[]) => {
-    if (!userId) return;
-    setSaving(true);
-    const supabase = createClient();
-    await supabase.from("profiles").update({ medication_favorites: next }).eq("id", userId);
-    setSaving(false);
-  };
-
-  const toggleFavorite = async (name: string) => {
-    const next = favorites.includes(name)
-      ? favorites.filter((item) => item !== name)
-      : [name, ...favorites];
-    setFavorites(next);
-    await persistFavorites(next);
-  };
+  const clearSearch = useCallback(() => {
+    setSearch("");
+    searchInputRef.current?.focus();
+  }, []);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-      <Card className="flex max-h-[90vh] w-full max-w-5xl flex-col">
-        <CardHeader className="flex shrink-0 flex-row items-center justify-between">
-          <CardTitle>Medication Picker</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+      onKeyDown={handleKeyDown}
+    >
+      <Card className="flex max-h-[90vh] w-full max-w-5xl flex-col" role="dialog" aria-labelledby="med-picker-title">
+        <CardHeader className="flex shrink-0 flex-row items-center justify-between gap-4">
+          <CardTitle id="med-picker-title">Medication Picker</CardTitle>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-3 overflow-hidden">
-          <div className="grid gap-2 md:grid-cols-[1fr_240px]">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder='Search medications by generic or brand (e.g. "ceftriaxone", "zofran", "morphine")'
-            />
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_200px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                ref={searchInputRef}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder='Search by name or brand (e.g. "zofran", "ceftriaxone", "norco")'
+                className="pl-9 pr-9"
+                aria-label="Search medications"
+              />
+              {search && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-1/2 h-8 w-8 -translate-y-1/2"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as MedicationCategory)}
-              className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              aria-label="Filter by category"
             >
               {MEDICATION_CATEGORIES.map((key) => (
                 <option key={key} value={key}>
@@ -170,65 +161,79 @@ export function MedicationPickerModal({ open, onClose, onSelect }: MedicationPic
             </select>
           </div>
 
-          <div className="rounded border border-slate-200 dark:border-border">
-            <div className="grid grid-cols-[auto_280px_1fr_120px] border-b bg-slate-50 dark:bg-muted px-3 py-2 text-xs font-semibold text-slate-600 dark:text-muted-foreground">
-              <span>Fav</span>
+          <div className="rounded-md border border-border overflow-hidden">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] sm:grid-cols-[auto_200px_1fr_100px] border-b bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
+              <span className="w-8" aria-hidden>Fav</span>
               <span>Medication</span>
-              <span>Alias / Class</span>
-              <span>Schedule</span>
+              <span className="hidden sm:inline">Alias / Class</span>
+              <span className="text-right">Type</span>
             </div>
             <div className="max-h-[58vh] overflow-auto">
-              {filteredMeds.map((medication) => {
-                const isFav = favorites.includes(medication.name);
-                const aliasText = (medication.aliases || []).join(", ");
-                return (
-                  <button
-                    type="button"
-                    key={medication.name}
-                    className="grid w-full grid-cols-[auto_280px_1fr_120px] items-start gap-2 border-b px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-muted"
-                    onClick={() => {
-                      onSelect(medication);
-                      onClose();
-                    }}
-                  >
-                    <span
-                      className="mt-0.5 inline-flex h-5 w-5 items-center justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void toggleFavorite(medication.name);
+              {filteredMeds.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground">
+                  <p className="font-medium">No medications found</p>
+                  <p className="mt-1 text-sm">
+                    {search.trim()
+                      ? 'Try a different search term or clear the search. Use generic name or brand (e.g. "Zofran", "Rocephin").'
+                      : "Select a category to browse, or type to search."}
+                  </p>
+                  {search && (
+                    <Button variant="outline" size="sm" className="mt-4" onClick={clearSearch}>
+                      Clear search
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                filteredMeds.map((medication) => {
+                  const isFav = favorites.includes(medication.name);
+                  const aliasText = (medication.aliases ?? []).join(", ");
+                  return (
+                    <button
+                      type="button"
+                      key={medication.name}
+                      className="grid w-full grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] sm:grid-cols-[auto_200px_1fr_100px] items-center gap-2 border-b border-border/50 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50 last:border-0"
+                      onClick={() => {
+                        onSelect(medication);
+                        onClose();
                       }}
-                      title={isFav ? "Remove favorite" : "Add favorite"}
                     >
-                      <Star
-                        className={`h-4 w-4 ${
-                          isFav ? "fill-amber-400 text-amber-500" : "text-slate-400"
+                      <span
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors hover:bg-muted"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void toggleFavorite(medication.name);
+                        }}
+                        title={isFav ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            isFav ? "fill-amber-400 text-amber-500" : "text-muted-foreground"
+                          }`}
+                        />
+                      </span>
+                      <span className="truncate font-medium">{medication.name}</span>
+                      <span className="truncate text-muted-foreground hidden sm:block">
+                        {aliasText || MEDICATION_CATEGORY_LABELS[medication.category]}
+                      </span>
+                      <span
+                        className={`inline-flex shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
+                          medication.controlled
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+                            : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
                         }`}
-                      />
-                    </span>
-                    <span className="font-medium text-slate-900 dark:text-foreground">{medication.name}</span>
-                    <span className="text-slate-700 dark:text-foreground">
-                      {aliasText || MEDICATION_CATEGORY_LABELS[medication.category]}
-                    </span>
-                    <span
-                      className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${
-                        medication.controlled
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-emerald-50 text-emerald-700"
-                      }`}
-                    >
-                      {medication.controlled ? "Controlled" : "Standard"}
-                    </span>
-                  </button>
-                );
-              })}
+                      >
+                        {medication.controlled ? "Controlled" : "Standard"}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-muted-foreground">
-            Showing {filteredMeds.length} medications.
-            {catalogBacked ? " Using full formulary search." : " Using bundled curated formulary."}
-            {" "}Favorites are pinned to the top.
-            {saving ? " Saving favorites..." : ""}
-            {loadingCatalog ? " Loading catalog..." : ""}
+          <p className="text-xs text-muted-foreground">
+            Showing {filteredMeds.length} of {MEDICATION_FORMULARY_DEDUPED.length} medications.
+            {search.trim() && " Multi-word search: each term must match. "}
+            Favorites appear first. {saving ? "Saving…" : ""}
           </p>
         </CardContent>
       </Card>

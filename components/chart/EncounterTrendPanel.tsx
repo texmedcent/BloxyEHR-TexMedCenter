@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
 
 interface TrendPoint {
   ts: string;
@@ -60,10 +61,10 @@ function TrendCard({
   const polyline = asSparkline(sorted);
   const latest = sorted.length > 0 ? sorted[sorted.length - 1].value : null;
   return (
-    <div className="rounded border border-slate-200 p-2">
-      <p className="text-xs font-medium text-slate-600">{label}</p>
+    <div className="rounded-lg border border-slate-200 dark:border-border p-3 bg-slate-50/50 dark:bg-muted/30">
+      <p className="text-xs font-medium text-slate-600 dark:text-muted-foreground">{label}</p>
       {sorted.length === 0 ? (
-        <p className="mt-1 text-xs text-slate-400">No points yet</p>
+        <p className="mt-1 text-xs text-slate-400 dark:text-muted-foreground">No data yet</p>
       ) : (
         <div className="mt-1">
           <svg viewBox="0 0 100 100" className="h-16 w-full">
@@ -75,7 +76,9 @@ function TrendCard({
               className={colorClass}
             />
           </svg>
-          <p className="text-xs text-slate-500">Latest: {latest}</p>
+          <p className="text-xs text-slate-500 dark:text-muted-foreground mt-1">
+            Latest: {latest}
+          </p>
         </div>
       )}
     </div>
@@ -101,11 +104,14 @@ export function EncounterTrendPanel({ vitals, labs }: EncounterTrendPanelProps) 
     .map((l) => ({ ts: l.reported_at, value: l.value }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Encounter Trends</CardTitle>
+    <Card className="border-slate-200 dark:border-border">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
+          Encounter Trends
+        </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-2 md:grid-cols-2 xl:grid-cols-5">
+      <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <TrendCard label="HR" points={hr} colorClass="text-rose-500" />
         <TrendCard label="BP (Systolic)" points={bp} colorClass="text-blue-500" />
         <TrendCard label="SpO2" points={spo2} colorClass="text-emerald-500" />
