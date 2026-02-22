@@ -10,53 +10,63 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    /* Roblox/BloxyEHR primary - deep blue #1a4d8c */
-    --primary: 211 69% 33%;
+    /* Atrium Health IRL brand: teal #00747E, yellow #FFC400 */
+    --primary: 184 100% 24%;
     --primary-foreground: 0 0% 98%;
     --secondary: 210 20% 96%;
-    --secondary-foreground: 211 69% 33%;
+    --secondary-foreground: 184 100% 24%;
     --muted: 210 20% 96%;
     --muted-foreground: 0 0% 45.1%;
-    --accent: 194 100% 42%;
+    --accent: 45 100% 51%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 210 20% 89%;
     --input: 210 20% 89%;
-    --ring: 211 69% 33%;
-    --chart-1: 211 69% 33%;
-    --chart-2: 194 100% 42%;
+    --ring: 184 100% 24%;
+    --chart-1: 184 100% 24%;
+    --chart-2: 45 100% 51%;
     --chart-3: 173 58% 39%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* Atrium Health extended tokens */
+    --atrium-primary: 184 100% 24%;
+    --atrium-teal: 184 100% 24%;
+    --atrium-yellow: 45 100% 51%;
+    --atrium-gray: 240 2% 55%;
   }
   .dark {
     color-scheme: dark;
-    --background: 222 47% 8%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 211 69% 55%;
+    /* Atrium Health branding preserved in dark mode */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 184 100% 24%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 217 33% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 15%;
-    --muted-foreground: 215 20% 70%;
-    --accent: 194 70% 50%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 184 100% 24%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 45 100% 51%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 63% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 211 69% 55%;
-    --chart-1: 211 69% 55%;
-    --chart-2: 194 70% 50%;
-    --chart-3: 173 58% 50%;
+    --border: 210 20% 89%;
+    --input: 210 20% 89%;
+    --ring: 184 100% 24%;
+    --chart-1: 184 100% 24%;
+    --chart-2: 45 100% 51%;
+    --chart-3: 173 58% 39%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --atrium-primary: 184 100% 24%;
+    --atrium-teal: 184 100% 24%;
+    --atrium-yellow: 45 100% 51%;
+    --atrium-gray: 240 2% 55%;
   }
 }
 
@@ -69,10 +79,68 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   html,
   body {
     height: 100%;
   }
+}
+
+@layer utilities {
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes subtle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.95; }
+  }
+  .animate-subtle-pulse {
+    animation: subtle-pulse 3s ease-in-out infinite;
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  .fill-mode-forwards {
+    animation-fill-mode: forwards;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
+  }
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+  .animate-delay-600 { animation-delay: 600ms; }
+  .animate-delay-700 { animation-delay: 700ms; }
+  .animate-delay-800 { animation-delay: 800ms; }
 }
 
 @layer components {

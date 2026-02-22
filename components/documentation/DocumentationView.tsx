@@ -244,7 +244,7 @@ export function DocumentationView({
                       }
                       className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors ${
                         selectedEncounterId === e.id
-                          ? "border-[#1a4d8c] dark:border-primary bg-[#1a4d8c]/5 dark:bg-primary/10"
+                          ? "border-atrium-primary dark:border-atrium-primary bg-atrium-primary/5 dark:bg-atrium-primary/10"
                           : "border-slate-200 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/50"
                       }`}
                     >

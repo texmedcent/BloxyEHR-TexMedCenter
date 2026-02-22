@@ -34,7 +34,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BehrLogo } from "@/components/branding/BehrLogo";
+import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
 import { LiveClock } from "@/components/chart/LiveClock";
 import { IdleLockOverlay } from "./IdleLockOverlay";
 import { isHospitalManager, isPharmacist } from "@/lib/roles";
@@ -97,14 +97,14 @@ export function HyperspaceLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "flex flex-col bg-[#1a4d8c] text-white transition-all duration-200 shrink-0",
+          "flex flex-col bg-atrium-primary text-white transition-all duration-200 shrink-0",
           sidebarCollapsed ? "w-16" : "w-56"
         )}
       >
         <div className="flex items-center justify-between p-3 border-b border-white/20">
           {!sidebarCollapsed && (
-            <Link href="/dashboard" className="truncate">
-              <BehrLogo compact inverted />
+            <Link href="/dashboard" className="truncate flex items-center">
+              <AtriumHealthLogo compact variant="white" iconOnly />
             </Link>
           )}
           <Button
@@ -167,19 +167,19 @@ export function HyperspaceLayout({
           <Link
             href="/dashboard"
             className="hidden sm:flex shrink-0 items-center pl-3 pr-2"
-            aria-label="BloxyEHR Home"
+            aria-label="Atrium Health Home"
           >
-            <BehrLogo compact />
+            <AtriumHealthLogo compact />
           </Link>
           <div className="flex items-center gap-2 pl-2 pr-3 flex-1 min-w-0">
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 h-8 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-[#1a4d8c]/5 dark:hover:bg-primary/10 hover:border-[#1a4d8c]/30 transition-colors"
+            className="gap-2 h-8 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-atrium-primary/5 dark:hover:bg-atrium-primary/10 hover:border-atrium-primary/30 transition-colors"
             onClick={() => setChartSearchOpen(true)}
             aria-label="Open Chart Search"
           >
-            <LayoutDashboard className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+            <LayoutDashboard className="h-4 w-4 text-atrium-primary" />
             Chart Search
           </Button>
 

@@ -265,7 +265,7 @@ export function PatientDashboardWorkspace({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Pill className="h-4 w-4 text-[#1a4d8c]" />
+              <Pill className="h-4 w-4 text-atrium-primary" />
               Active Medications
             </CardTitle>
           </CardHeader>
@@ -310,7 +310,7 @@ export function PatientDashboardWorkspace({
                   key={result.id}
                   type="button"
                   onClick={() => setSelectedResult(result)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
+                  className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-atrium-primary/40 dark:hover:border-atrium-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium capitalize">{result.type}</p>
@@ -337,7 +337,7 @@ export function PatientDashboardWorkspace({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Pill className="h-4 w-4 text-[#1a4d8c]" />
+              <Pill className="h-4 w-4 text-atrium-primary" />
               Medications
             </CardTitle>
           </CardHeader>
@@ -429,7 +429,7 @@ export function PatientDashboardWorkspace({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <CalendarClock className="h-4 w-4 text-[#1a4d8c]" />
+              <CalendarClock className="h-4 w-4 text-atrium-primary" />
               Appointments
             </CardTitle>
           </CardHeader>
@@ -492,7 +492,7 @@ export function PatientDashboardWorkspace({
               <button
                 key={note.id}
                 type="button"
-                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
+                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-atrium-primary/40 dark:hover:border-atrium-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 onClick={() =>
                   setSelectedDoc({
                     title: note.type.replaceAll("_", " "),
@@ -508,7 +508,7 @@ export function PatientDashboardWorkspace({
               <button
                 key={proc.id}
                 type="button"
-                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-[#1a4d8c]/40 dark:hover:border-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
+                className="w-full rounded-lg border border-slate-200 dark:border-border px-3 py-2 text-left hover:border-atrium-primary/40 dark:hover:border-atrium-primary/40 hover:bg-slate-50 dark:hover:bg-muted/50 transition-colors"
                 onClick={() =>
                   setSelectedDoc({
                     title: `Procedure (${proc.status})`,
@@ -562,7 +562,7 @@ export function PatientDashboardWorkspace({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <MessageSquare className="h-4 w-4 text-[#1a4d8c]" />
+            <MessageSquare className="h-4 w-4 text-atrium-primary" />
             Messages
           </CardTitle>
         </CardHeader>

@@ -202,7 +202,7 @@ export function EncounterHistory({
                 >
                   <Link
                     href={`/documentation?patientId=${patientId}&encounterId=${e.id}`}
-                    className="min-w-0 flex-1 hover:text-[#1a4d8c]"
+                    className="min-w-0 flex-1 hover:text-atrium-primary"
                   >
                     <span className="font-medium capitalize">{e.type}</span>
                     <span className="text-sm text-slate-500 dark:text-muted-foreground ml-2">

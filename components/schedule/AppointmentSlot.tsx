@@ -29,7 +29,7 @@ export function AppointmentSlot({ appointment }: AppointmentSlotProps) {
   return (
     <Link
       href={`/chart/${appointment.patient?.id || ""}`}
-      className="px-4 py-2.5 rounded-lg border border-primary/30 bg-primary/10 text-sm hover:bg-primary/20 transition-colors block"
+      className="px-4 py-2.5 rounded-lg border border-atrium-primary/30 bg-atrium-primary/10 text-sm hover:bg-atrium-primary/20 transition-colors block"
       aria-label={`Appointment: ${patientName}${appointment.type ? `, ${appointment.type}` : ""}`}
     >
       <span className="font-medium">{patientName}</span>

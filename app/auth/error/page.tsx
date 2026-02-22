@@ -29,12 +29,10 @@ export default function Page({
   searchParams: Promise<{ error: string }>;
 }) {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <Card>
+    <div className="flex flex-col gap-6">
+      <Card className="border-0 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-2xl text-slate-900">
                 Sorry, something went wrong.
               </CardTitle>
             </CardHeader>
@@ -43,9 +41,7 @@ export default function Page({
                 <ErrorContent searchParams={searchParams} />
               </Suspense>
             </CardContent>
-          </Card>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }

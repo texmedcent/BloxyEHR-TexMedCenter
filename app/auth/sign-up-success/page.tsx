@@ -8,12 +8,10 @@ import {
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <Card>
+    <div className="flex flex-col gap-6">
+      <Card className="border-0 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-2xl text-slate-900">
                 Thank you for signing up!
               </CardTitle>
               <CardDescription>Check your email to confirm</CardDescription>
@@ -25,8 +23,6 @@ export default function Page() {
               </p>
             </CardContent>
           </Card>
-        </div>
-      </div>
     </div>
   );
 }

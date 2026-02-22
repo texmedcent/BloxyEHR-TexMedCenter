@@ -6,6 +6,7 @@ import { Activity, CalendarDays, FileText, FlaskConical } from "lucide-react";
 import { CheckInCard } from "@/components/patient/CheckInCard";
 import { LogoutButton } from "@/components/logout-button";
 import { PatientDashboardWorkspace } from "@/components/patient/PatientDashboardWorkspace";
+import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
 
 export default async function PatientDashboardPage() {
   const supabase = await createClient();
@@ -168,9 +169,12 @@ export default async function PatientDashboardPage() {
       <div className="mx-auto max-w-5xl space-y-4">
         <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
-              MyChart
-            </h1>
+            <div className="flex items-center gap-3">
+              <AtriumHealthLogo compact />
+              <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
+                MyChart
+              </h1>
+            </div>
             <LogoutButton />
           </div>
           <p className="text-sm text-slate-600 dark:text-muted-foreground mt-1">
@@ -190,7 +194,7 @@ export default async function PatientDashboardPage() {
           <Card className="border-slate-200 dark:border-border">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
-                <CalendarDays className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+                <CalendarDays className="h-4 w-4 text-atrium-primary" />
                 Appointments
               </CardTitle>
             </CardHeader>
@@ -212,7 +216,7 @@ export default async function PatientDashboardPage() {
           <Card className="border-slate-200 dark:border-border">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
-                <FileText className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+                <FileText className="h-4 w-4 text-atrium-primary" />
                 Results
               </CardTitle>
             </CardHeader>
@@ -225,7 +229,7 @@ export default async function PatientDashboardPage() {
         <Card className="border-slate-200 dark:border-border">
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
-              <FlaskConical className="h-4 w-4 text-[#1a4d8c] dark:text-primary" />
+              <FlaskConical className="h-4 w-4 text-atrium-primary" />
               MyChart Clinical Workspace
             </CardTitle>
           </CardHeader>
@@ -261,6 +265,10 @@ export default async function PatientDashboardPage() {
           email={claims.email}
           initialActiveCheckin={activeCheckin ?? null}
         />
+
+        <footer className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500">
+          Atrium Health · Powered by BloxyEHR
+        </footer>
       </div>
     </main>
   );

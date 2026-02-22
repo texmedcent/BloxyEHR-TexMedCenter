@@ -124,7 +124,7 @@ export function RecentPatientsDropdown() {
               title={p.is_pinned ? "Unpin" : "Pin"}
             >
               <Pin
-                className={`h-4 w-4 ${p.is_pinned ? "fill-[#1a4d8c] dark:fill-primary text-[#1a4d8c] dark:text-primary" : "text-gray-400 dark:text-muted-foreground"}`}
+                className={`h-4 w-4 ${p.is_pinned ? "fill-atrium-primary text-atrium-primary" : "text-gray-400 dark:text-muted-foreground"}`}
               />
             </button>
           </DropdownMenuItem>

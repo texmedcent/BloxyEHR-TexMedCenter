@@ -661,7 +661,7 @@ export function EncounterStatusPanel({
           <Button
             onClick={assignToMe}
             disabled={savingAssign}
-            className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 shrink-0"
+            className="bg-atrium-primary hover:bg-atrium-primary/90 shrink-0"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             {savingAssign ? "Assigning…" : "Assign to Me"}
@@ -910,48 +910,6 @@ export function EncounterStatusPanel({
             </span>
           </p>
         </div>
-      </CollapsibleSection>
-
-      {/* Patient Safety Event */}
-      <CollapsibleSection title="Patient Safety Event" icon={AlertTriangle} defaultOpen={false}>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <select
-            value={adverseType}
-            onChange={(e) => setAdverseType(e.target.value)}
-            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-          >
-            <option value="medication">Medication Event</option>
-            <option value="fall">Fall</option>
-            <option value="procedure">Procedure Complication</option>
-            <option value="delay_in_care">Delay in Care</option>
-            <option value="other">Other</option>
-          </select>
-          <select
-            value={adverseSeverity}
-            onChange={(e) => setAdverseSeverity(e.target.value)}
-            className="h-9 rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm"
-          >
-            <option value="low">Low</option>
-            <option value="moderate">Moderate</option>
-            <option value="high">High</option>
-            <option value="sentinel">Sentinel</option>
-          </select>
-          <Textarea
-            className="sm:col-span-2 min-h-[70px]"
-            value={adverseDescription}
-            onChange={(e) => setAdverseDescription(e.target.value)}
-            placeholder="Describe the event and immediate actions taken."
-          />
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={reportAdverseEvent}
-          disabled={savingAdverseEvent || !adverseDescription.trim()}
-          className="mt-2"
-        >
-          {savingAdverseEvent ? "Reporting…" : "Report Event"}
-        </Button>
       </CollapsibleSection>
 
       {/* Audit Trail */}

@@ -58,7 +58,7 @@ export function ClaimPatientButton({
     <Button
       size="sm"
       variant={claimed ? "default" : "outline"}
-      className={claimed ? "bg-[#1a4d8c] hover:bg-[#1a4d8c]/90" : ""}
+      className={claimed ? "bg-atrium-primary hover:bg-atrium-primary/90" : ""}
       onClick={toggleClaim}
       disabled={saving}
     >

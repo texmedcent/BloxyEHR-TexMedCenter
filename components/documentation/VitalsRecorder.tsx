@@ -161,7 +161,7 @@ export function VitalsRecorder({
         </CardTitle>
         <Link
           href={`/chart/${patientId}#vitals`}
-          className="text-xs font-medium text-[#1a4d8c] dark:text-primary hover:underline"
+          className="text-xs font-medium text-atrium-primary hover:underline"
         >
           Quick View in Summary
         </Link>
@@ -177,7 +177,7 @@ export function VitalsRecorder({
                 className={cn(
                   "inline-flex h-7 items-center rounded-md border px-2 text-xs",
                   type === option.value
-                    ? "border-[#1a4d8c] dark:border-primary bg-blue-50 dark:bg-primary/10 font-medium text-[#1a4d8c] dark:text-primary"
+                    ? "border-atrium-primary dark:border-atrium-primary bg-blue-50 dark:bg-atrium-primary/10 font-medium text-atrium-primary"
                     : "border-slate-300 dark:border-input bg-white dark:bg-background text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted/50"
                 )}
               >
@@ -242,7 +242,7 @@ export function VitalsRecorder({
                 className={cn(
                   "rounded border px-2 py-0.5 text-[11px]",
                   value === quickValue
-                    ? "border-[#1a4d8c] dark:border-primary bg-blue-50 dark:bg-primary/10 text-[#1a4d8c] dark:text-primary"
+                    ? "border-atrium-primary dark:border-atrium-primary bg-blue-50 dark:bg-atrium-primary/10 text-atrium-primary"
                     : "border-slate-300 dark:border-input bg-white dark:bg-background text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted/50"
                 )}
               >

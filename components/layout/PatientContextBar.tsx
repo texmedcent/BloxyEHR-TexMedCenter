@@ -92,7 +92,7 @@ export function PatientContextBar() {
         </Link>
         <Link
           href={`/chart/${patientId}`}
-          className="font-medium text-[#1a4d8c] dark:text-primary hover:underline"
+          className="font-medium text-atrium-primary hover:underline"
         >
           {patient.last_name}, {patient.first_name}
         </Link>
@@ -125,28 +125,28 @@ export function PatientContextBar() {
       <div className="flex gap-2 mt-2 flex-wrap">
         <Link
           href={buildModuleHref("/documentation")}
-          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
+          className="text-sm text-atrium-primary hover:underline flex items-center gap-1"
         >
           <FileText className="h-3.5 w-3.5" />
           Documentation
         </Link>
         <Link
           href={buildModuleHref("/orders")}
-          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
+          className="text-sm text-atrium-primary hover:underline flex items-center gap-1"
         >
           <ClipboardList className="h-3.5 w-3.5" />
           Orders
         </Link>
         <Link
           href={buildModuleHref("/procedures")}
-          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
+          className="text-sm text-atrium-primary hover:underline flex items-center gap-1"
         >
           <ClipboardCheck className="h-3.5 w-3.5" />
           Procedures
         </Link>
         <Link
           href={buildModuleHref("/results")}
-          className="text-sm text-[#1a4d8c] dark:text-primary hover:underline flex items-center gap-1"
+          className="text-sm text-atrium-primary hover:underline flex items-center gap-1"
         >
           <TestTube className="h-3.5 w-3.5" />
           Results

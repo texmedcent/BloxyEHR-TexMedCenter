@@ -52,6 +52,13 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        atrium: {
+          primary: "#00747E",
+          teal: "#00747E",
+          "teal-dark": "#006C74",
+          yellow: "#FFC400",
+          gray: "#8a8a8d",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

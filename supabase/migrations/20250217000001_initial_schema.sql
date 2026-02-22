@@ -135,42 +135,56 @@ ALTER TABLE public.in_basket_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.recent_patients ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: allow authenticated users to read/write (demo - permissive)
+-- Use DROP IF EXISTS so migration is idempotent (safe to re-run)
+DROP POLICY IF EXISTS "Authenticated users can read profiles" ON public.profiles;
 CREATE POLICY "Authenticated users can read profiles" ON public.profiles
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE TO authenticated USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Authenticated users can read patients" ON public.patients;
 CREATE POLICY "Authenticated users can read patients" ON public.patients
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage patients" ON public.patients;
 CREATE POLICY "Authenticated users can manage patients" ON public.patients
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage vital_signs" ON public.vital_signs;
 CREATE POLICY "Authenticated users can manage vital_signs" ON public.vital_signs
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage encounters" ON public.encounters;
 CREATE POLICY "Authenticated users can manage encounters" ON public.encounters
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage clinical_notes" ON public.clinical_notes;
 CREATE POLICY "Authenticated users can manage clinical_notes" ON public.clinical_notes
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage orders" ON public.orders;
 CREATE POLICY "Authenticated users can manage orders" ON public.orders
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage results" ON public.results;
 CREATE POLICY "Authenticated users can manage results" ON public.results
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can manage appointments" ON public.appointments;
 CREATE POLICY "Authenticated users can manage appointments" ON public.appointments
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Users can manage own in_basket" ON public.in_basket_items;
 CREATE POLICY "Users can manage own in_basket" ON public.in_basket_items
   FOR ALL TO authenticated USING (recipient_id = auth.uid()) WITH CHECK (recipient_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can manage own recent_patients" ON public.recent_patients;
 CREATE POLICY "Users can manage own recent_patients" ON public.recent_patients
   FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 

@@ -66,11 +66,11 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+      <Card className="border-0 shadow-xl">
+        <CardHeader className="space-y-1 pb-4">
+          <CardTitle className="text-2xl text-slate-900">MyAtriumHealth Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email below to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,7 +92,7 @@ export function LoginForm({
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="ml-auto inline-block text-sm text-atrium-primary underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </Link>
@@ -106,7 +106,7 @@ export function LoginForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-atrium-primary hover:bg-atrium-primary/90" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
@@ -114,7 +114,7 @@ export function LoginForm({
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/sign-up"
-                className="underline underline-offset-4"
+                className="font-medium text-atrium-primary underline underline-offset-4 hover:text-atrium-primary/90"
               >
                 Sign up
               </Link>

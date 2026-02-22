@@ -148,28 +148,28 @@ async function PatientChartContent({
           </span>
           <Link
             href={`/documentation?patientId=${patientId}`}
-            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
+            className="inline-flex items-center gap-1.5 text-atrium-primary hover:underline font-medium"
           >
             <FileText className="h-4 w-4" />
             Documentation
           </Link>
           <Link
             href={`/orders?patientId=${patientId}`}
-            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
+            className="inline-flex items-center gap-1.5 text-atrium-primary hover:underline font-medium"
           >
             <ClipboardList className="h-4 w-4" />
             Orders
           </Link>
           <Link
             href={`/procedures?patientId=${patientId}`}
-            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
+            className="inline-flex items-center gap-1.5 text-atrium-primary hover:underline font-medium"
           >
             <ClipboardCheck className="h-4 w-4" />
             Procedures
           </Link>
           <Link
             href={`/results?patientId=${patientId}`}
-            className="inline-flex items-center gap-1.5 text-[#1a4d8c] dark:text-primary hover:underline font-medium"
+            className="inline-flex items-center gap-1.5 text-atrium-primary hover:underline font-medium"
           >
             <TestTube className="h-4 w-4" />
             Results
