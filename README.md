@@ -10,6 +10,7 @@ Electronic Hospital Records System for Roblox — modeled after EPIC EHR.
 - **Results Management** — Lab and imaging results with filtering
 - **Scheduling** — Day-view calendar, appointment booking
 - **In Basket** — Tasks and notifications with mark-as-read
+- **Display name** — Set your name in Settings; it appears in chat, DMs, and across the app
 
 ## Setup
 
