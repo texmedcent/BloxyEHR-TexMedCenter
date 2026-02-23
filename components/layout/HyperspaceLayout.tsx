@@ -169,7 +169,7 @@ export function HyperspaceLayout({
             className="hidden sm:flex shrink-0 items-center pl-3 pr-2"
             aria-label="Atrium Health Home"
           >
-            <AtriumHealthLogo compact />
+            <AtriumHealthLogo compact noLink />
           </Link>
           <div className="flex items-center gap-2 pl-2 pr-3 flex-1 min-w-0">
           <Button

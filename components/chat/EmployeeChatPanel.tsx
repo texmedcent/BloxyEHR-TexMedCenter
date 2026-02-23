@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import dynamic from "next/dynamic";
 import {
   MessageCircle,
   Send,
@@ -31,6 +32,20 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { playDmNotificationSound } from "@/lib/notification-sound";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useTheme } from "next-themes";
+import { Theme as EmojiTheme } from "emoji-picker-react";
+
+const EmojiPicker = dynamic(
+  () => import("emoji-picker-react").then((m) => m.default),
+  { ssr: false }
+);
 
 interface ChatMessage {
   id: string;
@@ -101,6 +116,30 @@ function getInitials(name: string) {
   return parts.map((part) => part[0]?.toUpperCase() || "").join("") || "U";
 }
 
+function MessageContent({ text }: { text: string }) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return (
+    <p className="whitespace-pre-wrap break-words text-sm text-slate-800 dark:text-foreground">
+      {parts.map((part, i) =>
+        part.match(urlRegex) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-2 hover:text-primary/90 break-all"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        )
+      )}
+    </p>
+  );
+}
+
 export function EmployeeChatPanel({
   initialGroups,
   initialMessages,
@@ -125,8 +164,15 @@ export function EmployeeChatPanel({
   const [chatError, setChatError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [showDmPicker, setShowDmPicker] = useState(false);
+  const [senderDisplayNames, setSenderDisplayNames] = useState<Map<string, string>>(new Map());
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
   const lastDmMessageIdRef = useRef<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   const isDmMode = selectedDmThreadId !== null;
   const selectedDmThread = dmThreads.find((t) => t.id === selectedDmThreadId) || null;
@@ -335,9 +381,86 @@ export function EmployeeChatPanel({
     }
   };
 
+  const insertAtCursor = useCallback((text: string) => {
+    const ta = textareaRef.current;
+    if (!ta) {
+      setMessageText((prev) => prev + text);
+      return;
+    }
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = messageText.slice(0, start);
+    const after = messageText.slice(end);
+    const next = before + text + after;
+    setMessageText(next);
+    setTimeout(() => {
+      ta.focus();
+      ta.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  }, [messageText]);
+
+  const onEmojiClick = useCallback(
+    (emoji: { emoji: string }) => {
+      insertAtCursor(emoji.emoji);
+      setEmojiPickerOpen(false);
+    },
+    [insertAtCursor]
+  );
+
+  const triggerFileInput = useCallback(() => {
+    fileInputRef.current?.click();
+    setPlusMenuOpen(false);
+  }, []);
+
+  const onFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file || !currentUser || !(selectedGroupId || selectedDmThreadId)) return;
+      setUploading(true);
+      const ext = file.name.includes(".") ? file.name.split(".").pop() || "bin" : "bin";
+      const path = `${currentUser.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+      const { data, error } = await supabase.storage.from("chat-attachments").upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+      setUploading(false);
+      if (error) {
+        pushToast(`Upload failed: ${error.message}`);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(data.path);
+      const line = messageText.trim() ? "\n" : "";
+      insertAtCursor(`${line}📎 ${file.name}\n${urlData.publicUrl}`);
+    },
+    [currentUser, selectedGroupId, selectedDmThreadId, messageText, supabase, pushToast, insertAtCursor]
+  );
+
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const displayMessages = isDmMode ? dmMessages : messages;
   const canSend = (selectedGroupId || selectedDmThreadId) && messageText.trim() && currentUser && !sending;
+
+  useEffect(() => {
+    const senderIds = [...new Set(displayMessages.map((m) => m.sender_id))];
+    if (senderIds.length === 0) return;
+    const fetchProfiles = async () => {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", senderIds);
+      const map = new Map<string, string>();
+      for (const p of profiles || []) {
+        if (p.full_name?.trim()) map.set(p.id, p.full_name.trim());
+      }
+      setSenderDisplayNames(map);
+    };
+    void fetchProfiles();
+  }, [displayMessages, supabase]);
+
+  const getDisplayName = useCallback(
+    (senderId: string, fallback: string) => senderDisplayNames.get(senderId) || fallback,
+    [senderDisplayNames]
+  );
 
   return (
     <Card className="relative h-[calc(100vh-11rem)] overflow-hidden border-slate-200 dark:border-border bg-[#f3f2f1] dark:bg-card shadow-sm">
@@ -559,6 +682,7 @@ export function EmployeeChatPanel({
               <div className="mx-auto max-w-5xl space-y-1">
                 {displayMessages.map((msg) => {
                   const isMine = msg.sender_id === currentUser?.id;
+                  const displayName = getDisplayName(msg.sender_id, msg.sender_name);
                   return (
                     <div
                       key={msg.id}
@@ -567,11 +691,11 @@ export function EmployeeChatPanel({
                       }`}
                     >
                       <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6264a7] text-[11px] font-semibold text-white">
-                        {getInitials(msg.sender_name)}
+                        {getInitials(displayName)}
                       </div>
                       <div className="min-w-0">
                         <div className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-muted-foreground">
-                          <span className="font-semibold text-slate-800 dark:text-foreground">{msg.sender_name}</span>
+                          <span className="font-semibold text-slate-800 dark:text-foreground">{displayName}</span>
                           {msg.sender_role && (
                             <span className="rounded-sm bg-slate-200 dark:bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-600 dark:text-muted-foreground">
                               {msg.sender_role.replaceAll("_", " ")}
@@ -580,7 +704,7 @@ export function EmployeeChatPanel({
                           <span>{format(new Date(msg.created_at), "h:mm a")}</span>
                           <span>{formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}</span>
                         </div>
-                        <p className="whitespace-pre-wrap break-words text-sm text-slate-800 dark:text-foreground">{msg.message}</p>
+                        <MessageContent text={msg.message} />
                       </div>
                     </div>
                   );
@@ -591,8 +715,16 @@ export function EmployeeChatPanel({
           </div>
 
           <form onSubmit={onSend} className="border-t border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*,.pdf,.doc,.docx,.txt"
+              onChange={onFileChange}
+            />
             <div className="mx-auto max-w-5xl space-y-2">
               <Textarea
+                ref={textareaRef}
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyDown={onComposerKeyDown}
@@ -603,15 +735,63 @@ export function EmployeeChatPanel({
               />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-slate-500 dark:text-muted-foreground">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <DropdownMenu open={plusMenuOpen} onOpenChange={setPlusMenuOpen}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={!selectedGroupId && !selectedDmThreadId}
+                        aria-label="More options"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" side="top" className="min-w-[160px]">
+                      <DropdownMenuItem onClick={triggerFileInput} disabled={uploading}>
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        {uploading ? "Uploading..." : "Upload file"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setEmojiPickerOpen(true); setPlusMenuOpen(false); }}>
+                        <Smile className="h-4 w-4 mr-2" />
+                        Insert emoji
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={!selectedGroupId && !selectedDmThreadId || uploading}
+                    onClick={triggerFileInput}
+                    aria-label="Attach file"
+                  >
                     <Paperclip className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Smile className="h-4 w-4" />
-                  </Button>
+                  <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={!selectedGroupId && !selectedDmThreadId}
+                        aria-label="Insert emoji"
+                      >
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="start" className="w-auto p-0 border-0 bg-transparent">
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        theme={resolvedTheme === "dark" ? EmojiTheme.DARK : EmojiTheme.LIGHT}
+                        width="100%"
+                        height={360}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <p className="ml-2 text-xs text-slate-500 dark:text-muted-foreground">Enter to send, Shift+Enter for new line</p>
                 </div>
                 <Button

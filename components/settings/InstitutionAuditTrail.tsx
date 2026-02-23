@@ -78,7 +78,7 @@ export function InstitutionAuditTrail({ initialRows }: { initialRows: AuditRow[]
           <select
             value={tableFilter}
             onChange={(e) => setTableFilter(e.target.value)}
-            className="h-9 rounded border border-slate-300 bg-white px-2 text-sm"
+            className="h-9 rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-2 text-sm text-foreground"
           >
             {tableOptions.map((option) => (
               <option key={option} value={option}>
@@ -89,39 +89,39 @@ export function InstitutionAuditTrail({ initialRows }: { initialRows: AuditRow[]
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
         <table className="w-full text-sm">
-          <thead className="border-b bg-slate-50">
+          <thead className="border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted">
             <tr>
-              <th className="px-3 py-2 text-left font-semibold">Time</th>
-              <th className="px-3 py-2 text-left font-semibold">Patient</th>
-              <th className="px-3 py-2 text-left font-semibold">Module</th>
-              <th className="px-3 py-2 text-left font-semibold">Action</th>
-              <th className="px-3 py-2 text-left font-semibold">Changed Fields</th>
-              <th className="px-3 py-2 text-left font-semibold">Performed By</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Time</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Patient</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Module</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Action</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Changed Fields</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Performed By</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b last:border-b-0">
-                <td className="px-3 py-2 text-slate-600">
+              <tr key={row.id} className="border-b border-slate-200 dark:border-border last:border-b-0">
+                <td className="px-3 py-2 text-slate-600 dark:text-muted-foreground">
                   {format(new Date(row.performed_at), "MM/dd/yyyy HH:mm:ss")}
                 </td>
                 <td className="px-3 py-2">
-                  <div className="font-medium">{row.patient_name || "Unknown patient"}</div>
-                  <div className="text-xs text-slate-500">{row.patient_mrn || "MRN —"}</div>
+                  <div className="font-medium text-foreground">{row.patient_name || "Unknown patient"}</div>
+                  <div className="text-xs text-slate-500 dark:text-muted-foreground">{row.patient_mrn || "MRN —"}</div>
                 </td>
-                <td className="px-3 py-2 font-mono text-xs">{row.table_name}</td>
-                <td className="px-3 py-2 capitalize">{row.action}</td>
-                <td className="max-w-[280px] px-3 py-2 text-xs text-slate-600">
+                <td className="px-3 py-2 font-mono text-xs text-foreground">{row.table_name}</td>
+                <td className="px-3 py-2 capitalize text-foreground">{row.action}</td>
+                <td className="max-w-[280px] px-3 py-2 text-xs text-slate-600 dark:text-muted-foreground">
                   {formatChangedFields(row.changed_fields)}
                 </td>
-                <td className="px-3 py-2">{row.performed_by_name || "System"}</td>
+                <td className="px-3 py-2 text-foreground">{row.performed_by_name || "System"}</td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td className="px-3 py-6 text-center text-slate-500" colSpan={6}>
+                <td className="px-3 py-6 text-center text-slate-500 dark:text-muted-foreground" colSpan={6}>
                   No audit events found for current filters.
                 </td>
               </tr>

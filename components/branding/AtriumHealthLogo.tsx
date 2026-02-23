@@ -8,6 +8,8 @@ interface AtriumHealthLogoProps {
   iconOnly?: boolean;
   /** Use white logo for dark backgrounds (e.g. nav bar) */
   variant?: "default" | "white";
+  /** When true, render span instead of Link (use when already inside a link) */
+  noLink?: boolean;
 }
 
 export function AtriumHealthLogo({
@@ -15,6 +17,7 @@ export function AtriumHealthLogo({
   compact = false,
   iconOnly = false,
   variant = "default",
+  noLink = false,
 }: AtriumHealthLogoProps) {
   const logoSrc = variant === "white" ? "/atrium-health-logo-white.svg" : "/atrium-health-logo.svg";
 
@@ -29,8 +32,8 @@ export function AtriumHealthLogo({
       />
   );
 
-  return iconOnly ? (
-    <span className={cn("inline-flex", className)}>{content}</span>
+  return iconOnly || noLink ? (
+    <span className={cn("inline-flex items-center", className)}>{content}</span>
   ) : (
     <Link href="/" className={cn("inline-flex items-center", className)}>
       {content}

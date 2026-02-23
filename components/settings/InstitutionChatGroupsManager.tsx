@@ -161,12 +161,12 @@ export function InstitutionChatGroupsManager({
   return (
     <div className="space-y-3">
       {message && (
-        <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{message}</div>
+        <div className="rounded border border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-3 py-2 text-sm text-slate-700 dark:text-foreground">{message}</div>
       )}
 
-      <div className="rounded-md border border-slate-200 bg-white p-3">
-        <h3 className="text-sm font-semibold text-slate-900">Department Chat Groups</h3>
-        <p className="mt-1 text-xs text-slate-500">
+      <div className="rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-foreground">Department Chat Groups</h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
           Create channels by department and assign staff members to each group.
         </p>
         <div className="mt-3 grid gap-2 md:grid-cols-[1fr_220px_auto]">
@@ -199,8 +199,8 @@ export function InstitutionChatGroupsManager({
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1.1fr_1.4fr]">
-        <div className="rounded-md border border-slate-200 bg-white p-3">
-          <h4 className="text-sm font-semibold text-slate-900">Groups</h4>
+        <div className="rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-foreground">Groups</h4>
           <div className="mt-2 space-y-2">
             {groups.map((group) => (
               <button
@@ -208,29 +208,29 @@ export function InstitutionChatGroupsManager({
                 key={group.id}
                 className={`w-full rounded border px-3 py-2 text-left text-sm ${
                   group.id === selectedGroupId
-                    ? "border-atrium-primary bg-atrium-primary/5"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
+                    ? "border-atrium-primary dark:border-atrium-primary bg-atrium-primary/5 dark:bg-atrium-primary/10"
+                    : "border-slate-200 dark:border-border bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted"
                 }`}
                 onClick={() => setSelectedGroupId(group.id)}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-slate-900">{group.name}</span>
-                  <span className={`text-[11px] uppercase ${group.is_active ? "text-emerald-700" : "text-slate-500"}`}>
+                  <span className="font-medium text-slate-900 dark:text-foreground">{group.name}</span>
+                  <span className={`text-[11px] uppercase ${group.is_active ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 dark:text-muted-foreground"}`}>
                     {group.is_active ? "active" : "archived"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
                   Department: {group.department_key || "none"}
                 </p>
               </button>
             ))}
-            {groups.length === 0 && <p className="text-xs text-slate-500">No groups created yet.</p>}
+            {groups.length === 0 && <p className="text-xs text-slate-500 dark:text-muted-foreground">No groups created yet.</p>}
           </div>
         </div>
 
-        <div className="rounded-md border border-slate-200 bg-white p-3">
+        <div className="rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
           <div className="flex items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold text-slate-900">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-foreground">
               Group Members{selectedGroup ? ` · ${selectedGroup.name}` : ""}
             </h4>
             {selectedGroup && (
@@ -254,7 +254,7 @@ export function InstitutionChatGroupsManager({
                     id="chat-group-add-member"
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+                    className="mt-1 h-9 w-full rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-foreground"
                   >
                     <option value="">Select staff member</option>
                     {eligibleUsers.map((u) => (
@@ -273,10 +273,10 @@ export function InstitutionChatGroupsManager({
                 {selectedGroupMembers.map((m) => {
                   const user = users.find((u) => u.id === m.user_id);
                   return (
-                    <div key={`${m.group_id}-${m.user_id}`} className="flex items-center justify-between rounded border border-slate-200 px-2 py-1.5">
+                    <div key={`${m.group_id}-${m.user_id}`} className="flex items-center justify-between rounded border border-slate-200 dark:border-border px-2 py-1.5">
                       <div className="text-sm">
-                        <p className="font-medium">{user?.full_name || user?.email || m.user_id}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="font-medium text-foreground">{user?.full_name || user?.email || m.user_id}</p>
+                        <p className="text-xs text-slate-500 dark:text-muted-foreground">
                           {(user?.department || "No department")} · {m.role_in_group}
                         </p>
                       </div>
@@ -287,12 +287,12 @@ export function InstitutionChatGroupsManager({
                   );
                 })}
                 {selectedGroupMembers.length === 0 && (
-                  <p className="text-xs text-slate-500">No members in this group yet.</p>
+                  <p className="text-xs text-slate-500 dark:text-muted-foreground">No members in this group yet.</p>
                 )}
               </div>
             </div>
           ) : (
-            <p className="mt-2 text-xs text-slate-500">Select a group to manage members.</p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-muted-foreground">Select a group to manage members.</p>
           )}
         </div>
       </div>

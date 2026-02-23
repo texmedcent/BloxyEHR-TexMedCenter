@@ -75,50 +75,50 @@ export function InstitutionSafetyQueue({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-3">
-        <p className="text-sm font-medium text-slate-800">
+      <div className="flex items-center justify-between rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card p-3">
+        <p className="text-sm font-medium text-slate-800 dark:text-foreground">
           Safety Event Queue · {openCount} open/review events
         </p>
         {!canReview && (
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-amber-700 dark:text-amber-400">
             {formatRoleLabel(currentUserRole)} cannot review/close events.
           </p>
         )}
       </div>
-      <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-border bg-white dark:bg-card">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted">
             <tr>
-              <th className="px-3 py-2 text-left font-semibold">When</th>
-              <th className="px-3 py-2 text-left font-semibold">Patient</th>
-              <th className="px-3 py-2 text-left font-semibold">Type/Severity</th>
-              <th className="px-3 py-2 text-left font-semibold">Description</th>
-              <th className="px-3 py-2 text-left font-semibold">Status</th>
-              <th className="px-3 py-2 text-left font-semibold">Actions</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">When</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Patient</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Type/Severity</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Description</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Status</th>
+              <th className="px-3 py-2 text-left font-semibold text-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-b last:border-b-0">
-                <td className="px-3 py-2 text-xs text-slate-600">
+              <tr key={row.id} className="border-b border-slate-200 dark:border-border last:border-b-0">
+                <td className="px-3 py-2 text-xs text-slate-600 dark:text-muted-foreground">
                   {format(new Date(row.created_at), "MM/dd HH:mm")}
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 text-foreground">
                   {row.patient_name}
                   {row.patient_mrn ? ` (${row.patient_mrn})` : ""}
                 </td>
                 <td className="px-3 py-2">
-                  <span className="capitalize">{row.event_type.replaceAll("_", " ")}</span>
-                  <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs capitalize">
+                  <span className="capitalize text-foreground">{row.event_type.replaceAll("_", " ")}</span>
+                  <span className="ml-2 rounded bg-slate-100 dark:bg-muted px-1.5 py-0.5 text-xs capitalize">
                     {row.severity}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-slate-700">{row.description}</td>
+                <td className="px-3 py-2 text-slate-700 dark:text-foreground">{row.description}</td>
                 <td className="px-3 py-2">
                   <div className="text-xs">
                     <p className="capitalize">{row.status.replaceAll("_", " ")}</p>
                     {row.reviewed_by_name && (
-                      <p className="text-slate-500">
+                      <p className="text-slate-500 dark:text-muted-foreground">
                         {row.reviewed_by_name}
                         {row.reviewed_at
                           ? ` · ${format(new Date(row.reviewed_at), "MM/dd HH:mm")}`
