@@ -29,9 +29,9 @@ export default function RootLayout({
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="system"
           storageKey="bloxyehr-theme"
-          themes={["light", "dark"]}
+          themes={["light", "dark", "system"]}
           disableTransitionOnChange
         >
           {children}

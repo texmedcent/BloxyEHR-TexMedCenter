@@ -398,7 +398,7 @@ export function NoteEditor({ encounterId, patientId, onClose, onSaved }: NoteEdi
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90">
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving…" : "Save Note"}
             </Button>
           </div>

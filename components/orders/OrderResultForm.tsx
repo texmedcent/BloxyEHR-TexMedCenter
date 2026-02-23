@@ -1135,7 +1135,7 @@ export function OrderResultForm({
               <Button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 dark:bg-primary dark:hover:bg-primary/90"
+                className="rounded-lg"
               >
                 {saving ? "Saving..." : mode === "note" ? "Save Note" : "Save Result"}
               </Button>

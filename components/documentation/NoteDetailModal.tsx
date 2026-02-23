@@ -319,7 +319,6 @@ export function NoteDetailModal({ note, onClose, onSaved }: NoteDetailModalProps
             <Button
               onClick={handleSave}
               disabled={saving || noteLocked}
-              className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
             >
               {saving ? "Saving…" : "Save Changes"}
             </Button>

@@ -30,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { playDmNotificationSound } from "@/lib/notification-sound";
 
 interface ChatMessage {
   id: string;
@@ -125,6 +126,7 @@ export function EmployeeChatPanel({
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [showDmPicker, setShowDmPicker] = useState(false);
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
+  const lastDmMessageIdRef = useRef<string | null>(null);
 
   const isDmMode = selectedDmThreadId !== null;
   const selectedDmThread = dmThreads.find((t) => t.id === selectedDmThreadId) || null;
@@ -165,6 +167,7 @@ export function EmployeeChatPanel({
     if (!threadId) {
       setDmMessages([]);
       setChatError(null);
+      lastDmMessageIdRef.current = null;
       return;
     }
     setRefreshing(true);
@@ -176,9 +179,23 @@ export function EmployeeChatPanel({
       return;
     }
     setChatError(null);
-    setDmMessages(data || []);
+    const messages = data || [];
+
+    if (currentUser && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1] as { id: string; sender_id: string };
+      const prevId = lastDmMessageIdRef.current;
+      if (lastMsg.sender_id !== currentUser.id && prevId !== null && lastMsg.id !== prevId) {
+        playDmNotificationSound();
+      }
+      lastDmMessageIdRef.current = lastMsg.id;
+    } else if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1] as { id: string };
+      lastDmMessageIdRef.current = lastMsg.id;
+    }
+
+    setDmMessages(messages);
     setRefreshing(false);
-  }, [pushToast, supabase]);
+  }, [pushToast, supabase, currentUser]);
 
   const fetchDmThreads = useCallback(async () => {
     if (!currentUser) return;
@@ -236,6 +253,7 @@ export function EmployeeChatPanel({
   useEffect(() => {
     if (selectedDmThreadId) {
       setSelectedGroupId(null);
+      lastDmMessageIdRef.current = null;
       void fetchDmMessages(selectedDmThreadId);
     }
   }, [fetchDmMessages, selectedDmThreadId]);

@@ -309,7 +309,6 @@ export function OrderView({
                   ? `${formatRoleLabel(currentUserRole)} cannot place new orders`
                   : undefined
               }
-              className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
             >
               Place Order
             </Button>
@@ -561,8 +560,8 @@ export function OrderView({
                           {o.type === "med" && o.status !== "discontinued" && (
                             <Button
                               size="sm"
-                              variant="outline"
-                              className="h-7 text-xs text-red-700 border-red-200 hover:bg-red-50"
+                              variant="destructive"
+                              className="h-7 text-xs"
                               onClick={() => discontinueOrder(o)}
                               disabled={updatingOrderId === o.id}
                             >

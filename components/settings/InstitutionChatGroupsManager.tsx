@@ -280,7 +280,7 @@ export function InstitutionChatGroupsManager({
                           {(user?.department || "No department")} · {m.role_in_group}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" disabled={saving} onClick={() => removeMember(m.group_id, m.user_id)}>
+                      <Button size="sm" variant="destructive" disabled={saving} onClick={() => removeMember(m.group_id, m.user_id)}>
                         Remove
                       </Button>
                     </div>

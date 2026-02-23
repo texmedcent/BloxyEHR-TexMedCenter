@@ -17,7 +17,7 @@ export function ThemeSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">Appearance</CardTitle>
-        <CardDescription>Choose how BEHR looks. Saved across sessions.</CardDescription>
+        <CardDescription>Choose how the app looks. Saved across sessions.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">

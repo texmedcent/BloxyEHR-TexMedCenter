@@ -89,7 +89,7 @@ export function ProblemList({ patientId, problems: initialProblems }: ProblemLis
               onKeyDown={(e) => e.key === "Enter" && addProblem()}
               className="rounded-lg"
             />
-            <Button size="sm" onClick={addProblem} disabled={!newDesc.trim()} className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90">
+            <Button size="sm" onClick={addProblem} disabled={!newDesc.trim()}>
               Save
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)}>

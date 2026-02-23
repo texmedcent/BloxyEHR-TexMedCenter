@@ -534,7 +534,7 @@ export function ResultDetail({ result, currentUserRole }: ResultDetailProps) {
                   Cancel
                 </Button>
                 <Button
-                  className="rounded-lg bg-[#1a4d8c] hover:bg-[#1a4d8c]/90 dark:bg-primary dark:hover:bg-primary/90"
+                  className="rounded-lg"
                   disabled={saving || !holdReason.trim()}
                   onClick={() => holdFromPatient(holdReason)}
                 >

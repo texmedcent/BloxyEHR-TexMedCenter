@@ -194,7 +194,6 @@ export function EncounterDiagnosisPanel({
           <Button
             onClick={saveDiagnosis}
             disabled={saving || !canSubmitTreatmentPlan}
-            className="bg-[#1a4d8c] hover:bg-[#1a4d8c]/90"
           >
             {saving ? "Saving…" : "Save Diagnosis"}
           </Button>
