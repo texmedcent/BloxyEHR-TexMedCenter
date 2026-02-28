@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
+  Users,
   FileText,
   ClipboardList,
   ClipboardCheck,
@@ -19,6 +20,7 @@ import {
   MessageCircle,
   Pill,
   Shield,
+  Home,
 } from "lucide-react";
 import { ChartSearch } from "./ChartSearch";
 import { NotificationCenter } from "./NotificationCenter";
@@ -45,6 +47,7 @@ const navItems: {
   icon: React.ComponentType<{ className?: string }>;
   roles?: string[];
 }[] = [
+  { href: "/staff-dashboard", label: "Staff Dashboard", icon: Users },
   { href: "/chart", label: "Patient Chart", icon: LayoutDashboard },
   { href: "/documentation", label: "Clinical Documentation", icon: FileText },
   { href: "/orders", label: "Order Entry", icon: ClipboardList },
@@ -60,6 +63,7 @@ const navItems: {
 function shouldShowNavItem(item: (typeof navItems)[0], userRole: string | undefined): boolean {
   if (item.href === "/admin") return isHospitalManager(userRole);
   if (item.href === "/pharmacist") return isPharmacist(userRole);
+  if (item.href === "/staff-dashboard") return true;
   return !item.roles || (userRole != null && item.roles.includes(userRole));
 }
 
@@ -103,7 +107,7 @@ export function HyperspaceLayout({
       >
         <div className="flex items-center justify-between p-3 border-b border-white/20">
           {!sidebarCollapsed && (
-            <Link href="/dashboard" className="truncate flex items-center">
+            <Link href="/staff-dashboard" className="truncate flex items-center">
               <AtriumHealthLogo compact variant="white" iconOnly />
             </Link>
           )}
@@ -165,7 +169,7 @@ export function HyperspaceLayout({
           role="banner"
         >
           <Link
-            href="/dashboard"
+            href="/staff-dashboard"
             className="hidden sm:flex shrink-0 items-center pl-3 pr-2"
             aria-label="Atrium Health Home"
           >
@@ -208,6 +212,12 @@ export function HyperspaceLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/" className="cursor-pointer">
+                    <Home className="h-4 w-4 mr-2" />
+                    Home
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
                     <Settings className="h-4 w-4 mr-2" />

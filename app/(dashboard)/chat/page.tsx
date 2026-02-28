@@ -2,7 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { EmployeeChatPanel } from "@/components/chat/EmployeeChatPanel";
 import { STAFF_ROLES } from "@/lib/roles";
 
-export default async function ChatPage() {
+export default async function ChatPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ openDm?: string }>;
+}) {
+  const params = await searchParams;
+  const openDmUserId = params.openDm?.trim() || null;
   const supabase = await createClient();
   const {
     data: { user },
@@ -71,7 +77,36 @@ export default async function ChatPage() {
     }
   }
 
-  const firstThreadId = dmThreads[0]?.id ?? null;
+  let firstThreadId = dmThreads[0]?.id ?? null;
+  if (openDmUserId && user) {
+    const { data: threadId } = await supabase.rpc("get_or_create_dm_thread", {
+      p_other_user_id: openDmUserId,
+    });
+    if (threadId) {
+      firstThreadId = threadId;
+      const { data: msgs } = await supabase.rpc("fetch_dm_messages", {
+        p_thread_id: threadId,
+      });
+      dmMessages = msgs || [];
+      const existing = dmThreads.find((t) => t.other_user_id === openDmUserId);
+      if (!existing) {
+        const { data: otherProfile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", openDmUserId)
+          .single();
+        dmThreads = [
+          {
+            id: threadId,
+            other_user_id: openDmUserId,
+            other_user_name: otherProfile?.full_name || "Unknown",
+            last_message_at: new Date().toISOString(),
+          },
+          ...dmThreads.filter((t) => t.id !== threadId),
+        ];
+      }
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -89,7 +124,7 @@ export default async function ChatPage() {
       <EmployeeChatPanel
         initialGroups={groupsWithMembership}
         initialMessages={messages || []}
-        initialGroupId={firstGroupId}
+        initialGroupId={openDmUserId ? null : firstGroupId}
         initialStaff={staff || []}
         initialDmThreads={dmThreads}
         initialDmThreadId={firstThreadId}

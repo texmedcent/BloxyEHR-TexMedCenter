@@ -12,6 +12,7 @@ export type MedicationCategory =
   | "obgyn"
   | "renal_urology"
   | "infectious_antiviral"
+  | "iv_fluids"
   | "misc";
 
 export interface MedicationItem {
@@ -37,6 +38,7 @@ export const MEDICATION_CATEGORY_LABELS: Record<MedicationCategory, string> = {
   obgyn: "OB/GYN",
   renal_urology: "Renal / Urology",
   infectious_antiviral: "Antiviral / ID Adjuncts",
+  iv_fluids: "IV Fluids",
   misc: "Other",
 };
 
@@ -54,6 +56,7 @@ export const MEDICATION_CATEGORIES: MedicationCategory[] = [
   "obgyn",
   "renal_urology",
   "infectious_antiviral",
+  "iv_fluids",
   "misc",
 ];
 
@@ -302,6 +305,59 @@ export const MEDICATION_FORMULARY: MedicationItem[] = [
   { name: "Valacyclovir", aliases: ["Valtrex"], category: "infectious_antiviral", controlled: false, defaultRoute: "PO", defaultFrequency: "BID" },
   { name: "Remdesivir", aliases: ["Veklury"], category: "infectious_antiviral", controlled: false, defaultRoute: "IV", defaultFrequency: "Daily" },
   { name: "Nirmatrelvir/Ritonavir", aliases: ["Paxlovid"], category: "infectious_antiviral", controlled: false, defaultRoute: "PO", defaultFrequency: "BID" },
+
+  // === IV FLUIDS (Essential formulary) ===
+  // Crystalloids - Isotonic
+  { name: "Normal Saline", aliases: ["0.9% NaCl", "NS", "Sodium Chloride 0.9%"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "Lactated Ringer's", aliases: ["LR", "Ringers", "Ringer's Lactate", "Hartmann's"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "Plasma-Lyte", aliases: ["Plasma-Lyte 148", "Plasma-Lyte A"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "Normosol-R", aliases: ["Normosol", "Isolyte E"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Crystalloids - Hypotonic
+  { name: "0.45% NaCl", aliases: ["Half Normal Saline", "1/2 NS", "0.45% Sodium Chloride"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "0.225% NaCl", aliases: ["Quarter Normal Saline", "1/4 NS", "0.225% Sodium Chloride"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Crystalloids - Hypertonic saline
+  { name: "3% NaCl", aliases: ["3% Sodium Chloride", "Hypertonic Saline 3%"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "23.4% NaCl", aliases: ["Hypertonic Saline 23.4%", "23.4% Sodium Chloride"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+
+  // Dextrose solutions
+  { name: "D5W", aliases: ["Dextrose 5%", "5% Dextrose in Water", "D5 Water"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D10W", aliases: ["10% Dextrose", "Dextrose 10% in Water"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "D20W", aliases: ["20% Dextrose"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "D50W", aliases: ["50% Dextrose", "Dextrose 50%", "D50"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "One-time" },
+
+  // Dextrose + saline combinations
+  { name: "D5 1/2 NS", aliases: ["D5 Half Normal Saline", "D5 0.45% NaCl", "D5W 1/2 NS"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D5 1/4 NS", aliases: ["D5 Quarter Normal Saline", "D5 0.225% NaCl", "D5W 1/4 NS"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D5NS", aliases: ["D5 Normal Saline", "D5 0.9% NaCl", "D5W in NS"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D2.5 1/2 NS", aliases: ["D2.5 Half Normal Saline", "2.5% Dextrose in 0.45% NaCl"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Dextrose + balanced crystalloids
+  { name: "D5 Lactated Ringer's", aliases: ["D5 LR", "D5 Ringers"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Balanced/alternative crystalloids
+  { name: "Plasma-Lyte 56", aliases: ["Plasma-Lyte M"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Acetated Ringer's", aliases: ["Acetate Ringer", "Ringer's Acetate"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "Isolyte S", aliases: ["Isolyte"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Potassium-containing maintenance fluids
+  { name: "NS with 20 mEq KCl", aliases: ["0.9% NaCl with potassium", "NS + K"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "NS with 40 mEq KCl", aliases: ["0.9% NaCl with 40 mEq K"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "LR with 20 mEq KCl", aliases: ["Lactated Ringer's with potassium", "LR + K"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D5 0.45% NaCl with 20 mEq KCl", aliases: ["D5 1/2 NS with K", "D5 Half NS with potassium"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+  { name: "D5 0.225% NaCl with 20 mEq KCl", aliases: ["D5 1/4 NS with K", "D5 Quarter NS with potassium"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Continuous" },
+
+  // Colloids & volume expanders
+  { name: "Albumin 5%", aliases: ["5% Albumin", "Human Albumin", "Albumin Human 5%"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Albumin 25%", aliases: ["25% Albumin", "Salt-poor Albumin", "Albumin Human 25%"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Hetastarch", aliases: ["Hextend", "Hespan", "Hydroxyethyl starch", "HES"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Dextran 40", aliases: ["LMD", "Low Molecular Weight Dextran"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+
+  // Special / adjunct solutions
+  { name: "Sodium Bicarbonate", aliases: ["NaHCO3", "Bicarb", "8.4% Sodium Bicarbonate"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Sterile Water for Injection", aliases: ["SWFI", "WFI", "Water for Injection"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
+  { name: "Mannitol", aliases: ["20% Mannitol", "Mannitol 20%"], category: "iv_fluids", controlled: false, defaultRoute: "IV", defaultFrequency: "Per protocol" },
 
   { name: "Diphenhydramine", aliases: ["Benadryl"], category: "misc", controlled: false, defaultRoute: "IV", defaultFrequency: "Q6H PRN" },
   { name: "Cetirizine", aliases: ["Zyrtec"], category: "misc", controlled: false, defaultRoute: "PO", defaultFrequency: "Daily" },

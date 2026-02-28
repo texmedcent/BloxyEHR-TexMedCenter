@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LiveClock } from "@/components/chart/LiveClock";
+import Link from "next/link";
 import { Activity, CalendarDays, FileText, FlaskConical } from "lucide-react";
 import { CheckInCard } from "@/components/patient/CheckInCard";
 import { LogoutButton } from "@/components/logout-button";
@@ -175,7 +176,21 @@ export default async function PatientDashboardPage() {
                 MyChart
               </h1>
             </div>
-            <LogoutButton />
+            <div className="flex items-center gap-2">
+              <Link
+                href="/"
+                className="text-sm font-medium text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                href="/patient/settings"
+                className="text-sm font-medium text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground transition-colors"
+              >
+                Settings
+              </Link>
+              <LogoutButton />
+            </div>
           </div>
           <p className="text-sm text-slate-600 dark:text-muted-foreground mt-1">
             Hello! {profile?.full_name || claims.email || "Patient"}

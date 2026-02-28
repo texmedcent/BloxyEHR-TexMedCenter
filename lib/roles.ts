@@ -119,7 +119,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 export function getRoleLandingPath(role: string | null | undefined): string {
   if (!role || role === "patient") return "/patient";
-  return "/dashboard";
+  return "/staff-dashboard";
 }
 
 export function isHospitalManager(role: string | null | undefined): boolean {

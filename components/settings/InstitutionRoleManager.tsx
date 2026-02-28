@@ -34,6 +34,17 @@ export function InstitutionRoleManager({
     initialBypassPharmacyVerification
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredRows = searchQuery.trim()
+    ? rows.filter((row) => {
+        const q = searchQuery.trim().toLowerCase();
+        const name = (row.full_name ?? "").toLowerCase();
+        const email = (row.email ?? "").toLowerCase();
+        const dept = (row.department ?? "").toLowerCase();
+        return name.includes(q) || email.includes(q) || dept.includes(q);
+      })
+    : rows;
 
   const updateRole = async (id: string, role: string) => {
     setSavingId(id);
@@ -134,6 +145,15 @@ export function InstitutionRoleManager({
 
       <div className="pt-4 border-t border-border">
         <h4 className="text-sm font-medium mb-3">User Roles</h4>
+        <div className="mb-3">
+          <Input
+            placeholder="Search users by name, email, or department..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-sm"
+            aria-label="Search users"
+          />
+        </div>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead>
@@ -145,7 +165,7 @@ export function InstitutionRoleManager({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">{row.full_name || "—"}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{row.email || "—"}</td>
@@ -166,7 +186,7 @@ export function InstitutionRoleManager({
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">
                     No users found.

@@ -2,10 +2,61 @@ import { createClient } from "@/lib/supabase/server";
 import { Inbox } from "lucide-react";
 import { InBasketList } from "@/components/inbasket/InBasketList";
 import { formatOrderDetails } from "@/lib/orders";
+import { isHospitalManager } from "@/lib/roles";
 
 export default async function InBasketPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const isManager = isHospitalManager(profile?.role);
+
+  // Pending LOA requests for managers to approve/deny
+  let loaItems: Array<{
+    id: string;
+    type: string;
+    priority: string;
+    read_at: null;
+    created_at: string;
+    headline: string;
+    details: string;
+    loaId?: string;
+    loaRequesterId?: string;
+    loaRequesterName?: string;
+  }> = [];
+  if (isManager && user) {
+    const { data: pendingLoas } = await supabase
+      .from("time_off_requests")
+      .select("id, user_id, start_date, end_date, type, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if (pendingLoas?.length) {
+      const reqIds = [...new Set(pendingLoas.map((r) => r.user_id))];
+      const { data: reqProfiles } = await supabase.from("profiles").select("id, full_name").in("id", reqIds);
+      const nameMap = new Map((reqProfiles || []).map((p) => [p.id, p.full_name]));
+      const TYPE_LABELS: Record<string, string> = { pto: "PTO", sick: "Sick", other: "Other" };
+      loaItems = pendingLoas.map((r) => {
+        const typeLabel = TYPE_LABELS[r.type] ?? r.type;
+        const start = new Date(r.start_date).toLocaleDateString();
+        const end = new Date(r.end_date).toLocaleDateString();
+        return {
+          id: `loa-${r.id}`,
+          type: "loa_request",
+          priority: "normal",
+          read_at: null,
+          created_at: r.created_at,
+          headline: `LOA Request: ${nameMap.get(r.user_id) ?? "Staff"}`,
+          details: `${typeLabel} · ${start} – ${end}`,
+          loaId: r.id,
+          loaRequesterId: r.user_id,
+          loaRequesterName: nameMap.get(r.user_id) ?? undefined,
+        };
+      });
+    }
+  }
+
   const rawItems = user
     ? (
         await supabase
@@ -130,13 +181,15 @@ export default async function InBasketPage() {
     };
   });
 
+  const allItems = [...loaItems, ...taskItems, ...items];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Inbox className="h-6 w-6 text-[#1a4d8c] dark:text-primary shrink-0" />
         <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">In Basket</h1>
       </div>
-      <InBasketList items={[...taskItems, ...items]} />
+      <InBasketList items={allItems} />
     </div>
   );
 }

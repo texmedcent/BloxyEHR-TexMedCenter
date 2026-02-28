@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Inbox, Check, Trash2 } from "lucide-react";
+import { Inbox, Check, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
 interface InBasketItem {
@@ -24,6 +24,9 @@ interface InBasketItem {
   taskStatus?: string;
   taskSlaViolation?: boolean;
   taskEscalated?: boolean;
+  loaId?: string;
+  loaRequesterId?: string;
+  loaRequesterName?: string;
 }
 
 interface InBasketListProps {
@@ -57,6 +60,7 @@ export function InBasketList({ items }: InBasketListProps) {
   };
 
   const clearItem = async (id: string) => {
+    if (id.startsWith("loa-")) return; // LOA items are resolved via approve/deny, not clear
     setClearingId(id);
     const supabase = createClient();
     if (id.startsWith("task-")) {
@@ -69,6 +73,40 @@ export function InBasketList({ items }: InBasketListProps) {
       await supabase.from("in_basket_items").delete().eq("id", id);
     }
     setClearingId(null);
+    router.refresh();
+  };
+
+  const handleLoaReview = async (loaId: string, loaRequesterId: string, loaRequesterName: string | undefined, approved: boolean) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: reviewerProfile } = user
+      ? await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+      : { data: null };
+    const status = approved ? "approved" : "denied";
+    await supabase
+      .from("time_off_requests")
+      .update({
+        status,
+        reviewed_by_id: user?.id ?? null,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", loaId);
+    // Notify requester in their In Basket
+    const { data: requesterProfile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", loaRequesterId)
+      .maybeSingle();
+    await supabase.from("in_basket_tasks").insert({
+      owner_id: loaRequesterId,
+      owner_name: requesterProfile?.full_name ?? loaRequesterName ?? "Staff",
+      title: approved ? "Leave of Absence Request Approved" : "Leave of Absence Request Denied",
+      details: `Your LOA request was ${status} by ${reviewerProfile?.full_name ?? "a manager"}.`,
+      created_by: user?.id ?? null,
+      created_by_name: reviewerProfile?.full_name ?? "Manager",
+      status: "open",
+      priority: "normal",
+    });
     router.refresh();
   };
 
@@ -250,7 +288,27 @@ export function InBasketList({ items }: InBasketListProps) {
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {item.taskId && (
+                  {item.type === "loa_request" && item.loaId && item.loaRequesterId && (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="h-8 text-xs gap-1"
+                        onClick={() => handleLoaReview(item.loaId!, item.loaRequesterId!, item.loaRequesterName, true)}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" /> Approve
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 text-xs gap-1"
+                        onClick={() => handleLoaReview(item.loaId!, item.loaRequesterId!, item.loaRequesterName, false)}
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> Deny
+                      </Button>
+                    </>
+                  )}
+                  {item.taskId && item.type !== "loa_request" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -268,7 +326,7 @@ export function InBasketList({ items }: InBasketListProps) {
                   <span className="text-sm text-slate-500 dark:text-muted-foreground">
                     {format(new Date(item.created_at), "MM/dd/yyyy HH:mm")}
                   </span>
-                  {!item.read_at && (
+                  {!item.read_at && item.type !== "loa_request" && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -278,15 +336,17 @@ export function InBasketList({ items }: InBasketListProps) {
                       <Check className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => clearItem(item.id)}
-                    title="Clear notification"
-                    disabled={clearingId === item.id}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {item.type !== "loa_request" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => clearItem(item.id)}
+                      title="Clear notification"
+                      disabled={clearingId === item.id}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}

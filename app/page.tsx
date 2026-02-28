@@ -4,9 +4,6 @@ import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { getRoleLandingPath } from "@/lib/roles";
 import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
 import { AnimateIn } from "@/components/ui/animate-in";
 import { HeroContent } from "@/components/landing/HeroContent";
@@ -14,24 +11,6 @@ import { HeroContent } from "@/components/landing/HeroContent";
 const COMMUNITY_BG = "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=1920&q=50";
 
 export default async function Home() {
-  if (hasEnvVars) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getClaims();
-    if (data?.claims) {
-      const userId = (data.claims as { sub?: string })?.sub;
-      let role: string | null = null;
-      if (userId) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", userId)
-          .single();
-        role = profile?.role ?? null;
-      }
-      redirect(getRoleLandingPath(role));
-    }
-  }
-
   return (
     <main className="min-h-screen bg-white">
       {/* Nav */}
