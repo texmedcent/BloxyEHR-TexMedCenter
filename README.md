@@ -54,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000). Sign up for an account to a
 
 ## Tech Stack
 
-- Next.js 14+ (App Router)
+- Next.js 16+ (App Router)
 - Supabase (PostgreSQL, Auth)
 - Tailwind CSS
 - Lucide React icons
