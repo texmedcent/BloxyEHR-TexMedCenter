@@ -661,7 +661,7 @@ export function EncounterStatusPanel({
           <Button
             onClick={assignToMe}
             disabled={savingAssign}
-            className="bg-atrium-primary hover:bg-atrium-primary/90 shrink-0"
+            className="bg-primary hover:bg-primary/90 shrink-0"
           >
             <UserPlus className="h-4 w-4 mr-2" />
             {savingAssign ? "Assigning…" : "Assign to Me"}

@@ -208,7 +208,7 @@ export function InstitutionChatGroupsManager({
                 key={group.id}
                 className={`w-full rounded border px-3 py-2 text-left text-sm ${
                   group.id === selectedGroupId
-                    ? "border-atrium-primary dark:border-atrium-primary bg-atrium-primary/5 dark:bg-atrium-primary/10"
+                    ? "border-primary dark:border-primary bg-primary/5 dark:bg-primary/10"
                     : "border-slate-200 dark:border-border bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-muted"
                 }`}
                 onClick={() => setSelectedGroupId(group.id)}

@@ -103,10 +103,10 @@ export function ChartSearch({ open, onClose }: ChartSearchProps) {
                     onClick={() => openChart(p.id)}
                     className={cn(
                       "w-full px-4 py-3 flex items-center gap-3 text-left text-foreground",
-                      "hover:bg-atrium-primary/5 dark:hover:bg-atrium-primary/10 transition-colors"
+                      "hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
                     )}
                   >
-                    <User className="h-5 w-5 text-atrium-primary shrink-0" />
+                    <User className="h-5 w-5 text-primary shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium truncate">
                         {p.last_name}, {p.first_name}

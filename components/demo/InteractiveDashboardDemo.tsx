@@ -243,7 +243,7 @@ export function InteractiveDashboardDemo() {
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="flex h-screen overflow-hidden">
-        <aside className="hidden w-56 flex-col bg-atrium-primary text-white md:flex">
+        <aside className="hidden w-56 flex-col bg-primary text-white md:flex">
           <div className="border-b border-white/20 p-3">
             <BehrLogo compact className="text-white [&_p]:text-white" />
           </div>
@@ -269,7 +269,7 @@ export function InteractiveDashboardDemo() {
           <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-3">
             <div className="flex items-center gap-3">
               <BehrLogo compact />
-              <Badge variant="outline" className="border-atrium-primary/30 text-atrium-primary">
+              <Badge variant="outline" className="border-primary/30 text-primary">
                 Interactive Demo
               </Badge>
             </div>
@@ -450,7 +450,7 @@ export function InteractiveDashboardDemo() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4 text-atrium-primary" />
+                      <ClipboardList className="h-4 w-4 text-primary" />
                       Recent Orders
                     </CardTitle>
                   </CardHeader>
@@ -562,7 +562,7 @@ export function InteractiveDashboardDemo() {
                         }`}
                       >
                         <div className="min-w-0 flex items-center gap-2">
-                          <User className={`h-4 w-4 ${p.triage ? "text-amber-700" : "text-atrium-primary"}`} />
+                          <User className={`h-4 w-4 ${p.triage ? "text-amber-700" : "text-primary"}`} />
                           <div className="min-w-0">
                             <p className="text-sm font-medium truncate">{p.last_name}, {p.first_name}</p>
                             <p className="text-xs text-slate-500">MRN: {p.mrn}</p>

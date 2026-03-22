@@ -83,7 +83,7 @@ export function ForgotPasswordForm({
                   />
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full bg-atrium-primary hover:bg-atrium-primary/90" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                   {isLoading ? "Sending..." : "Send reset email"}
                 </Button>
               </div>
@@ -91,7 +91,7 @@ export function ForgotPasswordForm({
                 Already have an account?{" "}
                 <Link
                   href="/auth/login"
-                  className="font-medium text-atrium-primary underline underline-offset-4 hover:text-atrium-primary/90"
+                  className="font-medium text-primary underline underline-offset-4 hover:text-primary/90"
                 >
                   Login
                 </Link>

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PatientAccountForm } from "@/components/patient/PatientAccountForm";
-import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
+import { BehrLogo } from "@/components/branding/BehrLogo";
 import { LogoutButton } from "@/components/logout-button";
 
 export default async function PatientSettingsPage() {
@@ -33,7 +33,7 @@ export default async function PatientSettingsPage() {
         <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <AtriumHealthLogo compact />
+              <BehrLogo compact />
               <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
                 MyChart Settings
               </h1>

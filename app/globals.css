@@ -10,11 +10,11 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    /* Atrium Health IRL brand: teal #00747E, yellow #FFC400 */
-    --primary: 184 100% 24%;
+    /* BloxyEHR primary #1a4d8c */
+    --primary: 207 74% 31%;
     --primary-foreground: 0 0% 98%;
     --secondary: 210 20% 96%;
-    --secondary-foreground: 184 100% 24%;
+    --secondary-foreground: 207 74% 31%;
     --muted: 210 20% 96%;
     --muted-foreground: 0 0% 45.1%;
     --accent: 45 100% 51%;
@@ -23,29 +23,23 @@
     --destructive-foreground: 0 0% 98%;
     --border: 210 20% 89%;
     --input: 210 20% 89%;
-    --ring: 184 100% 24%;
-    --chart-1: 184 100% 24%;
+    --ring: 207 74% 31%;
+    --chart-1: 207 74% 31%;
     --chart-2: 45 100% 51%;
     --chart-3: 173 58% 39%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    /* Atrium Health extended tokens */
-    --atrium-primary: 184 100% 24%;
-    --atrium-teal: 184 100% 24%;
-    --atrium-yellow: 45 100% 51%;
-    --atrium-gray: 240 2% 55%;
   }
   .dark {
     color-scheme: dark;
-    /* Dark theme: Atrium Health teal and yellow on dark backgrounds */
     --background: 222 47% 7%;
     --foreground: 210 40% 98%;
     --card: 222 47% 9%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 184 100% 24%;
+    --primary: 207 74% 40%;
     --primary-foreground: 0 0% 98%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -57,16 +51,12 @@
     --destructive-foreground: 0 0% 98%;
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 184 100% 35%;
-    --chart-1: 184 100% 35%;
+    --ring: 207 74% 40%;
+    --chart-1: 207 74% 40%;
     --chart-2: 45 100% 51%;
     --chart-3: 173 58% 45%;
     --chart-4: 43 74% 60%;
     --chart-5: 27 87% 65%;
-    --atrium-primary: 184 100% 35%;
-    --atrium-teal: 184 100% 35%;
-    --atrium-yellow: 45 100% 51%;
-    --atrium-gray: 215 20% 65%;
   }
 }
 

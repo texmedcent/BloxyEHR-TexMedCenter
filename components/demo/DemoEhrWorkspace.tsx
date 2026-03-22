@@ -87,7 +87,7 @@ export function DemoEhrWorkspace() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <BehrLogo compact />
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-atrium-primary border-atrium-primary/30 bg-atrium-primary/5">
+              <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5">
                 Demo Mode (No Sign-In)
               </Badge>
               <Link href="/">
@@ -107,7 +107,7 @@ export function DemoEhrWorkspace() {
             <Button
               key={t}
               variant={tab === t ? "default" : "outline"}
-              className={tab === t ? "bg-atrium-primary hover:bg-atrium-primary/90" : ""}
+              className={tab === t ? "bg-primary hover:bg-primary/90" : ""}
               onClick={() => setTab(t)}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}

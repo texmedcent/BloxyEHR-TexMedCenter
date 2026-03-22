@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
+import { BehrLogo } from "@/components/branding/BehrLogo";
 
 export default function AuthLayout({
   children,
@@ -7,7 +7,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-svh w-full flex-col items-center justify-center bg-gradient-to-br from-atrium-primary/95 via-atrium-primary to-slate-800 p-6 md:p-10">
+    <div className="relative flex min-h-svh w-full flex-col items-center justify-center bg-gradient-to-br from-primary/95 via-primary to-slate-800 p-6 md:p-10">
       {/* Subtle pattern overlay */}
       <div
         className="pointer-events-none absolute inset-0 opacity-10"
@@ -22,7 +22,7 @@ export default function AuthLayout({
         ← Back to home
       </Link>
       <Link href="/" className="mb-8 flex justify-center">
-        <AtriumHealthLogo compact variant="white" iconOnly />
+        <BehrLogo compact inverted iconOnly />
       </Link>
       <div className="relative w-full max-w-sm">{children}</div>
       <p className="mt-8 text-center text-xs text-white/60">

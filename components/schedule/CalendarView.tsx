@@ -85,7 +85,7 @@ export function CalendarView({
                         end.setHours(hour + 1, 0, 0, 0);
                         onSlotClick(start.toISOString(), end.toISOString());
                       }}
-                      className="text-sm text-muted-foreground hover:text-atrium-primary rounded-lg px-3 py-2 hover:bg-atrium-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-atrium-primary"
+                      className="text-sm text-muted-foreground hover:text-primary rounded-lg px-3 py-2 hover:bg-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                       aria-label={`Add appointment at ${hour}:00`}
                     >
                       + Add

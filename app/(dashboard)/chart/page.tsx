@@ -112,7 +112,7 @@ export default async function ChartPage() {
         <Card className="border-slate-200 dark:border-border">
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
-              <ClipboardList className="h-4 w-4 text-atrium-primary" />
+              <ClipboardList className="h-4 w-4 text-primary" />
               Recent Orders
             </CardTitle>
           </CardHeader>
@@ -127,7 +127,7 @@ export default async function ChartPage() {
         <Card className="border-slate-200 dark:border-border">
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2 text-slate-900 dark:text-foreground">
-              <FlaskConical className="h-4 w-4 text-atrium-primary" />
+              <FlaskConical className="h-4 w-4 text-primary" />
               Recent Results
             </CardTitle>
           </CardHeader>
@@ -207,9 +207,9 @@ export default async function ChartPage() {
                 <Link
                   key={p.id}
                   href={`/chart/${p.id}`}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card hover:bg-atrium-primary/5 dark:hover:bg-atrium-primary/10 transition-colors text-left"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors text-left"
                 >
-                  <User className="h-4 w-4 text-atrium-primary" />
+                  <User className="h-4 w-4 text-primary" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">
                       {p.last_name}, {p.first_name}

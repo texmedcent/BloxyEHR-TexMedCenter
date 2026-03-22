@@ -79,8 +79,8 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="border-0 shadow-xl">
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-2xl text-slate-900">Create MyAtriumHealth Account</CardTitle>
-          <CardDescription>Sign up to access Atrium Health services</CardDescription>
+          <CardTitle className="text-2xl text-slate-900">Create BloxyEHR Account</CardTitle>
+          <CardDescription>Sign up to access BloxyEHR</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -122,13 +122,13 @@ export function SignUpForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               {success && <p className="text-sm text-emerald-700">{success}</p>}
-              <Button type="submit" className="w-full bg-atrium-primary hover:bg-atrium-primary/90" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link href="/auth/login" className="font-medium text-atrium-primary underline underline-offset-4 hover:text-atrium-primary/90">
+              <Link href="/auth/login" className="font-medium text-primary underline underline-offset-4 hover:text-primary/90">
                 Login
               </Link>
             </div>

@@ -27,9 +27,9 @@ export function BehrLogo({
   iconOnly = false,
   inverted = false,
 }: BehrLogoProps) {
-  const textColor = inverted ? "text-white" : "text-atrium-primary";
+  const textColor = inverted ? "text-white" : "text-primary";
   return (
-    <div className={cn("inline-flex items-center gap-3", inverted ? "text-white" : "text-atrium-primary", className)}>
+    <div className={cn("inline-flex items-center gap-3", inverted ? "text-white" : "text-primary", className)}>
       <HexMark compact={compact} />
       {!iconOnly && (
         <div className={cn("leading-none", textColor)}>

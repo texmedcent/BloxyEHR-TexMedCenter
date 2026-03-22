@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AtriumHealthLogo } from "@/components/branding/AtriumHealthLogo";
+import { BehrLogo } from "@/components/branding/BehrLogo";
 import { AnimateIn } from "@/components/ui/animate-in";
 import {
   Heart,
@@ -16,7 +16,7 @@ const CAREER_DOCKETS = [
     title: "Nursing Careers",
     icon: Heart,
     description:
-      "Nurses are at the heart of Atrium Health, providing compassionate care and supporting patients across all departments.",
+      "Nurses are at the heart of BloxyEHR, providing compassionate care and supporting patients across all departments.",
     docketType: "nursing",
   },
   {
@@ -37,14 +37,14 @@ const CAREER_DOCKETS = [
     title: "Corporate Office Careers",
     icon: Building2,
     description:
-      "Corporate Office professionals support Atrium Health through leadership, administration, and system-wide operations that advance our mission.",
+      "Corporate Office professionals support BloxyEHR through leadership, administration, and system-wide operations that advance our mission.",
     docketType: "corporate office",
   },
   {
     title: "Student & Intern Opportunities",
     icon: GraduationCap,
     description:
-      "Atrium Health offers opportunities for students and interns to gain hands-on experience, develop professional skills, and explore careers in healthcare.",
+      "BloxyEHR offers opportunities for students and interns to gain hands-on experience, develop professional skills, and explore careers in healthcare.",
     docketType: "student & intern",
   },
 ] as const;
@@ -53,9 +53,9 @@ export default function CareersPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Nav */}
-      <nav className="flex h-16 w-full items-center justify-between bg-atrium-primary px-6 text-white shadow-md">
+      <nav className="flex h-16 w-full items-center justify-between bg-primary px-6 text-white shadow-md">
         <Link href="/" className="flex items-center">
-          <AtriumHealthLogo compact variant="white" iconOnly />
+          <BehrLogo compact inverted iconOnly />
         </Link>
         <div className="flex items-center gap-6">
           <Link
@@ -68,13 +68,13 @@ export default function CareersPage() {
             href="/auth/login"
             className="text-sm font-medium text-white/95 transition-colors hover:text-white"
           >
-            MyAtriumHealth
+            BloxyEHR
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-atrium-primary via-atrium-primary to-slate-800 py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-slate-800 py-24">
         <div
           className="pointer-events-none absolute inset-0 opacity-10"
           style={{
@@ -83,15 +83,15 @@ export default function CareersPage() {
         />
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <AnimateIn>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-atrium-yellow">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-accent">
               Careers Forum
             </p>
             <h1 className="mb-6 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-              Welcome to Atrium Health Systems Careers!
+              Welcome to BloxyEHR Systems Careers!
             </h1>
             <p className="text-xl text-white/90">
               The Careers Forum serves as the central hub for employment opportunities across
-              Atrium Health. Each department maintains a dedicated docket where current openings
+              BloxyEHR. Each department maintains a dedicated docket where current openings
               will be posted and updated as needed.
             </p>
           </AnimateIn>
@@ -111,7 +111,7 @@ export default function CareersPage() {
                 Allied Health Careers, Corporate Office Careers, and Student & Intern Opportunities.
               </p>
               <p>
-                Career postings are managed by the Atrium Health Talent Management team. To ensure
+                Career postings are managed by the BloxyEHR Talent Management team. To ensure
                 accuracy and consistency, only members with the designated Careers role are
                 authorized to publish new opportunities.
               </p>
@@ -120,7 +120,7 @@ export default function CareersPage() {
                 regularly for the latest updates.
               </p>
               <p className="font-medium text-slate-800">
-                Atrium Health is committed to fostering a professional, inclusive, and mission-driven
+                BloxyEHR is committed to fostering a professional, inclusive, and mission-driven
                 workforce dedicated to delivering compassionate, patient-centered care.
               </p>
             </div>
@@ -142,9 +142,9 @@ export default function CareersPage() {
           <div className="space-y-6">
             {CAREER_DOCKETS.map((docket, i) => (
               <AnimateIn key={docket.title} delay={i * 50}>
-                <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:border-atrium-primary/30 hover:shadow-md sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-md sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex gap-4">
-                    <docket.icon className="mt-1 h-10 w-10 shrink-0 text-atrium-primary" />
+                    <docket.icon className="mt-1 h-10 w-10 shrink-0 text-primary" />
                     <div>
                       <h3 className="text-xl font-semibold text-slate-900">
                         {docket.title}
@@ -160,7 +160,7 @@ export default function CareersPage() {
                     href={DISCORD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 rounded-lg bg-atrium-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-atrium-primary/90"
+                    className="shrink-0 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90"
                   >
                     View Docket
                   </Link>
@@ -172,7 +172,7 @@ export default function CareersPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-atrium-primary py-20">
+      <section className="bg-primary py-20">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <AnimateIn>
             <h2 className="mb-4 text-3xl font-bold text-white">
@@ -183,7 +183,7 @@ export default function CareersPage() {
             </p>
             <Link
               href="/auth/sign-up"
-              className="inline-flex h-12 items-center rounded-xl bg-atrium-yellow px-8 text-base font-semibold text-slate-900 shadow-lg transition-all hover:bg-atrium-yellow/90 hover:scale-105"
+              className="inline-flex h-12 items-center rounded-xl bg-accent px-8 text-base font-semibold text-slate-900 shadow-lg transition-all hover:bg-accent/90 hover:scale-105"
             >
               Create Account
             </Link>
@@ -196,17 +196,17 @@ export default function CareersPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <AtriumHealthLogo compact iconOnly />
+              <BehrLogo compact iconOnly />
             </Link>
             <div className="flex gap-6 text-sm text-slate-600">
-              <Link href="/" className="hover:text-atrium-primary">
+              <Link href="/" className="hover:text-primary">
                 Home
               </Link>
-              <Link href="/careers" className="hover:text-atrium-primary">
+              <Link href="/careers" className="hover:text-primary">
                 Careers
               </Link>
-              <Link href="/auth/login" className="hover:text-atrium-primary">
-                MyAtriumHealth
+              <Link href="/auth/login" className="hover:text-primary">
+                BloxyEHR
               </Link>
             </div>
             <p className="text-sm text-slate-600">

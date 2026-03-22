@@ -39,7 +39,7 @@ export function PatientNotesPanel({ notes, encounterLabels }: PatientNotesPanelP
                 <button
                   type="button"
                   key={note.id}
-                  className="w-full rounded border border-slate-200 px-3 py-2 text-left transition-colors hover:border-atrium-primary/40 hover:bg-slate-50"
+                  className="w-full rounded border border-slate-200 px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-slate-50"
                   onClick={() => setSelectedNote(note)}
                 >
                   <p className="text-sm font-medium capitalize">
@@ -52,7 +52,7 @@ export function PatientNotesPanel({ notes, encounterLabels }: PatientNotesPanelP
                   <p className="mt-1 whitespace-pre-wrap text-xs text-slate-600 line-clamp-2">
                     {note.content}
                   </p>
-                  <p className="mt-1 text-[11px] font-medium text-atrium-primary">
+                  <p className="mt-1 text-[11px] font-medium text-primary">
                     Click to view full note
                   </p>
                 </button>
