@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Monitor, Moon, Sun } from "lucide-react";
@@ -11,7 +12,9 @@ const THEME_OPTIONS = [
 ] as const;
 
 export function ThemeSettings() {
-  const { theme, setTheme, mounted } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <Card>
