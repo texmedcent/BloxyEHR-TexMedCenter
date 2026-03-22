@@ -5,11 +5,11 @@ import Link from "next/link";
 export function HeroContent() {
   return (
     <div className="mx-auto max-w-2xl text-center">
-      <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-accent/95 opacity-0 animate-fade-in-up animate-delay-100 fill-mode-forwards">
+      <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary opacity-0 animate-fade-in-up animate-delay-100 fill-mode-forwards">
         Powered by BloxyEHR · Roblox Healthcare
       </p>
       <h1 className="mb-6 text-4xl font-bold leading-tight text-white opacity-0 animate-fade-in-up animate-delay-200 fill-mode-forwards sm:text-5xl lg:text-6xl">
-        Welcome to <span className="text-accent">BloxyEHR</span>
+        Welcome to <span className="text-primary">BloxyEHR</span>
       </h1>
       <p className="mb-6 text-xl leading-relaxed text-white/95 opacity-0 animate-fade-in-up animate-delay-300 fill-mode-forwards">
         Where excellence meets compassion. We&apos;re here to deliver exceptional care
@@ -22,7 +22,7 @@ export function HeroContent() {
       <div className="flex flex-wrap items-center justify-center gap-4 opacity-0 animate-fade-in-up animate-delay-500 fill-mode-forwards">
         <Link
           href="/auth/login"
-          className="inline-flex h-12 items-center rounded-xl bg-accent px-8 text-base font-semibold text-slate-900 shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105 hover:bg-accent/90 hover:shadow-xl hover:shadow-black/25"
+          className="inline-flex h-12 items-center rounded-xl bg-white px-8 text-base font-semibold text-primary shadow-lg shadow-black/20 transition-all duration-300 hover:scale-105 hover:bg-slate-50 hover:shadow-xl hover:shadow-black/25"
         >
           Access BloxyEHR
         </Link>

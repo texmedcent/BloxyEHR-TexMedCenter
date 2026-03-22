@@ -105,12 +105,19 @@ export function HyperspaceLayout({
           sidebarCollapsed ? "w-16" : "w-56"
         )}
       >
-        <div className="flex items-center justify-between p-3 border-b border-white/20">
-          {!sidebarCollapsed && (
-            <Link href="/staff-dashboard" className="truncate flex items-center">
-              <BehrLogo compact inverted iconOnly />
-            </Link>
+        <div
+          className={cn(
+            "flex items-center p-3 border-b border-white/20 gap-2",
+            sidebarCollapsed ? "flex-col justify-center" : "justify-between"
           )}
+        >
+          <Link
+            href="/staff-dashboard"
+            className="flex items-center justify-center text-white shrink-0 min-w-0"
+            aria-label="BloxyEHR Home"
+          >
+            <BehrLogo compact inverted iconOnly={sidebarCollapsed} />
+          </Link>
           <Button
             variant="ghost"
             size="icon"

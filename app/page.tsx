@@ -17,9 +17,6 @@ export default async function Home() {
       <nav className="flex h-16 w-full items-center justify-between bg-primary px-6 text-white shadow-md transition-all duration-300">
         <BehrLogo compact inverted />
         <div className="flex items-center gap-6">
-          <Link href="/careers" className="text-sm font-medium text-white/95 transition-colors hover:text-white">
-            Careers
-          </Link>
           <Link href="/auth/login" className="text-sm font-medium text-white/95 transition-colors hover:text-white">
             BloxyEHR
           </Link>
@@ -85,7 +82,7 @@ export default async function Home() {
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-6">
           <AnimateIn>
-            <h2 className="mb-4 text-3xl font-bold text-slate-900">About BloxyEHR</h2>
+            <h2 className="mb-4 text-3xl font-bold text-primary">About BloxyEHR</h2>
             <p className="mb-12 max-w-2xl text-lg text-slate-600">
               We&apos;re proud to bring professional healthcare roleplay to Roblox—with a team
               that cares about you.
@@ -109,10 +106,11 @@ export default async function Home() {
               </div>
               <div className="p-6">
                 <p className="text-slate-600 leading-relaxed">
-                  BloxyEHR brings professional healthcare workflows to Roblox.
-                  We are committed to exemplary care in a serious yet engaging environment.
-                  Our programs—from Residency to Mobile Health—are tailored for the highest
-                  standards of patient care.
+                  BloxyEHR was built to bring real-world EHR workflows to Roblox healthcare roleplay.
+                  Modeled after Epic and modern hospital systems, it started as a way to replace
+                  scattered Discord threads and forum posts with a single, structured platform.
+                  Today it powers patient charts, clinical notes, orders, results, scheduling,
+                  and pharmacy workflows—all in one place.
                 </p>
               </div>
             </div>
@@ -130,15 +128,15 @@ export default async function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <h3 className="absolute bottom-4 left-4 right-4 text-xl font-semibold text-white">
-                  Why Join Us
+                  Why BloxyEHR Over Discord Charting?
                 </h3>
               </div>
               <div className="p-6">
                 <p className="text-slate-600 leading-relaxed">
-                  Benefits rooted in inclusivity, fairness, and safety. Our dedicated
-                  administration curates an environment that prioritizes your well-being and
-                  satisfaction. Be part of a vibrant community dedicated to excellence,
-                  compassion, and continuous improvement.
+                  Discord and forum charting is scattered across channels and threads—hard to search,
+                  impossible to audit, and no real workflow. BloxyEHR gives you structured patient
+                  charts, order entry with status tracking, signed progress notes, lab results,
+                  eMAR, and scheduling—all in a single system built for clinical roleplay.
                 </p>
               </div>
             </div>
@@ -156,14 +154,15 @@ export default async function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <h3 className="absolute bottom-4 left-4 right-4 text-xl font-semibold text-white">
-                  A Warm Welcome
+                  Support & Updates
                 </h3>
               </div>
               <div className="p-6">
                 <p className="text-slate-600 leading-relaxed">
-                  We extend a warm welcome to all newcomers. You&apos;ll receive not only
-                  the essential resources but the compassion and attention you deserve.
-                  We&apos;re here to help you grow and thrive.
+                  We provide life-long updates and quick customer support. When you choose
+                  BloxyEHR, you get ongoing feature improvements, migrations, and fixes—plus
+                  responsive help when you need it. No lock-in, no surprise fees. We&apos;re here
+                  to keep your hospital running smoothly.
                 </p>
               </div>
             </div>
@@ -206,21 +205,13 @@ export default async function Home() {
         />
         <div className="relative mx-auto max-w-6xl px-6">
           <AnimateIn>
-            <h2 className="mb-2 text-3xl font-bold text-slate-900">Join Our Community</h2>
+            <h2 className="mb-2 text-3xl font-bold text-primary">Join Our Community</h2>
             <p className="mb-10 text-lg text-slate-600">
               Connect with fellow team members, stay updated, and be part of something special.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/careers"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-12 items-center rounded-lg bg-accent px-6 text-base font-semibold text-slate-900 shadow-md transition-all duration-300 hover:scale-105 hover:bg-accent/90 hover:shadow-lg"
-              >
-                Careers
-              </Link>
-              <Link
-                href="https://discord.gg/J2ZVwSK5zy"
+                href="https://discord.gg/QpK3apKC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-12 items-center rounded-lg border-2 border-primary bg-white px-6 text-base font-semibold text-primary transition-all duration-300 hover:scale-105 hover:bg-primary/5"
@@ -238,9 +229,6 @@ export default async function Home() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-6">
               <BehrLogo compact />
-              <Link href="/careers" className="text-sm font-medium text-slate-600 hover:text-primary">
-                Careers
-              </Link>
             </div>
             <p className="text-sm text-slate-600">
               BloxyEHR · Roblox Healthcare

@@ -11,7 +11,7 @@ const THEME_OPTIONS = [
 ] as const;
 
 export function ThemeSettings() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, mounted } = useTheme();
 
   return (
     <Card>
@@ -23,7 +23,7 @@ export function ThemeSettings() {
         <div className="flex gap-2">
           {THEME_OPTIONS.map((opt) => {
             const Icon = opt.icon;
-            const isActive = theme === opt.id;
+            const isActive = mounted && theme === opt.id;
             return (
               <button
                 key={opt.id}
