@@ -7,6 +7,7 @@ Electronic Hospital Records System for Roblox — modeled after EPIC EHR.
 - **Patient Chart** — Demographics, vitals, allergies, encounter history
 - **Clinical Documentation** — Progress notes, SOAP notes with templates
 - **Order Entry** — Medications, labs, imaging, procedures
+- **Pharmacy** — Medication workflows, eMAR, Med Rec
 - **Results Management** — Lab and imaging results with filtering
 - **Scheduling** — Day-view calendar, appointment booking
 - **In Basket** — Tasks and notifications with mark-as-read
