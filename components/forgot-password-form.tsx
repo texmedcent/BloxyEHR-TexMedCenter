@@ -1,5 +1,6 @@
 "use client";
 
+import { getPublicAppOrigin } from "@/lib/app-url";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export function ForgotPasswordForm({
       // Must go through /auth/callback so the server exchanges ?code= for a session (PKCE).
       // Same pattern as sign-up emailRedirectTo. Add this URL to Supabase Auth → Redirect URLs.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`,
+        redirectTo: `${getPublicAppOrigin()}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`,
       });
       if (error) throw error;
       setSuccess(true);

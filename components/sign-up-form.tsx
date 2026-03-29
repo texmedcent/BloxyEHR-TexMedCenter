@@ -1,5 +1,6 @@
 "use client";
 
+import { getPublicAppOrigin } from "@/lib/app-url";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${getPublicAppOrigin()}/auth/callback`,
           data: { role: "patient" },
         },
       });
