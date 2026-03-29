@@ -1,8 +1,6 @@
 "use client";
 
-import { getPublicAppOrigin } from "@/lib/app-url";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,17 +25,17 @@ export function ForgotPasswordForm({
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      // Must go through /auth/callback so the server exchanges ?code= for a session (PKCE).
-      // Same pattern as sign-up emailRedirectTo. Add this URL to Supabase Auth → Redirect URLs.
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${getPublicAppOrigin()}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`,
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
-      if (error) throw error;
+      const data = (await res.json()) as { error?: string; ok?: boolean };
+      if (!res.ok) throw new Error(data.error ?? "Request failed");
       setSuccess(true);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
