@@ -2,16 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Stethoscope, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { isHospitalManager, resolveRoleWithBootstrap } from "@/lib/roles";
 
 interface ActiveEncounter {
   id: string;
   patient_id: string;
   type: string;
+  campus?: string | null;
+  care_setting?: string | null;
   admit_date: string | null;
   assigned_to_name: string | null;
   patient_name?: string | null;
@@ -30,13 +34,28 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceEndEncountersSectionProps) {
   const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const forceEnd = async (encounterId: string) => {
+    if (busyId) return;
+    setBusyId(encounterId);
+    setMessage(null);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setMessage("You are not signed in.");
+      setBusyId(null);
+      return;
+    }
     const { data: profile } = user
-      ? await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+      ? await supabase.from("profiles").select("full_name, role").eq("id", user.id).maybeSingle()
       : { data: null };
+    const effectiveRole = resolveRoleWithBootstrap(user.email ?? null, profile?.role ?? null);
+    if (effectiveRole === "hospital_manager" && !isHospitalManager(profile?.role)) {
+      // Keep DB role aligned so trigger-level manager bypass can run.
+      await supabase.from("profiles").update({ role: "hospital_manager" }).eq("id", user.id);
+    }
     const nowIso = new Date().toISOString();
 
     const { error } = await supabase
@@ -45,6 +64,10 @@ export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceE
         status: "completed",
         discharge_date: nowIso,
         workflow_status: "completed",
+        disposition_type: "transfer",
+        final_diagnosis_description: "Administratively closed by manager",
+        discharge_instructions: "Administratively closed.",
+        return_precautions: "N/A",
         last_updated_by: user?.id ?? null,
         last_updated_by_name: profile?.full_name ?? "Manager",
         last_updated_at: nowIso,
@@ -53,13 +76,17 @@ export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceE
       .eq("status", "active");
 
     if (error) {
-      // Could show toast - for now just refresh
+      setMessage(`Force End failed: ${error.message}`);
+      setBusyId(null);
+      return;
     }
     await supabase
       .from("patient_checkins")
       .update({ status: "completed" })
       .eq("encounter_id", encounterId)
       .in("status", ["triage", "in_encounter"]);
+    setMessage("Encounter force-ended.");
+    setBusyId(null);
     router.refresh();
   };
 
@@ -75,6 +102,9 @@ export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceE
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {message ? (
+          <div className="mb-3 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">{message}</div>
+        ) : null}
         {activeEncounters.length === 0 ? (
           <p className="text-sm text-muted-foreground">No active encounters.</p>
         ) : (
@@ -87,7 +117,8 @@ export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceE
                 <div>
                   <p className="font-medium">{enc.patient_name ?? "Unknown"}</p>
                   <p className="text-xs text-muted-foreground">
-                    {TYPE_LABELS[enc.type] ?? enc.type}
+                    {enc.campus || TYPE_LABELS[enc.type] || enc.type}
+                    {enc.care_setting ? ` (${enc.care_setting})` : ""}
                     {enc.admit_date && ` · Admitted ${format(new Date(enc.admit_date), "MMM d, h:mm a")}`}
                     {enc.assigned_to_name && ` · ${enc.assigned_to_name}`}
                   </p>
@@ -101,9 +132,10 @@ export function AdminForceEndEncountersSection({ activeEncounters }: AdminForceE
                   <Button
                     variant="destructive"
                     size="sm"
+                    disabled={busyId === enc.id}
                     onClick={() => forceEnd(enc.id)}
                   >
-                    Force End
+                    {busyId === enc.id ? "Ending..." : "Force End"}
                   </Button>
                 </div>
               </div>

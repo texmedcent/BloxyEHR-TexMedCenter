@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { BehrLogo } from "@/components/branding/BehrLogo";
 import { LiveClock } from "@/components/chart/LiveClock";
@@ -72,6 +72,8 @@ interface HyperspaceLayoutProps {
   userEmail?: string;
   userName?: string;
   userRole?: string;
+  /** Passed for future UI hints; department gating is enforced in app/(dashboard)/layout.tsx (server). */
+  departmentId?: string | null;
 }
 
 export function HyperspaceLayout({
@@ -79,11 +81,16 @@ export function HyperspaceLayout({
   userEmail,
   userName,
   userRole,
+  departmentId: _departmentId,
 }: HyperspaceLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [chartSearchOpen, setChartSearchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isDepartmentSetupPage =
+    pathname === "/settings/complete-department" || pathname?.startsWith("/settings/complete-department/");
 
   useEffect(() => {
     setMounted(true);
@@ -95,6 +102,28 @@ export function HyperspaceLayout({
     router.push("/");
     router.refresh();
   };
+
+  if (isDepartmentSetupPage) {
+    return (
+      <div className="min-h-screen bg-slate-100 dark:bg-background flex flex-col">
+        <header
+          className="h-14 bg-white dark:bg-card border-b border-slate-200 dark:border-border flex items-center px-4 shrink-0"
+          role="banner"
+        >
+          <div className="flex items-center gap-2" aria-label="BloxyEHR">
+            <BehrLogo compact />
+            <span className="font-semibold text-slate-900 dark:text-foreground">BloxyEHR</span>
+          </div>
+          <span className="ml-4 text-sm text-muted-foreground hidden sm:inline">
+            Choose your department to continue
+          </span>
+        </header>
+        <main className="flex-1 overflow-auto p-4 md:p-6" role="main" id="main-content">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-slate-100 dark:bg-background overflow-hidden">

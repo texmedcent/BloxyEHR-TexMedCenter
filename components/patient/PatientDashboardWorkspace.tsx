@@ -3,8 +3,6 @@
 import { useMemo, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
-  BellRing,
-  CalendarClock,
   CheckCircle2,
   ClipboardList,
   MessageSquare,
@@ -12,6 +10,7 @@ import {
   Send,
   Stethoscope,
   TestTube2,
+  Trash2,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -21,6 +20,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { formatOrderDetails, getMedicationName } from "@/lib/orders";
+import { cn } from "@/lib/utils";
+import { PatientActionCenter, type ActionItem, type TaskRow as ActionTaskRow } from "@/components/patient/PatientActionCenter";
+import { PatientMiniCalendar } from "@/components/patient/PatientMiniCalendar";
+import { PatientCareTeamMini, type CareMember } from "@/components/patient/PatientCareTeamMini";
+import { PatientListEmptyState } from "@/components/patient/PatientListEmptyState";
+import { usePatientSchedule } from "@/components/patient/PatientScheduleProvider";
 
 type EncounterRow = {
   id: string;
@@ -32,6 +37,9 @@ type EncounterRow = {
   disposition_type?: string | null;
   discharge_instructions?: string | null;
   return_precautions?: string | null;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  supervising_attending?: string | null;
 };
 
 type ResultRow = {
@@ -102,6 +110,25 @@ type ProcedureRow = {
   details: unknown;
 };
 
+type ProviderMessageOption = {
+  id: string;
+  full_name: string | null;
+  role: string | null;
+  department: string | null;
+};
+
+type SentMessageRow = {
+  id: string;
+  owner_id: string;
+  owner_name: string | null;
+  title: string;
+  details: string | null;
+  created_at: string;
+  status: string;
+  created_by: string | null;
+  created_by_name: string | null;
+};
+
 function parseResultSeverity(value: unknown): "critical" | "abnormal" | "normal" | "unknown" {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "unknown";
   const record = value as Record<string, unknown>;
@@ -129,9 +156,18 @@ function formatResultPreview(value: unknown): string {
   return JSON.stringify(value);
 }
 
+type VisitTab = "upcoming" | "past";
+
+const VISIT_TABS: { id: VisitTab; label: string }[] = [
+  { id: "upcoming", label: "Upcoming" },
+  { id: "past", label: "Past" },
+];
+
 export function PatientDashboardWorkspace({
   userId,
   patientId,
+  currentPatientName,
+  providers,
   encounters,
   results,
   medOrders,
@@ -140,9 +176,13 @@ export function PatientDashboardWorkspace({
   tasks,
   procedures,
   notes,
+  careTeamMembers,
+  portalMessages,
 }: {
   userId: string;
   patientId: string | null;
+  currentPatientName: string;
+  providers: ProviderMessageOption[];
   encounters: EncounterRow[];
   results: ResultRow[];
   medOrders: MedOrderRow[];
@@ -151,13 +191,21 @@ export function PatientDashboardWorkspace({
   tasks: TaskRow[];
   procedures: ProcedureRow[];
   notes: DashboardNote[];
+  careTeamMembers: CareMember[];
+  portalMessages: SentMessageRow[];
 }) {
+  const { openSchedule } = usePatientSchedule();
+  const [visitTab, setVisitTab] = useState<VisitTab>("upcoming");
   const [selectedResult, setSelectedResult] = useState<ResultRow | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<{ title: string; body: string } | null>(null);
   const [requestBusy, setRequestBusy] = useState<string | null>(null);
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
+  const [selectedMessageProviderId, setSelectedMessageProviderId] = useState("");
   const [messageSubject, setMessageSubject] = useState("");
   const [messageBody, setMessageBody] = useState("");
+  const [hiddenMessageIds, setHiddenMessageIds] = useState<string[]>([]);
+  const [hideMessageBusyId, setHideMessageBusyId] = useState<string | null>(null);
+  const [openThreadKey, setOpenThreadKey] = useState<string | null>(null);
 
   const activeMeds = useMemo(
     () =>
@@ -171,36 +219,120 @@ export function PatientDashboardWorkspace({
   const upcomingAppointments = useMemo(
     () =>
       appointments
-        .filter((a) => new Date(a.slot_start).getTime() >= Date.now())
+        .filter((a) => {
+          const normalizedStatus = (a.status || "scheduled").toLowerCase();
+          return !["cancelled", "completed", "no_show"].includes(normalizedStatus);
+        })
         .sort((a, b) => new Date(a.slot_start).getTime() - new Date(b.slot_start).getTime()),
     [appointments]
   );
 
-  const messageThreads = useMemo(
-    () => tasks.filter((t) => t.title.toLowerCase().startsWith("message:")),
-    [tasks]
+  const pastAppointments = useMemo(
+    () =>
+      appointments
+        .filter((a) => {
+          const normalizedStatus = (a.status || "").toLowerCase();
+          if (["cancelled", "completed", "no_show"].includes(normalizedStatus)) return true;
+          return new Date(a.slot_end).getTime() < Date.now();
+        })
+        .sort((a, b) => new Date(b.slot_start).getTime() - new Date(a.slot_start).getTime()),
+    [appointments]
   );
 
-  const actionItems = useMemo(() => {
-    const dueSoonAppointments = upcomingAppointments
-      .filter((a) => new Date(a.slot_start).getTime() - Date.now() <= 1000 * 60 * 60 * 48)
-      .map((a) => ({
-        key: `appt-${a.id}`,
-        title: "Upcoming appointment reminder",
-        details: `${a.type || "Visit"} on ${format(new Date(a.slot_start), "MM/dd/yyyy HH:mm")}`,
-      }));
+  const providerOptions = useMemo(() => {
+    const byId = new Map<string, ProviderMessageOption>();
+    for (const provider of providers) {
+      if (!provider?.id) continue;
+      byId.set(provider.id, provider);
+    }
+    for (const member of careTeamMembers) {
+      if (!member?.id || byId.has(member.id)) continue;
+      byId.set(member.id, {
+        id: member.id,
+        full_name: member.full_name,
+        role: member.role,
+        department: null,
+      });
+    }
+    return [...byId.values()].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+  }, [providers, careTeamMembers]);
 
-    const criticalResults = results
-      .filter((r) => r.is_critical || parseResultSeverity(r.value) === "critical")
-      .slice(0, 3)
-      .map((r) => ({
-        key: `result-${r.id}`,
-        title: "Critical result available",
-        details: `${r.type} reported ${formatDistanceToNow(new Date(r.reported_at), { addSuffix: true })}`,
-      }));
+  const visiblePortalMessages = useMemo(
+    () => portalMessages.filter((thread) => !hiddenMessageIds.includes(thread.id)),
+    [portalMessages, hiddenMessageIds]
+  );
 
-    return [...dueSoonAppointments, ...criticalResults];
-  }, [results, upcomingAppointments]);
+  const messageThreads = useMemo(() => {
+    const bySubject = new Map<
+      string,
+      {
+        key: string;
+        subject: string;
+        latestAt: string;
+        hasRecentProviderReply: boolean;
+        messages: SentMessageRow[];
+      }
+    >();
+    for (const msg of visiblePortalMessages) {
+      const subject =
+        msg.title.replace(/^Patient Message:\s*/i, "").replace(/^Provider Reply:\s*/i, "").trim() ||
+        "Portal message";
+      const key = subject.toLowerCase();
+      const existing = bySubject.get(key);
+      if (!existing) {
+        bySubject.set(key, {
+          key,
+          subject,
+          latestAt: msg.created_at,
+          hasRecentProviderReply: /^Provider Reply:/i.test(msg.title || ""),
+          messages: [msg],
+        });
+      } else {
+        existing.messages.push(msg);
+        if (new Date(msg.created_at).getTime() > new Date(existing.latestAt).getTime()) {
+          existing.latestAt = msg.created_at;
+        }
+        if (/^Provider Reply:/i.test(msg.title || "")) {
+          existing.hasRecentProviderReply = true;
+        }
+      }
+    }
+    const threads = [...bySubject.values()].map((thread) => ({
+      ...thread,
+      messages: [...thread.messages].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      ),
+    }));
+    threads.sort((a, b) => new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime());
+    return threads;
+  }, [visiblePortalMessages]);
+
+  const openThread = useMemo(
+    () => messageThreads.find((thread) => thread.key === openThreadKey) ?? null,
+    [messageThreads, openThreadKey]
+  );
+
+  const actionItems: ActionItem[] = useMemo(() => {
+    const now = Date.now();
+    const ttlMs = 72 * 60 * 60 * 1000;
+    return messageThreads
+      .filter((thread) => thread.hasRecentProviderReply)
+      .filter((thread) => now - new Date(thread.latestAt).getTime() <= ttlMs)
+      .map((thread) => ({
+        key: `provider-msg-${thread.key}`,
+        title: "Check message from Provider!",
+        details: "",
+      }));
+  }, [messageThreads]);
+
+  const actionCenterTasks = useMemo(
+    () =>
+      tasks.filter((task) => {
+        const title = (task.title || "").toLowerCase();
+        return !title.startsWith("provider reply:") && !title.startsWith("patient message:");
+      }),
+    [tasks]
+  );
 
   const medLogByOrder = useMemo(() => {
     const grouped = new Map<string, MedAdminLogRow[]>();
@@ -215,7 +347,22 @@ export function PatientDashboardWorkspace({
     return grouped;
   }, [medAdminLogs]);
 
-  const openTaskCount = tasks.filter((t) => t.status === "open" || t.status === "in_progress").length;
+  const activeEncounterList = useMemo(
+    () => encounters.filter((e) => (e.status || "").toLowerCase() === "active"),
+    [encounters]
+  );
+
+  const pastEncounters = useMemo(() => {
+    const list = encounters.filter((e) => (e.status || "").toLowerCase() !== "active");
+    return [...list].sort((a, b) => {
+      const ta = a.admit_date ? new Date(a.admit_date).getTime() : 0;
+      const tb = b.admit_date ? new Date(b.admit_date).getTime() : 0;
+      return tb - ta;
+    });
+  }, [encounters]);
+
+  const formatDue = (due: string | null) =>
+    due ? `Due ${format(new Date(due), "MM/dd/yyyy HH:mm")}` : "No due time";
 
   const sendPatientRequest = async (title: string, details: string) => {
     setRequestBusy(title);
@@ -241,57 +388,132 @@ export function PatientDashboardWorkspace({
     setRequestBusy(null);
   };
 
-  const submitMessage = async () => {
-    if (!messageSubject.trim() || !messageBody.trim()) return;
-    await sendPatientRequest(`Message: ${messageSubject.trim()}`, messageBody.trim());
+  const sendMessageToProvider = async () => {
+    if (!selectedMessageProviderId || !messageSubject.trim() || !messageBody.trim()) return;
+    const provider = providerOptions.find((p) => p.id === selectedMessageProviderId);
+    if (!provider) return;
+
+    setRequestBusy(`Patient Message: ${messageSubject.trim()}`);
+    setRequestMessage(null);
+    const supabase = createClient();
+
+    const { error } = await supabase.from("in_basket_tasks").insert({
+      owner_id: provider.id,
+      owner_name: provider.full_name ?? "Provider",
+      patient_id: patientId,
+      title: `Patient Message: ${messageSubject.trim()}`,
+      details: `From: ${currentPatientName}\nTo: ${provider.full_name ?? "Provider"}\n\n${messageBody.trim()}`,
+      priority: "normal",
+      status: "open",
+      created_by: userId,
+      created_by_name: currentPatientName,
+    });
+
+    if (error) {
+      setRequestMessage(error.message || "Unable to send message.");
+      setRequestBusy(null);
+      return;
+    }
+
+    setRequestMessage("Message sent to provider.");
     setMessageSubject("");
     setMessageBody("");
+    setRequestBusy(null);
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="border-slate-200 dark:border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <TestTube2 className="h-4 w-4 text-indigo-600" />
-              Released Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{results.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Pill className="h-4 w-4 text-primary" />
-              Active Medications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{activeMeds.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <BellRing className="h-4 w-4 text-amber-600" />
-              Open Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">{openTaskCount}</p>
-          </CardContent>
-        </Card>
-      </div>
+  const submitMessage = async () => {
+    await sendMessageToProvider();
+  };
 
-      <div className="grid gap-4 xl:grid-cols-2">
+  const hidePortalMessage = async (threadId: string) => {
+    setHideMessageBusyId(threadId);
+    setRequestMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("in_basket_tasks")
+      .update({ patient_hidden_at: new Date().toISOString() })
+      .eq("id", threadId);
+    setHideMessageBusyId(null);
+    if (error) {
+      setRequestMessage(error.message || "Unable to hide message.");
+      return;
+    }
+    setHiddenMessageIds((prev) => (prev.includes(threadId) ? prev : [...prev, threadId]));
+    setRequestMessage("Message hidden.");
+  };
+
+  const renderEncounterRow = (enc: EncounterRow) => (
+    <div key={enc.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium capitalize">{enc.type.replaceAll("_", " ")}</p>
+        <span className="text-xs uppercase text-slate-500">{enc.status}</span>
+      </div>
+      <p className="mt-1 text-xs text-slate-500">
+        {enc.admit_date ? format(new Date(enc.admit_date), "MM/dd/yyyy HH:mm") : "Unknown admit"}{" "}
+        {enc.discharge_date ? `to ${format(new Date(enc.discharge_date), "MM/dd/yyyy HH:mm")}` : ""}
+      </p>
+      {(enc.assigned_to_name || enc.supervising_attending) && (
+        <p className="mt-1 text-xs text-slate-600">
+          Provider: {enc.assigned_to_name || enc.supervising_attending}
+        </p>
+      )}
+      {(enc.final_diagnosis_description || enc.disposition_type) && (
+        <p className="mt-1 text-xs text-slate-600">
+          {enc.final_diagnosis_description || "Diagnosis pending"} · {(enc.disposition_type || "pending").replaceAll("_", " ")}
+        </p>
+      )}
+    </div>
+  );
+
+  const renderAppointmentRow = (appt: AppointmentRow) => (
+    <div key={appt.id} className="rounded-lg border border-primary/25 bg-primary/5 dark:bg-primary/10 px-3 py-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-primary">Scheduled visit</p>
+      <p className="text-sm font-medium">{appt.type || "Visit"}</p>
+      <p className="mt-1 text-xs text-slate-600">
+        {format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")} – {format(new Date(appt.slot_end), "HH:mm")}
+      </p>
+      <p className="mt-1 text-xs text-slate-500">
+        Provider: {appt.provider_name || "Assigned clinician"} · {appt.status || "scheduled"}
+      </p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={requestBusy !== null}
+          onClick={() =>
+            sendPatientRequest(
+              "Appointment Change Request",
+              `Please help reschedule appointment on ${format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")}.`
+            )
+          }
+        >
+          Request reschedule
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={requestBusy !== null}
+          onClick={() =>
+            sendPatientRequest(
+              "Appointment Cancellation Request",
+              `Please cancel appointment on ${format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")}.`
+            )
+          }
+        >
+          Request cancel
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start">
+      <div className="space-y-4 min-w-0">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <TestTube2 className="h-4 w-4 text-indigo-600" />
-              Test Results
+              Test results
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -301,10 +523,10 @@ export function PatientDashboardWorkspace({
                 severity === "critical"
                   ? "bg-red-50 text-red-700"
                   : severity === "abnormal"
-                  ? "bg-amber-50 text-amber-700"
-                  : severity === "normal"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-slate-100 text-slate-600";
+                    ? "bg-amber-50 text-amber-700"
+                    : severity === "normal"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-slate-100 text-slate-600";
               return (
                 <button
                   key={result.id}
@@ -323,14 +545,18 @@ export function PatientDashboardWorkspace({
                       </span>
                     </div>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {format(new Date(result.reported_at), "MM/dd/yyyy HH:mm")}
-                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{format(new Date(result.reported_at), "MM/dd/yyyy HH:mm")}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-slate-600">{formatResultPreview(result.value)}</p>
                 </button>
               );
             })}
-            {results.length === 0 && <p className="text-sm text-slate-500">No released results yet.</p>}
+            {results.length === 0 && (
+              <PatientListEmptyState
+                title="No released results yet"
+                description="When your care team releases labs or imaging, they will appear here."
+                onBook={undefined}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -380,13 +606,10 @@ export function PatientDashboardWorkspace({
                       variant="outline"
                       disabled={requestBusy !== null}
                       onClick={() =>
-                        sendPatientRequest(
-                          "Refill Request",
-                          `Please review refill request for medication: ${label}.`
-                        )
+                        sendPatientRequest("Refill Request", `Please review refill request for medication: ${label}.`)
                       }
                     >
-                      {requestBusy ? "Submitting..." : "Request Refill"}
+                      {requestBusy ? "Submitting..." : "Request refill"}
                     </Button>
                   </div>
                 </div>
@@ -400,82 +623,52 @@ export function PatientDashboardWorkspace({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Stethoscope className="h-4 w-4 text-slate-700" />
-              Visits & Encounter Timeline
+              Visits & encounter timeline
             </CardTitle>
+            <div className="flex flex-wrap gap-1 rounded-lg border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/30 p-1 mt-2">
+              {VISIT_TABS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setVisitTab(id)}
+                  className={cn(
+                    "flex-1 min-w-[100px] rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    visitTab === id
+                      ? "bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-sm"
+                      : "text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            {encounters.slice(0, 12).map((enc) => (
-              <div key={enc.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-medium capitalize">{enc.type.replaceAll("_", " ")}</p>
-                  <span className="text-xs uppercase text-slate-500">{enc.status}</span>
-                </div>
-                <p className="mt-1 text-xs text-slate-500">
-                  {enc.admit_date ? format(new Date(enc.admit_date), "MM/dd/yyyy HH:mm") : "Unknown admit"}{" "}
-                  {enc.discharge_date ? `to ${format(new Date(enc.discharge_date), "MM/dd/yyyy HH:mm")}` : ""}
-                </p>
-                {(enc.final_diagnosis_description || enc.disposition_type) && (
-                  <p className="mt-1 text-xs text-slate-600">
-                    {enc.final_diagnosis_description || "Diagnosis pending"} ·{" "}
-                    {(enc.disposition_type || "pending").replaceAll("_", " ")}
-                  </p>
+            {visitTab === "upcoming" && (
+              <>
+                {upcomingAppointments.map(renderAppointmentRow)}
+                {activeEncounterList.map(renderEncounterRow)}
+                {upcomingAppointments.length === 0 && activeEncounterList.length === 0 && (
+                  <PatientListEmptyState
+                    title="Nothing upcoming"
+                    description="You have no scheduled visits or active encounters. Plan your next visit below."
+                    onBook={() => openSchedule()}
+                  />
                 )}
-              </div>
-            ))}
-            {encounters.length === 0 && <p className="text-sm text-slate-500">No encounters found.</p>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <CalendarClock className="h-4 w-4 text-primary" />
-              Appointments
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {upcomingAppointments.slice(0, 10).map((appt) => (
-              <div key={appt.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
-                <p className="text-sm font-medium">{appt.type || "Visit"}</p>
-                <p className="mt-1 text-xs text-slate-600">
-                  {format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")} -{" "}
-                  {format(new Date(appt.slot_end), "HH:mm")}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Provider: {appt.provider_name || "Assigned Clinician"} · Status: {appt.status || "scheduled"}
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={requestBusy !== null}
-                    onClick={() =>
-                      sendPatientRequest(
-                        "Appointment Change Request",
-                        `Please help reschedule appointment on ${format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")}.`
-                      )
-                    }
-                  >
-                    Request Reschedule
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={requestBusy !== null}
-                    onClick={() =>
-                      sendPatientRequest(
-                        "Appointment Cancellation Request",
-                        `Please cancel appointment on ${format(new Date(appt.slot_start), "MM/dd/yyyy HH:mm")}.`
-                      )
-                    }
-                  >
-                    Request Cancel
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {upcomingAppointments.length === 0 && (
-              <p className="text-sm text-slate-500">No upcoming appointments scheduled.</p>
+              </>
+            )}
+            {visitTab === "past" && (
+              <>
+                {pastAppointments.map(renderAppointmentRow)}
+                {pastEncounters.slice(0, 20).map(renderEncounterRow)}
+                {pastAppointments.length === 0 && pastEncounters.length === 0 && (
+                  <PatientListEmptyState
+                    title="No past visits on file"
+                    description="Your completed visits will appear here after discharge."
+                    onBook={() => openSchedule()}
+                  />
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -516,7 +709,7 @@ export function PatientDashboardWorkspace({
                   })
                 }
               >
-                <p className="text-sm font-medium">Procedure Summary</p>
+                <p className="text-sm font-medium">Procedure summary</p>
                 <p className="mt-1 text-xs text-slate-500">{format(new Date(proc.ordered_at), "MM/dd/yyyy HH:mm")}</p>
               </button>
             ))}
@@ -529,87 +722,129 @@ export function PatientDashboardWorkspace({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <BellRing className="h-4 w-4 text-amber-600" />
-              Action Center
+              <MessageSquare className="h-4 w-4 text-primary" />
+              Messages
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {actionItems.map((item) => (
-              <div key={item.key} className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 px-3 py-2">
-                <p className="text-sm font-medium text-amber-900">{item.title}</p>
-                <p className="mt-1 text-xs text-amber-800">{item.details}</p>
-              </div>
-            ))}
-            {tasks.slice(0, 8).map((task) => (
-              <div key={task.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">{task.title}</p>
-                  <span className="text-[11px] uppercase text-slate-500">{task.status}</span>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              {visiblePortalMessages.slice(0, 8).map((thread) => {
+                const isReplyToPatient = thread.owner_id === userId;
+                const directionLabel = isReplyToPatient
+                  ? `From ${thread.created_by_name || thread.owner_name || "Provider"}`
+                  : `To ${thread.owner_name || "Provider"}`;
+                return (
+                <div key={thread.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {thread.title.replace(/^Patient Message:\s*/i, "").replace(/^Provider Reply:\s*/i, "") || "Portal message"}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => hidePortalMessage(thread.id)}
+                      disabled={hideMessageBusyId === thread.id}
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      {hideMessageBusyId === thread.id ? "Hiding..." : "Hide"}
+                    </Button>
+                  </div>
+                  {thread.details && <p className="mt-1 text-xs text-slate-600 whitespace-pre-wrap">{thread.details}</p>}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {format(new Date(thread.created_at), "MM/dd/yyyy HH:mm")} · {directionLabel} · {thread.status}
+                  </p>
                 </div>
-                {task.details && <p className="mt-1 text-xs text-slate-600">{task.details}</p>}
-                <p className="mt-1 text-xs text-slate-500">
-                  {task.due_at ? `Due ${format(new Date(task.due_at), "MM/dd/yyyy HH:mm")}` : "No due time"}
-                </p>
+              )})}
+              {visiblePortalMessages.length === 0 && (
+                <p className="text-sm text-slate-500">No messages yet. Send one below to contact your care team.</p>
+              )}
+            </div>
+            <div className="rounded-lg border border-slate-200 dark:border-border p-3">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Send a new message</p>
+              <div className="space-y-2">
+                <select
+                  value={selectedMessageProviderId}
+                  onChange={(e) => setSelectedMessageProviderId(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Select provider</option>
+                  {providerOptions.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.full_name || "Provider"}
+                      {provider.role ? ` (${provider.role.replaceAll("_", " ")})` : ""}
+                      {provider.department ? ` - ${provider.department}` : ""}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  value={messageSubject}
+                  onChange={(e) => setMessageSubject(e.target.value)}
+                  placeholder="Subject"
+                />
+                <Textarea
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder="Write your question for your care team..."
+                  className="min-h-[90px]"
+                />
+                <Button
+                  onClick={submitMessage}
+                  disabled={
+                    requestBusy !== null ||
+                    !selectedMessageProviderId ||
+                    !messageSubject.trim() ||
+                    !messageBody.trim()
+                  }
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Send message
+                </Button>
               </div>
-            ))}
-            {actionItems.length === 0 && tasks.length === 0 && (
-              <p className="text-sm text-slate-500">No pending tasks. You are all caught up.</p>
-            )}
+            </div>
+            {requestMessage && <p className="text-xs text-slate-600">{requestMessage}</p>}
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <MessageSquare className="h-4 w-4 text-primary" />
-            Messages
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            {messageThreads.slice(0, 8).map((thread) => (
-              <div key={thread.id} className="rounded-lg border border-slate-200 dark:border-border px-3 py-2">
-                <p className="text-sm font-medium">{thread.title.replace(/^Message:\s*/i, "") || "Portal message"}</p>
-                {thread.details && <p className="mt-1 text-xs text-slate-600 whitespace-pre-wrap">{thread.details}</p>}
-                <p className="mt-1 text-xs text-slate-500">
-                  {format(new Date(thread.created_at), "MM/dd/yyyy HH:mm")} · {thread.status}
-                </p>
-              </div>
-            ))}
-            {messageThreads.length === 0 && (
-              <p className="text-sm text-slate-500">No messages yet. Send one below to contact your care team.</p>
-            )}
-          </div>
-          <div className="rounded-lg border border-slate-200 dark:border-border p-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Send a new message</p>
-            <div className="space-y-2">
-              <Input
-                value={messageSubject}
-                onChange={(e) => setMessageSubject(e.target.value)}
-                placeholder="Subject"
-              />
-              <Textarea
-                value={messageBody}
-                onChange={(e) => setMessageBody(e.target.value)}
-                placeholder="Write your question for your care team..."
-                className="min-h-[90px]"
-              />
-              <Button onClick={submitMessage} disabled={requestBusy !== null || !messageSubject.trim() || !messageBody.trim()}>
-                <Send className="mr-2 h-4 w-4" />
-                Send Message
+      <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <PatientActionCenter
+          actionItems={actionItems}
+          tasks={actionCenterTasks as ActionTaskRow[]}
+          formatDue={formatDue}
+          onActionItemClick={(item) => {
+            const key = item.key.replace(/^provider-msg-/, "");
+            setOpenThreadKey(key);
+          }}
+          headerActions={
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                disabled={requestBusy !== null || !patientId}
+                onClick={() =>
+                  sendPatientRequest(
+                    "Billing / balance",
+                    "I need help with an outstanding balance or billing question."
+                  )
+                }
+              >
+                Pay outstanding balance
               </Button>
-            </div>
-          </div>
-          {requestMessage && <p className="text-xs text-slate-600">{requestMessage}</p>}
-        </CardContent>
-      </Card>
+            </>
+          }
+        />
+        <PatientMiniCalendar appointments={appointments} />
+        <PatientCareTeamMini members={careTeamMembers} />
+      </aside>
 
       {selectedResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
           <Card className="flex max-h-[90vh] w-full max-w-2xl flex-col">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="capitalize">Result Detail · {selectedResult.type}</CardTitle>
+              <CardTitle className="capitalize">Result detail · {selectedResult.type}</CardTitle>
               <Button size="icon" variant="ghost" onClick={() => setSelectedResult(null)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -651,6 +886,49 @@ export function PatientDashboardWorkspace({
               <div className="inline-flex items-center gap-2 rounded bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Released to patient portal
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {openThread && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <Card className="flex max-h-[90vh] w-full max-w-2xl flex-col">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="capitalize">Provider Messages · {openThread.subject}</CardTitle>
+              <Button size="icon" variant="ghost" onClick={() => setOpenThreadKey(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-3 overflow-y-auto">
+              <div className="space-y-2">
+                {openThread.messages.map((msg) => {
+                  const fromProvider = /^Provider Reply:/i.test(msg.title || "");
+                  const senderLabel = fromProvider
+                    ? msg.created_by_name || msg.owner_name || "Provider"
+                    : currentPatientName;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`rounded-lg border px-3 py-2 ${
+                        fromProvider
+                          ? "border-blue-200 bg-blue-50 dark:border-blue-900/40 dark:bg-blue-950/20"
+                          : "border-slate-200 bg-slate-50 dark:border-border dark:bg-muted/40"
+                      }`}
+                    >
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                        {fromProvider ? "From provider" : "You"}: {senderLabel}
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-100">
+                        {msg.details || "No message body."}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {format(new Date(msg.created_at), "MM/dd/yyyy HH:mm")}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

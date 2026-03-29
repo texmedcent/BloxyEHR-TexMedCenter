@@ -13,9 +13,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getRoleLandingPath } from "@/lib/roles";
+import {
+  ensureProfileRecord,
+  getRoleLandingPath,
+  persistBootstrapHospitalManagerRole,
+  resolveRoleWithBootstrap,
+} from "@/lib/roles";
 
 export function SignUpForm({
   className,
@@ -27,7 +31,6 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,12 +65,24 @@ export function SignUpForm({
         return;
       }
 
-      // New users default to patient portal unless manager email override applies.
-      const expectedRole =
-        email.toLowerCase() === "dylanmwoodruff@icloud.com"
-          ? "hospital_manager"
-          : "patient";
-      router.push(getRoleLandingPath(expectedRole));
+      const userId = data.user?.id;
+      let profileRole: string | null = "patient";
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+        profileRole = profile?.role ?? "patient";
+        if (!profile) {
+          const bootstrapRole = resolveRoleWithBootstrap(email.trim(), null) ?? "patient";
+          await ensureProfileRecord(supabase, userId, email.trim(), email.trim().split("@")[0] ?? null, bootstrapRole);
+          profileRole = bootstrapRole;
+        }
+        await persistBootstrapHospitalManagerRole(supabase, userId, email.trim(), profileRole);
+      }
+      const role = resolveRoleWithBootstrap(email.trim(), profileRole);
+      window.location.assign(getRoleLandingPath(role));
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

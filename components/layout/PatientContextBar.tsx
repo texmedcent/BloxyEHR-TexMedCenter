@@ -26,6 +26,8 @@ interface Patient {
 interface EncounterOption {
   id: string;
   type: string;
+  campus: string | null;
+  care_setting: string | null;
   status: string;
   admit_date: string | null;
 }
@@ -61,7 +63,7 @@ export function PatientContextBar() {
 
       const { data: encounterRows } = await supabase
         .from("encounters")
-        .select("id, type, status, admit_date")
+        .select("id, type, campus, care_setting, status, admit_date")
         .eq("patient_id", patientId)
         .order("admit_date", { ascending: false })
         .limit(25);
@@ -112,7 +114,7 @@ export function PatientContextBar() {
             <option value="">All Encounters</option>
             {encounters.map((encounter) => (
               <option key={encounter.id} value={encounter.id}>
-                {encounter.type} · {encounter.status}
+                {encounter.campus || encounter.type} · {encounter.status}
                 {encounter.admit_date
                   ? ` · ${new Date(encounter.admit_date).toLocaleDateString()}`
                   : ""}

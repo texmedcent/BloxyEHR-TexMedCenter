@@ -142,9 +142,11 @@ export default async function InBasketPage() {
     ? (
         await supabase
           .from("in_basket_tasks")
-          .select("id, title, details, due_at, priority, status, patient_id, created_at, sla_violation, escalation_triggered_at")
+          .select(
+            "id, title, details, due_at, priority, status, patient_id, created_at, completed_at, sla_violation, escalation_triggered_at, created_by, created_by_name, owner_id, owner_name"
+          )
           .eq("owner_id", user.id)
-          .in("status", ["open", "in_progress"])
+          .in("status", ["open", "in_progress", "completed"])
           .order("due_at", { ascending: true, nullsFirst: false })
           .limit(80)
       ).data ?? []
@@ -156,7 +158,7 @@ export default async function InBasketPage() {
     taskPatientIds.length > 0
       ? await supabase
           .from("patients")
-          .select("id, first_name, last_name, mrn")
+          .select("id, first_name, last_name, mrn, auth_user_id")
           .in("id", taskPatientIds)
       : { data: [] };
   const taskPatientMap = new Map((taskPatients || []).map((row) => [row.id, row]));
@@ -167,17 +169,20 @@ export default async function InBasketPage() {
       id: `task-${task.id}`,
       type: "task",
       priority: task.priority,
-      read_at: null,
+      read_at: task.status === "completed" ? task.completed_at || task.created_at : null,
       created_at: task.created_at,
       headline: task.title,
       details: `${task.details || ""}${task.due_at ? ` · Due ${new Date(task.due_at).toLocaleString()}` : ""}`.trim(),
       patientName: patient ? `${patient.last_name}, ${patient.first_name}` : undefined,
       patientMrn: patient?.mrn || "",
       relatedPatientId: task.patient_id || null,
+      patientAuthUserId: patient?.auth_user_id || null,
       taskId: task.id,
       taskStatus: task.status,
       taskSlaViolation: Boolean(task.sla_violation),
       taskEscalated: Boolean(task.escalation_triggered_at),
+      createdByUserId: task.created_by || null,
+      createdByName: task.created_by_name || null,
     };
   });
 

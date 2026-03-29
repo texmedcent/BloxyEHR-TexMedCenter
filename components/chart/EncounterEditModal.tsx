@@ -122,7 +122,7 @@ export function EncounterEditModal({
             <select
               value={type}
               onChange={(e) => setType(e.target.value as "outpatient" | "inpatient" | "ed")}
-              className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+              className="mt-1 h-9 w-full rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
               disabled={!canEditEncounter}
             >
               <option value="outpatient">Outpatient</option>
@@ -135,7 +135,7 @@ export function EncounterEditModal({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as "active" | "completed")}
-              className="mt-1 h-9 w-full rounded border border-slate-300 bg-white px-3 text-sm"
+              className="mt-1 h-9 w-full rounded border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
               disabled={!canEditEncounter}
             >
               <option value="active">Active</option>

@@ -4,20 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-
-function campusToEncounterType(campus: string): "ed" | "outpatient" {
-  if (campus === "Emergency Room") return "ed";
-  return "outpatient";
-}
+import { careSettingToEncounterType, normalizeCareSetting } from "@/lib/campuses";
 
 export function StartEncounterButton({
   checkinId,
   patientId,
   campus,
+  careSetting,
 }: {
   checkinId: string;
   patientId: string;
   campus: string;
+  careSetting?: string | null;
 }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -33,12 +31,15 @@ export function StartEncounterButton({
       return;
     }
 
-    const encounterType = campusToEncounterType(campus);
+    const normalizedCareSetting = normalizeCareSetting(careSetting);
+    const encounterType = careSettingToEncounterType(normalizedCareSetting);
     const { data: encounter, error: encounterError } = await supabase
       .from("encounters")
       .insert({
         patient_id: patientId,
         type: encounterType,
+        campus,
+        care_setting: normalizedCareSetting,
         admit_date: new Date().toISOString(),
         status: "active",
       })

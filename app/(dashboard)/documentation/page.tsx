@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import { DocumentationView } from "@/components/documentation/DocumentationView";
 
 export default async function DocumentationPage({
@@ -7,9 +7,7 @@ export default async function DocumentationPage({
   searchParams: Promise<{ patientId?: string; encounterId?: string }>;
 }) {
   const { patientId, encounterId } = await searchParams;
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = (claimsData?.claims as { sub?: string } | undefined)?.sub;
+  const { supabase, userId } = await getSessionAndUser();
   let currentUserRole: string | null = null;
 
   let patient = null;
@@ -96,7 +94,9 @@ export default async function DocumentationPage({
 
       const encounterIds = (encounters || []).map((encounter) => encounter.id);
       const activeEncounter =
-        (encounters || []).find((encounter) => encounter.status === "active") || null;
+        (encounters || []).find((encounter) =>
+          ["active", "in_progress"].includes((encounter.status || "").toLowerCase())
+        ) || null;
       if (encounterId) {
         const { data: n } = await supabase
           .from("clinical_notes")

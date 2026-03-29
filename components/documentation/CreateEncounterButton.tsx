@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { FALLBACK_CAMPUSES, normalizeCareSetting, careSettingToEncounterType, type CampusOption, type CareSetting } from "@/lib/campuses";
 
 interface CreateEncounterButtonProps {
   patientId: string;
@@ -17,18 +18,37 @@ export function CreateEncounterButton({
   isLoading,
   onLoadingChange,
 }: CreateEncounterButtonProps) {
-  const [type, setType] = useState<"inpatient" | "outpatient" | "ed">(
-    "outpatient"
-  );
+  const [campuses, setCampuses] = useState<CampusOption[]>(FALLBACK_CAMPUSES);
+  const [campus, setCampus] = useState<string>(FALLBACK_CAMPUSES[0]?.name || "Primary Care Office");
+  const [careSetting, setCareSetting] = useState<CareSetting>("outpatient");
+
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("institution_campuses")
+        .select("id, name, sort_order, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (!error && data && data.length > 0) {
+        setCampuses(data);
+        setCampus((current) => (data.some((campusRow) => campusRow.name === current) ? current : data[0].name));
+      }
+    })();
+  }, []);
 
   const handleCreate = async () => {
     onLoadingChange(true);
     const supabase = createClient();
+    const normalizedCareSetting = normalizeCareSetting(careSetting);
+    const encounterType = careSettingToEncounterType(normalizedCareSetting);
     const { data, error } = await supabase
       .from("encounters")
       .insert({
         patient_id: patientId,
-        type,
+        type: encounterType,
+        campus,
+        care_setting: normalizedCareSetting,
         admit_date: new Date().toISOString(),
         status: "active",
       })
@@ -44,16 +64,26 @@ export function CreateEncounterButton({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm text-gray-500">No encounters yet.</p>
+      <p className="text-sm text-muted-foreground">No encounters yet.</p>
       <div className="flex gap-2 flex-wrap">
         <select
-          value={type}
-          onChange={(e) => setType(e.target.value as "inpatient" | "outpatient" | "ed")}
-          className="rounded border px-2 py-1 text-sm"
+          value={campus}
+          onChange={(e) => setCampus(e.target.value)}
+          className="rounded border border-input bg-background px-2 py-1 text-sm"
+        >
+          {campuses.map((c) => (
+            <option key={c.id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={careSetting}
+          onChange={(e) => setCareSetting(normalizeCareSetting(e.target.value))}
+          className="rounded border border-input bg-background px-2 py-1 text-sm"
         >
           <option value="outpatient">Outpatient</option>
           <option value="inpatient">Inpatient</option>
-          <option value="ed">Emergency</option>
         </select>
         <Button size="sm" onClick={handleCreate} disabled={isLoading}>
           {isLoading ? "Creating..." : "Create Encounter"}

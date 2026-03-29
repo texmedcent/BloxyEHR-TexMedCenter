@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { LayoutGrid } from "lucide-react";
 import { QuickLinksSection } from "@/components/staff-dashboard/QuickLinksSection";
@@ -11,26 +11,35 @@ import { EventsSection } from "@/components/staff-dashboard/EventsSection";
 import { FeedbackSection } from "@/components/staff-dashboard/FeedbackSection";
 import { StaffDashboardTabs } from "@/components/staff-dashboard/StaffDashboardTabs";
 import { StaffDashboardOverview } from "@/components/staff-dashboard/StaffDashboardOverview";
-import { STAFF_ROLES } from "@/lib/roles";
+import { resolveRoleWithBootstrap, STAFF_ROLES } from "@/lib/roles";
 import { isHospitalManager } from "@/lib/roles";
 
+function getWeekStartIso(now = new Date()): string {
+  const d = new Date(now);
+  const day = d.getDay(); // 0=Sun
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - diffToMonday);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 export default async function StaffDashboardPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims as { sub?: string } | undefined;
-  const userId = claims?.sub;
+  const { supabase, userId, user } = await getSessionAndUser();
 
   if (!userId) {
-    redirect("/auth/login");
+    redirect("/auth/login?r=staff-page-no-user");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, department")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
-  if (!profile?.role || profile.role === "patient") {
+  const effectiveRole = resolveRoleWithBootstrap(user?.email ?? null, profile?.role ?? null);
+  const effectiveDepartment = profile?.department ?? null;
+  // Only explicit patients use the patient portal — missing role must not bounce here (was a /patient ↔ /dashboard loop).
+  if (effectiveRole === "patient") {
     redirect("/patient");
   }
 
@@ -69,11 +78,11 @@ export default async function StaffDashboardPage() {
     .limit(50);
 
   // Department tasks
-  const { data: departmentTasks } = profile?.department
+  const { data: departmentTasks } = effectiveDepartment
     ? await supabase
         .from("department_tasks")
         .select("id, department, title, details, due_at, priority, status, assignee_id")
-        .eq("department", profile.department)
+        .eq("department", effectiveDepartment)
         .order("created_at", { ascending: false })
         .limit(50)
     : { data: [] };
@@ -98,7 +107,7 @@ export default async function StaffDashboardPage() {
     requested_by_name?: string | null;
   };
   let swapRequests: SwapRequestRow[] = [];
-  if (isHospitalManager(profile?.role)) {
+  if (isHospitalManager(effectiveRole)) {
     const { data: swaps } = await supabase
       .from("shift_swap_requests")
       .select("id, original_shift_id, requested_by_id, status")
@@ -132,6 +141,22 @@ export default async function StaffDashboardPage() {
     .order("clock_in_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  const weekStartIso = getWeekStartIso();
+  const { data: weeklyTimeEntries } = await supabase
+    .from("staff_time_entries")
+    .select("clock_in_at, clock_out_at")
+    .eq("user_id", userId)
+    .gte("clock_in_at", weekStartIso);
+  const nowMs = Date.now();
+  const weeklyClockedHours = (weeklyTimeEntries || []).reduce((sum, entry) => {
+    const start = new Date(entry.clock_in_at).getTime();
+    if (Number.isNaN(start)) return sum;
+    const rawEnd = entry.clock_out_at ? new Date(entry.clock_out_at).getTime() : nowMs;
+    const end = Number.isNaN(rawEnd) ? nowMs : rawEnd;
+    if (end <= start) return sum;
+    return sum + (end - start) / (1000 * 60 * 60);
+  }, 0);
 
   // Time-off requests
   const { data: timeOffRequests } = await supabase
@@ -193,10 +218,15 @@ export default async function StaffDashboardPage() {
           day: "numeric",
         })}`
       : undefined;
+  const openPersonalTaskCount = (personalTasks || []).filter((task) =>
+    ["open", "in_progress"].includes((task.status || "").toLowerCase())
+  ).length;
+  const upcomingMyShiftCount = myShifts.length;
+  const unreadAnnouncementsCount = (announcements || []).length;
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="w-full space-y-6">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-4 sm:px-5">
         <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
           <LayoutGrid className="h-6 w-6 text-primary shrink-0" />
           Staff Dashboard
@@ -204,6 +234,20 @@ export default async function StaffDashboardPage() {
         <p className="mt-1 text-muted-foreground text-sm">
           Quick access to your work, tasks, and team.
         </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/40 px-3 py-2">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Open tasks</p>
+            <p className="text-lg font-semibold">{openPersonalTaskCount}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/40 px-3 py-2">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">My upcoming shifts</p>
+            <p className="text-lg font-semibold">{upcomingMyShiftCount}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/40 px-3 py-2">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Announcements</p>
+            <p className="text-lg font-semibold">{unreadAnnouncementsCount}</p>
+          </div>
+        </div>
       </div>
 
       <StaffDashboardTabs
@@ -212,6 +256,7 @@ export default async function StaffDashboardPage() {
             <StaffDashboardOverview
               currentUserId={userId}
               latestTimeEntry={latestTimeEntry}
+              weeklyClockedHours={weeklyClockedHours}
               nextShift={nextShift}
               loaStatus={loaStatus}
               loaDates={loaDates}
@@ -225,15 +270,15 @@ export default async function StaffDashboardPage() {
               personalTasks={personalTasks || []}
               departmentTasks={departmentTasks || []}
               currentUserId={userId}
-              currentUserDepartment={profile?.department ?? null}
-              isManager={isHospitalManager(profile?.role)}
+              currentUserDepartment={effectiveDepartment}
+              isManager={isHospitalManager(effectiveRole)}
             />
             <ShiftManagementSection
               upcomingShifts={upcomingShifts || []}
               swapRequests={swapRequests}
               latestTimeEntry={latestTimeEntry}
               currentUserId={userId}
-              currentUserRole={profile?.role ?? null}
+              currentUserRole={effectiveRole}
             />
             <HrSection
               timeOffRequests={timeOffRequests || []}
@@ -245,21 +290,21 @@ export default async function StaffDashboardPage() {
           <div className="space-y-6">
             <AnnouncementsSection
               announcements={announcements || []}
-              currentUserRole={profile?.role ?? null}
-              currentUserDepartment={profile?.department ?? null}
+              currentUserRole={effectiveRole}
+              currentUserDepartment={effectiveDepartment}
             />
             <EventsSection
               events={staffEvents || []}
               myRsvps={myRsvps || []}
               currentUserId={userId}
-              currentUserRole={profile?.role ?? null}
-              currentUserDepartment={profile?.department ?? null}
+              currentUserRole={effectiveRole}
+              currentUserDepartment={effectiveDepartment}
             />
             <FeedbackSection
               activePolls={(activePolls || []).filter((p) => !votedPollIds.has(p.id))}
               currentUserId={userId}
-              currentUserRole={profile?.role ?? null}
-              currentUserDepartment={profile?.department ?? null}
+              currentUserRole={effectiveRole}
+              currentUserDepartment={effectiveDepartment}
             />
           </div>
         }

@@ -109,12 +109,24 @@ export default async function ChatPage({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-        <h1 className="text-2xl font-semibold text-foreground">Team Chat</h1>
-        <p className="text-sm text-slate-600 dark:text-muted-foreground">
-          Department groups and direct messages with hospital staff.
-        </p>
+    <div className="w-full space-y-4">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Team Chat</h1>
+            <p className="text-sm text-slate-600 dark:text-muted-foreground">
+              Department groups and direct messages with hospital staff.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="rounded-full border border-slate-200 dark:border-border px-2 py-0.5">
+              {groupsWithMembership.length} groups
+            </span>
+            <span className="rounded-full border border-slate-200 dark:border-border px-2 py-0.5">
+              {dmThreads.length} DMs
+            </span>
+          </div>
+        </div>
         {groupsWithMembership.length === 0 && (
           <p className="mt-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 px-2 py-1.5 text-xs text-amber-800 dark:text-amber-200">
             You are not a member of any department chat groups. You can still message colleagues directly.

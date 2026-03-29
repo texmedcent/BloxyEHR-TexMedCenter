@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import { Suspense } from "react";
 import { PatientSummaryBar } from "@/components/chart/PatientSummaryBar";
 import { PatientDemographics } from "@/components/chart/PatientDemographics";
@@ -19,9 +19,7 @@ async function PatientChartContent({
 }: {
   patientId: string;
 }) {
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = (claimsData?.claims as { sub?: string } | undefined)?.sub;
+  const { supabase, userId } = await getSessionAndUser();
   const { data: currentProfile } = userId
     ? await supabase.from("profiles").select("role").eq("id", userId).maybeSingle()
     : { data: null };
@@ -49,7 +47,10 @@ async function PatientChartContent({
     .order("admit_date", { ascending: false })
     .limit(20);
 
-  const activeEncounter = (encounters || []).find((encounter) => encounter.status === "active") || null;
+  const activeEncounter =
+    (encounters || []).find((encounter) =>
+      ["active", "in_progress"].includes((encounter.status || "").toLowerCase())
+    ) || null;
 
   let vitals: {
     id: string;
@@ -139,7 +140,7 @@ async function PatientChartContent({
   );
 
   return (
-    <div className="space-y-5">
+    <div className="w-full space-y-5">
       <RecordRecentPatient patientId={patientId} />
       <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card overflow-hidden">
         <div className="flex items-center gap-4 border-b border-slate-200 dark:border-border bg-slate-50 dark:bg-muted px-4 py-2.5 text-sm">
@@ -176,7 +177,7 @@ async function PatientChartContent({
           </Link>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2">
         <PatientSummaryBar patient={patient} className="flex-1" />
         <div className="flex items-center gap-2">
           <EditDemographicsButton patient={patient} />

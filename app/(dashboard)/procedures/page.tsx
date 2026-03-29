@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import { ProceduresView } from "@/components/procedures/ProceduresView";
 
 export default async function ProceduresPage({
@@ -7,9 +7,7 @@ export default async function ProceduresPage({
   searchParams: Promise<{ patientId?: string; encounterId?: string }>;
 }) {
   const { patientId, encounterId } = await searchParams;
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = (claimsData?.claims as { sub?: string } | undefined)?.sub;
+  const { supabase, userId } = await getSessionAndUser();
 
   let patient = null;
   let procedures: {

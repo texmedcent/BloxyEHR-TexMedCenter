@@ -4,16 +4,17 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
 export function LiveClock() {
-  const [now, setNow] = useState<Date>(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="text-sm font-medium text-slate-600 dark:text-muted-foreground tabular-nums">
-      {format(now, "EEEE, MMM d, yyyy • hh:mm:ss a")}
+    <div className="text-sm font-medium text-slate-600 dark:text-muted-foreground tabular-nums" suppressHydrationWarning>
+      {now ? format(now, "EEEE, MMM d, yyyy • hh:mm:ss a") : "—"}
     </div>
   );
 }

@@ -6,6 +6,30 @@ import { cookies } from "next/headers";
  * global variable. Always create a new client within each function when using
  * it.
  */
+/**
+ * Auth for Server Components. Prefer getUser() (validated server-side); if it returns null
+ * (common in local dev / transient Auth errors), fall back to getSession() so cookie sessions still work.
+ */
+export async function getSessionAndUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    return { supabase, user, userId: user.id };
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const sessionUser = session?.user ?? null;
+  return {
+    supabase,
+    user: sessionUser,
+    userId: sessionUser?.id ?? null,
+  };
+}
+
 export async function createClient() {
   const cookieStore = await cookies();
 

@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 export type AppRole =
   | "patient"
   | "hospital_manager"
@@ -138,10 +140,74 @@ export function hasRolePermission(
   return ROLE_PERMISSIONS[permission].includes(role as AppRole);
 }
 
+/** Non-patient staff must have a department (institution_departments) before using the clinical workspace. */
+export function staffMustSelectDepartment(role: string | null | undefined): boolean {
+  return Boolean(role && role !== "patient");
+}
+
 export function formatRoleLabel(role: string | null | undefined): string {
   if (!role) return "—";
   if ((role as AppRole) in ROLE_LABELS) {
     return ROLE_LABELS[role as AppRole];
   }
   return role.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Canonical account that always receives hospital_manager (matches DB triggers / migrations). */
+export const HOSPITAL_MANAGER_BOOTSTRAP_EMAIL = "dylanmwoodruff@icloud.com";
+
+export function isBootstrapHospitalManagerEmail(email: string | null | undefined): boolean {
+  return email?.trim().toLowerCase() === HOSPITAL_MANAGER_BOOTSTRAP_EMAIL;
+}
+
+/** Prefer bootstrap over stored profile role so landing + RLS stay aligned. */
+export function resolveRoleWithBootstrap(
+  email: string | null | undefined,
+  profileRole: string | null | undefined,
+): string | null {
+  if (isBootstrapHospitalManagerEmail(email)) return "hospital_manager";
+  return profileRole ?? null;
+}
+
+/** Ensures profiles.role is hospital_manager for the bootstrap email (RLS allows own-row update). */
+export async function persistBootstrapHospitalManagerRole(
+  supabase: SupabaseClient,
+  userId: string,
+  email: string | null | undefined,
+  profileRole: string | null | undefined,
+): Promise<void> {
+  if (!isBootstrapHospitalManagerEmail(email) || profileRole === "hospital_manager") return;
+  await supabase.from("profiles").update({ role: "hospital_manager" }).eq("id", userId);
+}
+
+/** Create or update the caller's profile row so server layouts can authorize by role. */
+export async function ensureProfileRecord(
+  supabase: SupabaseClient,
+  userId: string,
+  email: string | null,
+  fullName: string | null,
+  role: string,
+): Promise<void> {
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      email,
+      full_name: fullName,
+      role,
+    },
+    { onConflict: "id" },
+  );
+  if (!error) return;
+
+  // If email is already used by a stale/legacy profile row, create/update this user's row without email.
+  // This keeps auth flow unblocked; email can be reconciled separately in admin/settings.
+  await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      email: null,
+      full_name: fullName,
+      role,
+    },
+    { onConflict: "id" },
+  );
 }

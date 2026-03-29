@@ -193,7 +193,7 @@ export function VitalsRecorder({
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={VITAL_PLACEHOLDER[type] || "Enter value"}
-                className="mt-1 bg-white"
+                className="mt-1 bg-background text-foreground"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -205,7 +205,7 @@ export function VitalsRecorder({
             <div>
               <div className="flex items-center justify-between">
                 <Label>Unit</Label>
-                <label className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                <label className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={customUnitEnabled}
@@ -217,7 +217,7 @@ export function VitalsRecorder({
               <Input
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="mt-1 bg-white"
+                className="mt-1 bg-background text-foreground"
                 readOnly={!customUnitEnabled}
               />
             </div>
@@ -285,15 +285,15 @@ export function VitalsRecorder({
                       <td className="py-2 pr-4 capitalize">
                         {v.type.replaceAll("_", " ")}
                         {abnormal && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
+                          <span className="ml-2 inline-flex items-center gap-1 rounded bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 text-[11px] font-medium text-red-700 dark:text-red-300">
                             <AlertTriangle className="h-3 w-3" />
                             Abnormal
                           </span>
                         )}
                       </td>
-                      <td className={cn("py-2 pr-4", abnormal && "font-semibold text-red-600")}>
+                      <td className={cn("py-2 pr-4", abnormal && "font-semibold text-red-600 dark:text-red-400")}>
                         {v.value}
-                        {v.unit ? <span className="text-slate-500"> {v.unit}</span> : null}
+                        {v.unit ? <span className="text-slate-500 dark:text-muted-foreground"> {v.unit}</span> : null}
                       </td>
                       <td className="py-2 text-slate-500 dark:text-muted-foreground">
                         {format(new Date(v.recorded_at), "MM/dd/yyyy HH:mm")}

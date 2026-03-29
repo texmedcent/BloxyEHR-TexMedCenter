@@ -1,12 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import { PharmacistPanelView } from "@/components/pharmacist/PharmacistPanelView";
 import { isPharmacist } from "@/lib/roles";
 
 export default async function PharmacistPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = (data?.claims as { sub?: string } | undefined)?.sub;
+  const { supabase, userId } = await getSessionAndUser();
 
   if (!userId) {
     redirect("/auth/login");

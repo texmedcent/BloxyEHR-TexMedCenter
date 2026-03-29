@@ -463,7 +463,7 @@ export function EmployeeChatPanel({
   );
 
   return (
-    <Card className="relative h-[calc(100vh-11rem)] overflow-hidden border-slate-200 dark:border-border bg-[#f3f2f1] dark:bg-card shadow-sm">
+    <Card className="relative h-[calc(100vh-12rem)] overflow-hidden rounded-xl border-slate-200 dark:border-border bg-[#f3f2f1] dark:bg-card shadow-sm">
       {toasts.length > 0 && (
         <div className="pointer-events-none absolute right-3 top-3 z-20 space-y-2">
           {toasts.map((toast) => (
@@ -570,7 +570,7 @@ export function EmployeeChatPanel({
         )}
       </CardHeader>
       <CardContent className="flex h-full p-0">
-        <div className="hidden w-72 shrink-0 border-r border-slate-200 dark:border-border bg-white dark:bg-card md:block overflow-y-auto">
+        <div className="hidden w-80 shrink-0 border-r border-slate-200 dark:border-border bg-white dark:bg-card md:block overflow-y-auto">
           <div className="border-b border-slate-200 dark:border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-muted-foreground">
             Department Groups
           </div>
@@ -647,7 +647,7 @@ export function EmployeeChatPanel({
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto bg-[#f3f2f1] dark:bg-background p-3">
             {groups.length === 0 && dmThreads.length === 0 ? (
-              <div className="mx-auto mt-10 max-w-md rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
+              <div className="mt-10 rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
                 <Sparkles className="mx-auto mb-2 h-5 w-5 text-[#464eb8] dark:text-primary" />
                 <p className="text-sm font-medium text-slate-700 dark:text-foreground">No channels yet</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
@@ -659,7 +659,7 @@ export function EmployeeChatPanel({
                 </Button>
               </div>
             ) : !selectedGroupId && !selectedDmThreadId ? (
-              <div className="mx-auto mt-10 max-w-md rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
+              <div className="mt-10 rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
                 <Sparkles className="mx-auto mb-2 h-5 w-5 text-[#464eb8] dark:text-primary" />
                 <p className="text-sm font-medium text-slate-700 dark:text-foreground">Select a channel</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
@@ -671,7 +671,7 @@ export function EmployeeChatPanel({
                 </Button>
               </div>
             ) : displayMessages.length === 0 ? (
-              <div className="mx-auto mt-10 max-w-md rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
+              <div className="mt-10 rounded-lg border border-dashed border-slate-300 dark:border-input bg-white dark:bg-card p-6 text-center">
                 <Sparkles className="mx-auto mb-2 h-5 w-5 text-[#464eb8] dark:text-primary" />
                 <p className="text-sm font-medium text-slate-700 dark:text-foreground">No messages yet</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-muted-foreground">
@@ -679,7 +679,7 @@ export function EmployeeChatPanel({
                 </p>
               </div>
             ) : (
-              <div className="mx-auto max-w-5xl space-y-1">
+              <div className="space-y-1">
                 {displayMessages.map((msg) => {
                   const isMine = msg.sender_id === currentUser?.id;
                   const displayName = getDisplayName(msg.sender_id, msg.sender_name);
@@ -722,7 +722,7 @@ export function EmployeeChatPanel({
               accept="image/*,.pdf,.doc,.docx,.txt"
               onChange={onFileChange}
             />
-            <div className="mx-auto max-w-5xl space-y-2">
+            <div className="space-y-2">
               <Textarea
                 ref={textareaRef}
                 value={messageText}

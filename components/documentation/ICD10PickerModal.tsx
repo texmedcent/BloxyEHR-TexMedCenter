@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ICD10_CODES, type ICD10Code } from "@/lib/icd10";
+import { ICD10_CODES, inferIcd10Category, type ICD10Code } from "@/lib/icd10";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,29 +55,6 @@ const CATEGORY_LABELS: Record<ICDCategory, string> = {
   symptoms: "Symptoms/General",
   followup_zcodes: "Follow-up/Z-Codes",
 };
-
-function getICDCategory(code: string): ICDCategory {
-  const c = code.toUpperCase();
-  if (c.startsWith("S") || c.startsWith("T")) return "trauma_injury";
-  if (c.startsWith("V") || c.startsWith("W") || c.startsWith("X") || c.startsWith("Y")) {
-    return "external_causes";
-  }
-  if (c.startsWith("A") || c.startsWith("B")) return "infectious";
-  if (c.startsWith("E")) return "endocrine";
-  if (c.startsWith("F")) return "mental_health";
-  if (c.startsWith("G")) return "neuro";
-  if (c.startsWith("H")) return "ent_eye";
-  if (c.startsWith("I")) return "cardio";
-  if (c.startsWith("J")) return "respiratory";
-  if (c.startsWith("K")) return "gi";
-  if (c.startsWith("N")) return "gu";
-  if (c.startsWith("O")) return "obstetric";
-  if (c.startsWith("M")) return "musculoskeletal";
-  if (c.startsWith("L")) return "skin";
-  if (c.startsWith("R")) return "symptoms";
-  if (c.startsWith("Z")) return "followup_zcodes";
-  return "all";
-}
 
 export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalProps) {
   const [search, setSearch] = useState("");
@@ -162,7 +139,7 @@ export function ICD10PickerModal({ open, onClose, onSelect }: ICD10PickerModalPr
     const localByCategory =
       category === "all"
         ? ICD10_CODES
-        : ICD10_CODES.filter((c) => getICDCategory(c.code) === category);
+        : ICD10_CODES.filter((c) => inferIcd10Category(c.code) === category);
 
     const localCodes = q
       ? localByCategory.filter(

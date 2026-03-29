@@ -3,6 +3,47 @@ export interface ICD10Code {
   label: string;
 }
 
+export type IcdCategoryKey =
+  | "infectious"
+  | "endocrine"
+  | "mental_health"
+  | "neuro"
+  | "ent_eye"
+  | "cardio"
+  | "respiratory"
+  | "gi"
+  | "gu"
+  | "obstetric"
+  | "musculoskeletal"
+  | "skin"
+  | "trauma_injury"
+  | "external_causes"
+  | "symptoms"
+  | "followup_zcodes";
+
+export function inferIcd10Category(code: string): IcdCategoryKey {
+  const c = (code || "").toUpperCase();
+  if (c.startsWith("S") || c.startsWith("T")) return "trauma_injury";
+  if (c.startsWith("V") || c.startsWith("W") || c.startsWith("X") || c.startsWith("Y")) {
+    return "external_causes";
+  }
+  if (c.startsWith("A") || c.startsWith("B")) return "infectious";
+  if (c.startsWith("E")) return "endocrine";
+  if (c.startsWith("F")) return "mental_health";
+  if (c.startsWith("G")) return "neuro";
+  if (c.startsWith("H")) return "ent_eye";
+  if (c.startsWith("I")) return "cardio";
+  if (c.startsWith("J")) return "respiratory";
+  if (c.startsWith("K")) return "gi";
+  if (c.startsWith("N")) return "gu";
+  if (c.startsWith("O")) return "obstetric";
+  if (c.startsWith("M")) return "musculoskeletal";
+  if (c.startsWith("L")) return "skin";
+  if (c.startsWith("R")) return "symptoms";
+  if (c.startsWith("Z")) return "followup_zcodes";
+  return "symptoms";
+}
+
 // Curated set for performance + realism in this simulation.
 export const ICD10_CODES: ICD10Code[] = [
   // Infectious disease

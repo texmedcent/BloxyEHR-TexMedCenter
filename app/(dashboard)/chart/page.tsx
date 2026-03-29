@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionAndUser } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Activity, ClipboardList, FlaskConical, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +8,7 @@ import { StartChartCard } from "@/components/chart/StartChartCard";
 import { DashboardRecentPanels } from "@/components/chart/DashboardRecentPanels";
 
 export default async function ChartPage() {
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = (claimsData?.claims as { sub?: string } | undefined)?.sub;
+  const { supabase, userId } = await getSessionAndUser();
   const { data: currentProfile } = userId
     ? await supabase
         .from("profiles")
@@ -24,7 +22,7 @@ export default async function ChartPage() {
   const { count: activeEncounterCount } = await supabase
     .from("encounters")
     .select("*", { count: "exact", head: true })
-    .eq("status", "active");
+    .in("status", ["active", "in_progress"]);
 
   let ordersQuery = supabase
     .from("orders")
@@ -48,7 +46,9 @@ export default async function ChartPage() {
 
   const { data: triageQueue } = await supabase
     .from("patient_checkins")
-    .select("id, patient_id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode")
+    .select(
+      "id, patient_id, campus, care_setting, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode"
+    )
     .eq("status", "triage")
     .order("checked_in_at", { ascending: true })
     .limit(10);
@@ -56,7 +56,7 @@ export default async function ChartPage() {
   const { data: activeEncounterRows } = await supabase
     .from("encounters")
     .select("patient_id, admit_date")
-    .eq("status", "active")
+    .in("status", ["active", "in_progress"])
     .order("admit_date", { ascending: false })
     .limit(30);
 
@@ -90,8 +90,13 @@ export default async function ChartPage() {
     );
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-slate-900 dark:text-foreground">Chart Dashboard</h1>
+    <div className="w-full space-y-5">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-4 sm:px-5">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">Chart Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">
+          Track active encounters, triage flow, and recent clinical activity.
+        </p>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="border-slate-200 dark:border-border">
@@ -178,6 +183,9 @@ export default async function ChartPage() {
                           MRN: {p.mrn} · {q.campus}
                         </p>
                         <p className="text-xs text-slate-600 dark:text-muted-foreground">
+                          Setting: {(q.care_setting || "outpatient").replaceAll("_", " ")}
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-muted-foreground">
                           {(q.acuity_level || "acuity not set").replaceAll("_", " ").toUpperCase()}
                           {typeof q.pain_score === "number" ? ` · Pain ${q.pain_score}/10` : ""}
                           {q.arrival_mode ? ` · ${q.arrival_mode.replaceAll("_", " ")}` : ""}
@@ -195,6 +203,7 @@ export default async function ChartPage() {
                         checkinId={q.id}
                         patientId={p.id}
                         campus={q.campus}
+                        careSetting={q.care_setting}
                       />
                     </div>
                   </div>

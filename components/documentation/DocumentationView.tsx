@@ -141,14 +141,16 @@ export function DocumentationView({
 
   if (!patient) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <FileText className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
-          <div>
-            <h1 className="text-2xl font-semibold">Clinical Documentation</h1>
-            <p className="text-sm text-slate-600 dark:text-muted-foreground">
-              View and add clinical notes for your patients.
-            </p>
+      <div className="w-full space-y-6">
+        <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-4 sm:px-5">
+          <div className="flex items-center gap-3">
+            <FileText className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+            <div>
+              <h1 className="text-2xl font-semibold">Clinical Documentation</h1>
+              <p className="text-sm text-slate-600 dark:text-muted-foreground">
+                View and add clinical notes for your patients.
+              </p>
+            </div>
           </div>
         </div>
         <Card className="border-slate-200 dark:border-border">
@@ -184,28 +186,38 @@ export function DocumentationView({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <FileText className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold">Clinical Documentation</h1>
-          <div className="flex flex-wrap items-center gap-3 mt-1">
-            <span className="font-medium text-slate-800 dark:text-foreground">
-              {patient.last_name}, {patient.first_name}
-            </span>
-            <span className="text-sm text-slate-500 dark:text-muted-foreground">
-              MRN {patient.mrn}
-            </span>
-            {selectedEncounterId && (
-              <span className="rounded-full bg-blue-100 dark:bg-primary/20 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-primary">
-                Encounter selected
-              </span>
-            )}
+    <div className="w-full space-y-6">
+      <div className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <FileText className="h-8 w-8 text-[#1a4d8c] dark:text-primary" />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-semibold">Clinical Documentation</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <span className="font-medium text-slate-800 dark:text-foreground">
+                  {patient.last_name}, {patient.first_name}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-muted-foreground">
+                  MRN {patient.mrn}
+                </span>
+                {selectedEncounterId && (
+                  <span className="rounded-full bg-blue-100 dark:bg-primary/20 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-primary">
+                    Encounter selected
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+          {selectedEncounterId && (
+            <Button size="sm" onClick={() => setShowEditor(true)} className="gap-1.5 shrink-0">
+              <Plus className="h-4 w-4" />
+              Add Note
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <Card className="border-slate-200 dark:border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -267,17 +279,11 @@ export function DocumentationView({
         </Card>
 
         <Card className="border-slate-200 dark:border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-500 dark:text-muted-foreground" />
               Notes
             </CardTitle>
-            {selectedEncounterId && (
-              <Button size="sm" onClick={() => setShowEditor(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                Add Note
-              </Button>
-            )}
           </CardHeader>
           <CardContent>
             {!selectedEncounterId ? (
@@ -341,19 +347,21 @@ export function DocumentationView({
             currentUserRole={currentUserRole}
             onSaved={() => router.refresh()}
           />
-            <NursingFlowsheetPanel patientId={patient.id} encounterId={selectedEncounterId} />
-            <HandoffPanel
-              patientId={patient.id}
-              encounterId={selectedEncounterId}
-              currentUserRole={currentUserRole}
-            />
+          <NursingFlowsheetPanel patientId={patient.id} encounterId={selectedEncounterId} />
+          <HandoffPanel
+            patientId={patient.id}
+            encounterId={selectedEncounterId}
+            currentUserRole={currentUserRole}
+          />
         </div>
       )}
 
       <VitalsRecorder
         patientId={patient.id}
         initialVitals={vitals}
-        activeEncounterId={encounters.find((e) => e.status === "active")?.id || null}
+        activeEncounterId={
+          encounters.find((e) => ["active", "in_progress"].includes((e.status || "").toLowerCase()))?.id || null
+        }
       />
 
       {showEditor && selectedEncounterId && patient && (

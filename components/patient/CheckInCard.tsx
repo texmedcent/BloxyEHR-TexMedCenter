@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck } from "lucide-react";
+import { FALLBACK_CAMPUSES, normalizeCareSetting, type CampusOption, type CareSetting } from "@/lib/campuses";
 
-const CAMPUSES = ["Primary Care Office", "Emergency Room", "Urgent Care"] as const;
 const ACUITY_LEVELS = ["esi_1", "esi_2", "esi_3", "esi_4", "esi_5"] as const;
 const ARRIVAL_MODES = ["walk_in", "ambulance", "transfer", "police", "other"] as const;
 
@@ -19,6 +19,7 @@ type ActiveCheckin = {
   acuity_level: string | null;
   pain_score: number | null;
   arrival_mode: string | null;
+  care_setting?: string | null;
 } | null;
 
 export function CheckInCard({
@@ -32,7 +33,9 @@ export function CheckInCard({
   email: string | null | undefined;
   initialActiveCheckin: ActiveCheckin;
 }) {
-  const [campus, setCampus] = useState<(typeof CAMPUSES)[number]>("Primary Care Office");
+  const [campuses, setCampuses] = useState<CampusOption[]>(FALLBACK_CAMPUSES);
+  const [campus, setCampus] = useState<string>(FALLBACK_CAMPUSES[0]?.name || "Primary Care Office");
+  const [careSetting, setCareSetting] = useState<CareSetting>("outpatient");
   const [activeCheckin, setActiveCheckin] = useState<ActiveCheckin>(initialActiveCheckin);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -41,6 +44,21 @@ export function CheckInCard({
   const [painScore, setPainScore] = useState("0");
   const [arrivalMode, setArrivalMode] = useState<(typeof ARRIVAL_MODES)[number]>("walk_in");
 
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("institution_campuses")
+        .select("id, name, sort_order, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (!error && data && data.length > 0) {
+        setCampuses(data);
+        setCampus((current) => (data.some((campusRow) => campusRow.name === current) ? current : data[0].name));
+      }
+    })();
+  }, []);
+
   const handleCheckIn = async () => {
     setSaving(true);
     setMessage(null);
@@ -48,7 +66,7 @@ export function CheckInCard({
 
     const { data: existing } = await supabase
       .from("patient_checkins")
-      .select("id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode")
+      .select("id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode, care_setting")
       .eq("auth_user_id", userId)
       .in("status", ["triage", "in_encounter"])
       .order("checked_in_at", { ascending: false })
@@ -103,13 +121,14 @@ export function CheckInCard({
         auth_user_id: userId,
         patient_id: patientId,
         campus,
+        care_setting: careSetting,
         status: "triage",
         chief_complaint: chiefComplaint.trim() || null,
         acuity_level: acuityLevel,
         pain_score: Number.isNaN(Number(painScore)) ? null : Number(painScore),
         arrival_mode: arrivalMode,
       })
-      .select("id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode")
+      .select("id, campus, status, checked_in_at, chief_complaint, acuity_level, pain_score, arrival_mode, care_setting")
       .single();
 
     setSaving(false);
@@ -135,6 +154,9 @@ export function CheckInCard({
           <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 p-3 text-sm">
             <p className="font-medium text-amber-800">Current status: {activeCheckin.status.toUpperCase()}</p>
             <p className="text-amber-700">Campus: {activeCheckin.campus}</p>
+            <p className="text-amber-700">
+              Care setting: {normalizeCareSetting(activeCheckin.care_setting).replaceAll("_", " ")}
+            </p>
             {activeCheckin.chief_complaint && (
               <p className="text-amber-700">Chief complaint: {activeCheckin.chief_complaint}</p>
             )}
@@ -150,15 +172,27 @@ export function CheckInCard({
                 <p className="mb-1 text-xs text-slate-500">Campus</p>
                 <select
                   value={campus}
-                  onChange={(e) => setCampus(e.target.value as (typeof CAMPUSES)[number])}
+                  onChange={(e) => setCampus(e.target.value)}
                   className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
                   disabled={saving}
                 >
-                  {CAMPUSES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
+                  {campuses.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
                     </option>
                   ))}
+                </select>
+              </div>
+              <div>
+                <p className="mb-1 text-xs text-slate-500">Care Setting</p>
+                <select
+                  value={careSetting}
+                  onChange={(e) => setCareSetting(normalizeCareSetting(e.target.value))}
+                  className="h-9 w-full rounded-md border border-slate-300 dark:border-input bg-white dark:bg-background px-3 text-sm text-slate-900 dark:text-foreground"
+                  disabled={saving}
+                >
+                  <option value="outpatient">Outpatient</option>
+                  <option value="inpatient">Inpatient</option>
                 </select>
               </div>
               <div>

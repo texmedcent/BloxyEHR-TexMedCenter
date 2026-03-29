@@ -52,30 +52,87 @@ export function ShiftManagementSection({
 }: ShiftManagementSectionProps) {
   const router = useRouter();
   const [clocking, setClocking] = useState(false);
+  const [clockMessage, setClockMessage] = useState<string | null>(null);
+  const [timeTrackingUnavailable, setTimeTrackingUnavailable] = useState(false);
   const isManager = isHospitalManager(currentUserRole);
   const myShifts = upcomingShifts.filter((s) => s.user_id === currentUserId);
   const pendingSwapRequests = swapRequests.filter((r) => r.status === "pending");
   const isClockedIn = latestTimeEntry && !latestTimeEntry.clock_out_at;
 
+  const handleClockError = (rawMessage: string) => {
+    const msg = rawMessage || "Unknown error";
+    if (msg.toLowerCase().includes("could not find the table 'public.staff_time_entries'")) {
+      setTimeTrackingUnavailable(true);
+      setClockMessage("Time tracking isn't configured in this project yet. Ask an admin to run staff dashboard migrations.");
+      return;
+    }
+    setClockMessage(msg);
+  };
+
   const clockIn = async () => {
     setClocking(true);
+    setClockMessage(null);
     const supabase = createClient();
-    await supabase.from("staff_time_entries").insert({
-      user_id: currentUserId,
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userId = user?.id ?? currentUserId;
+    if (!userId) {
+      setClockMessage("Unable to clock in: no active user.");
+      setClocking(false);
+      return;
+    }
+    const { data: openEntry, error: openEntryError } = await supabase
+      .from("staff_time_entries")
+      .select("id")
+      .eq("user_id", userId)
+      .is("clock_out_at", null)
+      .order("clock_in_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (openEntryError) {
+      handleClockError(`Clock In failed: ${openEntryError.message}`);
+      setClocking(false);
+      return;
+    }
+    if (openEntry?.id) {
+      setClockMessage("You are already clocked in.");
+      setClocking(false);
+      router.refresh();
+      return;
+    }
+    const { error } = await supabase.from("staff_time_entries").insert({
+      user_id: userId,
       clock_in_at: new Date().toISOString(),
     });
+    if (error) {
+      handleClockError(`Clock In failed: ${error.message}`);
+      setClocking(false);
+      return;
+    }
+    setClockMessage("Clocked in.");
     setClocking(false);
     router.refresh();
   };
 
   const clockOut = async () => {
-    if (!latestTimeEntry?.id) return;
+    setClockMessage(null);
+    if (!latestTimeEntry?.id) {
+      setClockMessage("No active clock-in found.");
+      return;
+    }
     setClocking(true);
     const supabase = createClient();
-    await supabase
+    const { error } = await supabase
       .from("staff_time_entries")
       .update({ clock_out_at: new Date().toISOString() })
       .eq("id", latestTimeEntry.id);
+    if (error) {
+      handleClockError(`Clock Out failed: ${error.message}`);
+      setClocking(false);
+      return;
+    }
+    setClockMessage("Clocked out.");
     setClocking(false);
     router.refresh();
   };
@@ -112,6 +169,7 @@ export function ShiftManagementSection({
             <Clock className="h-4 w-4" />
             Time Tracker
           </h4>
+          {clockMessage ? <p className="mb-2 text-xs text-muted-foreground">{clockMessage}</p> : null}
           <div className="flex items-center gap-3">
             <Badge variant={isClockedIn ? "default" : "secondary"} className="text-sm">
               {isClockedIn
@@ -123,7 +181,7 @@ export function ShiftManagementSection({
                 variant="destructive"
                 size="sm"
                 onClick={clockOut}
-                disabled={clocking}
+                disabled={clocking || timeTrackingUnavailable}
               >
                 Clock Out
               </Button>
@@ -132,7 +190,7 @@ export function ShiftManagementSection({
                 variant="default"
                 size="sm"
                 onClick={clockIn}
-                disabled={clocking}
+                disabled={clocking || timeTrackingUnavailable}
               >
                 Clock In
               </Button>
