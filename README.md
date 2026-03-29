@@ -22,12 +22,18 @@ Electronic Hospital Records System for Roblox — modeled after EPIC EHR.
 
 ### 2. Configure environment
 
-Create `.env.local`:
+Create `.env.local` (see `.env.example`):
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-or-publishable-key
 ```
+
+Do **not** set `NEXT_PUBLIC_SITE_URL` for local dev unless you need reset/confirm emails to target a deployed URL. Omitting it keeps auth links on `http://localhost:3000`.
+
+**Vercel:** In the project **Settings → Environment Variables**, set `NEXT_PUBLIC_SITE_URL` to your live site origin (e.g. `https://your-app.vercel.app`), with **no** trailing slash. Do **not** use `http://localhost:3000` there. Redeploy after changing.
+
+**Supabase:** Under **Authentication → URL Configuration**, set **Site URL** to that same production `https://…` URL and add `https://…/auth/callback` under **Redirect URLs**.
 
 > Note: Use `NEXT_PUBLIC_SUPABASE_ANON_KEY` if your template expects that name; this app uses `PUBLISHABLE_KEY` to match the Supabase Next.js starter.
 

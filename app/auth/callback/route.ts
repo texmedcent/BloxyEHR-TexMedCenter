@@ -1,3 +1,4 @@
+import { isRecoveryAccessToken } from "@/lib/auth-recovery";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import {
@@ -18,6 +19,12 @@ export async function GET(request: Request) {
     if (!error) {
       if (next) {
         return NextResponse.redirect(`${origin}${next}`);
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token && isRecoveryAccessToken(session.access_token)) {
+        return NextResponse.redirect(`${origin}/auth/update-password`);
       }
       const { data } = await supabase.auth.getClaims();
       const userId = (data?.claims as { sub?: string; email?: string } | undefined)?.sub;
