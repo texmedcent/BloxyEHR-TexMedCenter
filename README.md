@@ -2,6 +2,8 @@
 
 Electronic Hospital Records System for Roblox — modeled after EPIC EHR.
 
+**Source:** [texmedcent/BloxyEHR-TexMedCenter](https://github.com/texmedcent/BloxyEHR-TexMedCenter) (branch `tmc`).
+
 ## Features
 
 - **Patient Chart** — Demographics, vitals, allergies, encounter history
