@@ -13,6 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { PRODUCT_NAME, PRODUCT_NAME_SHORT } from "@/lib/branding";
+import { authCardClassName, authCardTitleClassName } from "@/components/auth/auth-display";
 import {
   ensureProfileRecord,
   getRoleLandingPath,
@@ -74,11 +76,14 @@ export function UpdatePasswordForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-0 shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl text-slate-900">Reset Your Password</CardTitle>
-          <CardDescription>
-            Please enter your new password below.
+      <Card className={authCardClassName}>
+        <CardHeader className="space-y-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c4a574]">
+            {PRODUCT_NAME_SHORT}
+          </p>
+          <CardTitle className={authCardTitleClassName()}>Set new password</CardTitle>
+          <CardDescription className="text-slate-600">
+            Choose a new password for your {PRODUCT_NAME} account.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,8 +101,12 @@ export function UpdatePasswordForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save new password"}
+              <Button
+                type="submit"
+                className="w-full bg-[#002868] font-semibold text-white hover:bg-[#003a7a]"
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving…" : "Save new password"}
               </Button>
             </div>
           </form>

@@ -10,21 +10,21 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    /* BloxyEHR primary #1a4d8c */
-    --primary: 207 74% 31%;
+    /* Texas Medical Center primary #4193bd */
+    --primary: 201 49% 50%;
     --primary-foreground: 0 0% 98%;
     --secondary: 210 20% 96%;
-    --secondary-foreground: 207 74% 31%;
+    --secondary-foreground: 201 49% 35%;
     --muted: 210 20% 96%;
     --muted-foreground: 0 0% 45.1%;
-    --accent: 207 40% 94%;
-    --accent-foreground: 207 74% 31%;
+    --accent: 201 45% 94%;
+    --accent-foreground: 201 49% 35%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 210 20% 89%;
     --input: 210 20% 89%;
-    --ring: 207 74% 31%;
-    --chart-1: 207 74% 31%;
+    --ring: 201 49% 50%;
+    --chart-1: 201 49% 50%;
     --chart-2: 45 100% 51%;
     --chart-3: 173 58% 39%;
     --chart-4: 43 74% 66%;
@@ -39,20 +39,20 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 207 74% 40%;
+    --primary: 201 49% 56%;
     --primary-foreground: 0 0% 98%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 207 35% 18%;
+    --accent: 201 35% 18%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 63% 50%;
     --destructive-foreground: 0 0% 98%;
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 207 74% 40%;
-    --chart-1: 207 74% 40%;
+    --ring: 201 49% 56%;
+    --chart-1: 201 49% 56%;
     --chart-2: 45 100% 51%;
     --chart-3: 173 58% 45%;
     --chart-4: 43 74% 60%;
@@ -134,6 +134,23 @@
 }
 
 @layer components {
+  /**
+   * White/light wordmarks on primary or dark fills (sidebar, auth, idle lock).
+   * Resets Geist + avoids RGB subpixel fringe on saturated backgrounds (Windows/Chrome).
+   */
+  .brand-wordmark-invert {
+    isolation: isolate;
+    mix-blend-mode: normal;
+  }
+  .brand-wordmark-invert p {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    font-synthesis: none;
+    text-rendering: geometricPrecision;
+  }
+
   .ehr-panel {
     @apply rounded-md border bg-white shadow-sm dark:bg-card dark:border-[hsl(var(--border))];
   }

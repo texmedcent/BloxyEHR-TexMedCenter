@@ -10,6 +10,7 @@ import { PatientDashboardWorkspace } from "@/components/patient/PatientDashboard
 import { PatientScheduleProvider } from "@/components/patient/PatientScheduleProvider";
 import { PatientHeroActions } from "@/components/patient/PatientHeroActions";
 import { BehrLogo } from "@/components/branding/BehrLogo";
+import { PRODUCT_NAME_SHORT } from "@/lib/branding";
 import { CLINICAL_PROVIDER_ROLES } from "@/lib/roles";
 
 export default async function PatientDashboardPage() {
@@ -296,12 +297,19 @@ export default async function PatientDashboardPage() {
     <main className="min-h-screen bg-slate-100 dark:bg-background p-4 md:p-6">
       <div className="mx-auto max-w-6xl space-y-4">
         <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <BehrLogo compact />
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">MyChart</h1>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4 sm:justify-start">
+              <BehrLogo
+                compact
+                wordmarkOnly
+                emphasizeShortName
+                wordmarkAlign="responsive"
+              />
+              <h1 className="text-2xl font-semibold text-center text-slate-900 dark:text-foreground sm:text-left">
+                MyChart
+              </h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-end">
               <Link
                 href="/"
                 className="text-sm font-medium text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground transition-colors"
@@ -421,7 +429,7 @@ export default async function PatientDashboardPage() {
         />
 
         <footer className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500">
-          BloxyEHR
+          {PRODUCT_NAME_SHORT}
         </footer>
       </div>
     </main>

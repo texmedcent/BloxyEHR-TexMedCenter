@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
+import { PRODUCT_NAME, PRODUCT_NAME_SHORT } from "@/lib/branding";
+import { authCardClassName, authCardTitleClassName } from "@/components/auth/auth-display";
 
 export function ForgotPasswordForm({
   className,
@@ -47,25 +49,32 @@ export function ForgotPasswordForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {success ? (
-        <Card className="border-0 shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl text-slate-900">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+        <Card className={authCardClassName}>
+          <CardHeader className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c4a574]">
+              {PRODUCT_NAME_SHORT}
+            </p>
+            <CardTitle className={authCardTitleClassName()}>Check your email</CardTitle>
+            <CardDescription className="text-slate-600">
+              Password reset link sent · {PRODUCT_NAME}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+            <p className="text-sm leading-relaxed text-slate-600">
+              If you have an account with {PRODUCT_NAME}, you&apos;ll receive an email with
+              instructions to reset your password.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-0 shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl text-slate-900">Reset Your Password</CardTitle>
-            <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+        <Card className={authCardClassName}>
+          <CardHeader className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c4a574]">
+              {PRODUCT_NAME_SHORT}
+            </p>
+            <CardTitle className={authCardTitleClassName()}>Reset password</CardTitle>
+            <CardDescription className="text-slate-600">
+              Enter your email and we&apos;ll send a secure link · {PRODUCT_NAME}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -83,17 +92,21 @@ export function ForgotPasswordForm({
                   />
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                <Button
+                  type="submit"
+                  className="w-full bg-[#002868] font-semibold text-white hover:bg-[#003a7a]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Sending…" : "Send reset email"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
                 <Link
                   href="/auth/login"
-                  className="font-medium text-primary underline underline-offset-4 hover:text-primary/90"
+                  className="font-medium text-[#002868] underline underline-offset-4 hover:text-[#003a7a]"
                 >
-                  Login
+                  Sign in
                 </Link>
               </div>
             </form>

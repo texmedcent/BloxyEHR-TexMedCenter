@@ -31,14 +31,19 @@ export default async function PatientSettingsPage() {
     <main className="min-h-screen bg-slate-100 dark:bg-background p-4 md:p-6">
       <div className="mx-auto max-w-2xl space-y-4">
         <div className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <BehrLogo compact />
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4 sm:justify-start">
+              <BehrLogo
+                compact
+                wordmarkOnly
+                emphasizeShortName
+                wordmarkAlign="responsive"
+              />
+              <h1 className="text-2xl font-semibold text-center text-slate-900 dark:text-foreground sm:text-left">
                 MyChart Settings
               </h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-end">
               <Link
                 href="/patient"
                 className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"

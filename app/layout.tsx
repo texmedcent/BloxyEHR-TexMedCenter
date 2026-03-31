@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import {
+  PRODUCT_METADATA_DESCRIPTION,
+  PRODUCT_METADATA_TITLE,
+} from "@/lib/branding";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -9,8 +13,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "BloxyEHR - Electronic Hospital Records",
-  description: "EPIC-style EHR for Roblox hospital roleplay",
+  title: PRODUCT_METADATA_TITLE,
+  description: PRODUCT_METADATA_DESCRIPTION,
 };
 
 const geistSans = Geist({
@@ -30,7 +34,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
-          storageKey="bloxyehr-theme"
+          storageKey="texmedcenter-theme"
           themes={["light", "dark", "system"]}
           disableTransitionOnChange
         >

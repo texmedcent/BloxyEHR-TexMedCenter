@@ -97,7 +97,7 @@ export function RecentPatientsDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/30 transition-colors">
+        <Button variant="outline" size="sm" className="shrink-0 gap-2 whitespace-nowrap rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/30 transition-colors">
           <Clock className="h-4 w-4 text-primary dark:text-primary" />
           Recent Patients
         </Button>

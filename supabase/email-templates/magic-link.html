@@ -1,8 +1,8 @@
 <!--
-  BloxyEHR — Magic link (Supabase)
+  Texas Medical Center (powered by BloxyEHR) — Magic link (Supabase)
 
   Paste into: Supabase Dashboard → Authentication → Email Templates → Magic link
-  Subject: Your BloxyEHR sign-in link
+  Subject: Your Texas Medical Center sign-in link
 
   Uses {{ .ConfirmationURL }} (set emailRedirectTo / options when you add signInWithOtp later).
 -->
@@ -11,25 +11,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign in to BloxyEHR</title>
+    <title>Sign in to Texas Medical Center</title>
   </head>
   <body style="margin:0;padding:0;background-color:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#eef1f5;padding:32px 16px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(26,77,140,0.08);">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(65,147,189,0.1);">
             <tr>
-              <td style="background-color:#1a4d8c;padding:28px 32px;text-align:left;">
+              <td style="background-color:#4193bd;padding:28px 32px;text-align:left;">
                 <table role="presentation" cellspacing="0" cellpadding="0">
                   <tr>
                     <td style="vertical-align:middle;padding-right:14px;">
-                      <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="display:block;">
-                        <polygon points="50,6 88,28 88,72 50,94 12,72 12,28" fill="#ffffff" />
-                      </svg>
+                      <!-- Replace REPLACE_APP_URL with your deployed origin (e.g. https://your-app.vercel.app) so the logo loads in email clients -->
+                      <img src="REPLACE_APP_URL/branding/tmc-mark-white.png" width="40" height="40" alt="" style="display:block;object-fit:contain;" />
                     </td>
                     <td style="vertical-align:middle;">
-                      <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#ffffff;line-height:1.1;">BloxyEHR</p>
-                      <p style="margin:6px 0 0;font-size:13px;font-weight:500;color:rgba(255,255,255,0.88);letter-spacing:0.02em;">Roblox Healthcare</p>
+                      <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#ffffff;line-height:1.1;">Texas Medical Center</p>
+                      <p style="margin:6px 0 0;font-size:13px;font-weight:500;color:rgba(255,255,255,0.88);letter-spacing:0.02em;">powered by BloxyEHR · Roblox Healthcare</p>
                     </td>
                   </tr>
                 </table>
@@ -39,20 +38,20 @@
               <td style="padding:36px 32px 8px;">
                 <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;">Your sign-in link</h1>
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#475569;">
-                  Tap the button below to sign in to BloxyEHR as <strong style="color:#0f172a;">{{ .Email }}</strong>. No password needed&mdash;this link is single-use and expires soon. Don&rsquo;t share it with anyone.
+                  Tap the button below to sign in to Texas Medical Center as <strong style="color:#0f172a;">{{ .Email }}</strong>. No password needed&mdash;this link is single-use and expires soon. Don&rsquo;t share it with anyone.
                 </p>
                 <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 28px;">
                   <tr>
-                    <td style="border-radius:8px;background-color:#1a4d8c;">
-                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;">Sign in to BloxyEHR</a>
+                    <td style="border-radius:8px;background-color:#4193bd;">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;">Sign in to Texas Medical Center</a>
                     </td>
                   </tr>
                 </table>
                 <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#64748b;">
                   If the button doesn&rsquo;t work, copy and paste this link into your browser:
                 </p>
-                <p style="margin:0 0 28px;font-size:13px;line-height:1.5;word-break:break-all;color:#1a4d8c;">
-                  <a href="{{ .ConfirmationURL }}" style="color:#1a4d8c;text-decoration:underline;">{{ .ConfirmationURL }}</a>
+                <p style="margin:0 0 28px;font-size:13px;line-height:1.5;word-break:break-all;color:#4193bd;">
+                  <a href="{{ .ConfirmationURL }}" style="color:#4193bd;text-decoration:underline;">{{ .ConfirmationURL }}</a>
                 </p>
                 <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
                   If you didn&rsquo;t try to sign in, you can safely ignore this email.
@@ -62,7 +61,7 @@
             <tr>
               <td style="padding:24px 32px 32px;border-top:1px solid #e2e8f0;">
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#94a3b8;text-align:center;">
-                  &copy; BloxyEHR &middot; This message was sent automatically; replies are not monitored.
+                  &copy; Texas Medical Center &middot; This message was sent automatically; replies are not monitored.
                 </p>
               </td>
             </tr>

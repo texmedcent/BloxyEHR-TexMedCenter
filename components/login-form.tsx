@@ -20,6 +20,8 @@ import {
   persistBootstrapHospitalManagerRole,
   resolveRoleWithBootstrap,
 } from "@/lib/roles";
+import { POWERED_BY, PRODUCT_NAME, PRODUCT_NAME_SHORT } from "@/lib/branding";
+import { authCardClassName, authCardTitleClassName } from "@/components/auth/auth-display";
 
 export function LoginForm({
   className,
@@ -78,11 +80,14 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-0 shadow-xl">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-2xl text-slate-900">BloxyEHR Login</CardTitle>
-          <CardDescription>
-            Enter your email below to access your account
+      <Card className={authCardClassName}>
+        <CardHeader className="space-y-2 pb-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c4a574]">
+            {PRODUCT_NAME_SHORT}
+          </p>
+          <CardTitle className={authCardTitleClassName()}>Sign in</CardTitle>
+          <CardDescription className="text-slate-600">
+            Staff and providers — {PRODUCT_NAME}. {POWERED_BY}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +109,7 @@ export function LoginForm({
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm text-primary underline-offset-4 hover:underline"
+                    className="ml-auto inline-block text-sm font-medium text-[#002868] underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </Link>
@@ -118,17 +123,21 @@ export function LoginForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+              <Button
+                type="submit"
+                className="w-full bg-[#002868] font-semibold text-white hover:bg-[#003a7a]"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in…" : "Sign in"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Don&apos;t have an account?{" "}
               <Link
                 href="/auth/sign-up"
-                className="font-medium text-primary underline underline-offset-4 hover:text-primary/90"
+                className="font-medium text-[#002868] underline underline-offset-4 hover:text-[#003a7a]"
               >
-                Sign up
+                Create account
               </Link>
             </div>
           </form>

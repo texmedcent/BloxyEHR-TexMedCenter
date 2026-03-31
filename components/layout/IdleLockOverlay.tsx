@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { BehrLogo } from "@/components/branding/BehrLogo";
+import { PRODUCT_NAME_SHORT } from "@/lib/branding";
 import { Lock } from "lucide-react";
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
@@ -83,11 +84,7 @@ export function IdleLockOverlay() {
       aria-label="Session locked. Click to resume."
     >
       <div className="flex flex-col items-center gap-6 text-center px-6">
-        <BehrLogo
-          className="text-white"
-          compact={false}
-          inverted
-        />
+        <BehrLogo className="text-white" compact inverted />
         <div className="flex items-center gap-2 text-slate-400">
           <Lock className="h-5 w-5" />
           <span className="text-sm font-medium">
@@ -102,7 +99,7 @@ export function IdleLockOverlay() {
         </div>
       </div>
       <p className="absolute bottom-6 text-slate-600 text-xs">
-        BloxyEHR · Protected health information
+        {PRODUCT_NAME_SHORT} · Protected health information
       </p>
     </div>
   );

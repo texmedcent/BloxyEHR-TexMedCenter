@@ -110,9 +110,8 @@ export function HyperspaceLayout({
           className="h-14 bg-white dark:bg-card border-b border-slate-200 dark:border-border flex items-center px-4 shrink-0"
           role="banner"
         >
-          <div className="flex items-center gap-2" aria-label="BloxyEHR">
-            <BehrLogo compact />
-            <span className="font-semibold text-slate-900 dark:text-foreground">BloxyEHR</span>
+          <div className="flex items-center gap-2" aria-label="Texas Medical Center">
+            <BehrLogo compact fullName showPoweredBy={false} />
           </div>
           <span className="ml-4 text-sm text-muted-foreground hidden sm:inline">
             Choose your department to continue
@@ -136,21 +135,33 @@ export function HyperspaceLayout({
       >
         <div
           className={cn(
-            "flex items-center p-3 border-b border-white/20 gap-2",
-            sidebarCollapsed ? "flex-col justify-center" : "justify-between"
+            "flex min-w-0 items-center border-b border-white/20 px-2 py-2.5",
+            sidebarCollapsed ? "flex-col justify-center gap-2" : "gap-2"
           )}
         >
           <Link
             href="/staff-dashboard"
-            className="flex items-center justify-center text-white shrink-0 min-w-0"
-            aria-label="BloxyEHR Home"
+            className={cn(
+              "flex min-w-0 items-center text-white",
+              sidebarCollapsed
+                ? "justify-center"
+                : "flex-1 justify-center"
+            )}
+            aria-label="Texas Medical Center home"
           >
-            <BehrLogo compact inverted iconOnly={sidebarCollapsed} />
+            <BehrLogo
+              compact
+              inverted
+              iconOnly={sidebarCollapsed}
+              wordmarkOnly={!sidebarCollapsed}
+              showPoweredBy={false}
+              emphasizeShortName={!sidebarCollapsed}
+            />
           </Link>
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:bg-white/20 shrink-0"
+            className="text-white hover:bg-white/20 shrink-0 self-center"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           >
             {sidebarCollapsed ? (
@@ -206,16 +217,21 @@ export function HyperspaceLayout({
         >
           <Link
             href="/staff-dashboard"
-            className="hidden sm:flex shrink-0 items-center pl-3 pr-2"
-            aria-label="BloxyEHR Home"
+            className="hidden shrink-0 items-center overflow-visible pl-3 pr-2 sm:flex"
+            aria-label="Texas Medical Center home"
           >
-            <BehrLogo compact />
+            <span className="dark:hidden">
+              <BehrLogo compact fullName showPoweredBy={false} />
+            </span>
+            <span className="hidden dark:inline-flex dark:items-center">
+              <BehrLogo compact fullName showPoweredBy={false} inverted />
+            </span>
           </Link>
-          <div className="flex items-center gap-2 pl-2 pr-3 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 pl-2 pr-3">
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 h-8 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/30 transition-colors"
+            className="shrink-0 gap-2 whitespace-nowrap h-8 rounded-lg font-medium text-slate-700 dark:text-foreground border-slate-200 dark:border-border hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/30 transition-colors"
             onClick={() => setChartSearchOpen(true)}
             aria-label="Open Chart Search"
           >

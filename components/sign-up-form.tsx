@@ -21,6 +21,8 @@ import {
   persistBootstrapHospitalManagerRole,
   resolveRoleWithBootstrap,
 } from "@/lib/roles";
+import { POWERED_BY, PRODUCT_NAME, PRODUCT_NAME_SHORT } from "@/lib/branding";
+import { authCardClassName, authCardTitleClassName } from "@/components/auth/auth-display";
 
 export function SignUpForm({
   className,
@@ -93,10 +95,15 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="border-0 shadow-xl">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-2xl text-slate-900">Create BloxyEHR Account</CardTitle>
-          <CardDescription>Sign up to access BloxyEHR</CardDescription>
+      <Card className={authCardClassName}>
+        <CardHeader className="space-y-2 pb-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#c4a574]">
+            {PRODUCT_NAME_SHORT}
+          </p>
+          <CardTitle className={authCardTitleClassName()}>Create account</CardTitle>
+          <CardDescription className="text-slate-600">
+            Join {PRODUCT_NAME} — patient and staff. {POWERED_BY}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
@@ -138,14 +145,21 @@ export function SignUpForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               {success && <p className="text-sm text-emerald-700">{success}</p>}
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+              <Button
+                type="submit"
+                className="w-full bg-[#002868] font-semibold text-white hover:bg-[#003a7a]"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account…" : "Create account"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link href="/auth/login" className="font-medium text-primary underline underline-offset-4 hover:text-primary/90">
-                Login
+              <Link
+                href="/auth/login"
+                className="font-medium text-[#002868] underline underline-offset-4 hover:text-[#003a7a]"
+              >
+                Sign in
               </Link>
             </div>
           </form>
